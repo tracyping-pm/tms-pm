@@ -1,0 +1,2167 @@
+nodes:
+  n1:
+    tag: div
+    width: 1438.72px
+    height: 817.28px
+    styleId: style_1
+  n2:
+    tag: div
+    width: 220px
+    height: 3588.06px
+    styleId: style_2
+  n3:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(0, 150, 136);stroke-width:1px;color:rgb(0, 150, 136);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" width=\"14\" height=\"14\"><defs><clipPath id=\"home_svg__a\"><rect width=\"14\" height=\"14\" rx=\"0\"></rect></clipPath></defs><g clip-path=\"url(#home_svg__a)\"><path d=\"M11.945 5.457 8.52 2.11A2.158 2.158 0 0 0 7 1.5c-.58 0-1.124.215-1.522.606L2.052 5.457A1.796 1.796 0 0 0 1.5 6.745v3.8c0 1.078.944 1.955 2.105 1.955h6.79c1.16 0 2.105-.877 2.105-1.956V6.745c0-.483-.196-.939-.555-1.288Zm-3.647 4.897H5.7c-.318 0-.578-.242-.578-.537 0-.295.26-.537.578-.537h2.6c.317 0 .577.242.577.537 0 .295-.26.537-.578.537Z\"></path></g></svg>"
+  n4:
+    tag: span
+    children[1]: n3
+    height: 14px
+    width: 14px
+    styleId: style_3
+  n5:
+    tag: span
+    text: Home Page
+    height: 40px
+    width: 72.75px
+    styleId: style_4
+  n6:
+    tag: div
+    children[2]: n4,n5
+    width: 164.36px
+    height: 40px
+    styleId: style_5
+  n7:
+    tag: a
+    children[1]: n6
+    styleId: style_6
+  n8:
+    tag: span
+    children[1]: n7
+    height: 40px
+    width: 164.36px
+    styleId: style_7
+  n9:
+    tag: li
+    children[1]: n8
+    width: 196.36px
+    height: 40px
+    styleId: style_8
+  n10:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" width=\"14\" height=\"14\"><defs><clipPath id=\"customer_svg__a\"><rect width=\"14\" height=\"14\" rx=\"0\"></rect></clipPath></defs><g clip-path=\"url(#customer_svg__a)\"><path d=\"M4.024 4.117a2.882 2.882 0 1 0 5.766 0 2.882 2.882 0 1 0-5.766 0Zm-2.281 7.176q0 .002 0 0Zm10.328.036v-.004.004Zm0-.006v-.02M9.523 7.611l-.236-.002a.717.717 0 0 0-.282.07q-.19.11-.362.182a4.361 4.361 0 0 1-1.73.35 4.374 4.374 0 0 1-1.721-.345q-.176-.075-.369-.187a.639.639 0 0 0-.282-.07l-.234.002c-.945.125-1.937.962-2.22 1.868q-.303.612-.347 1.813c-.002.157.123.355.285.44q1.608 1.032 4.877 1.032 3.272 0 4.878-1.033c.16-.086.29-.305.285-.444q-.041-1.196-.335-1.783c-.26-.91-1.265-1.754-2.207-1.893Zm2.548 3.686v-.007.007Z\"></path></g></svg>"
+  n11:
+    tag: span
+    children[1]: n10
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n12:
+    tag: span
+    text: Customer Mgmt
+    height: 40px
+    width: 101.26px
+    styleId: style_10
+  n13:
+    tag: div
+    children[2]: n11,n12
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n14:
+    tag: span
+    children[1]: n13
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n15:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n16:
+    tag: div
+    children[2]: n14,n15
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n17:
+    tag: li
+    children[1]: n16
+    width: 204.36px
+    styleId: style_15
+  n18:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" width=\"14\" height=\"14\"><defs><clipPath id=\"vendor_svg__a\"><rect width=\"14\" height=\"14\" rx=\"0\"></rect></clipPath></defs><g clip-path=\"url(#vendor_svg__a)\"><path d=\"M10.436 8.77c-.627 0-1.226-.22-1.698-.608a2.674 2.674 0 0 1-3.436-.032 2.663 2.663 0 0 1-1.738.64c-.301 0-.6-.05-.884-.15a.38.38 0 0 0-.507.356v2.017A1.01 1.01 0 0 0 3.186 12h7.446a1.01 1.01 0 0 0 1.013-1.007v-1.96a.378.378 0 0 0-.478-.365 2.628 2.628 0 0 1-.731.102Zm1.987-3.325-.002-.005a2.017 2.017 0 0 0-.145-.37l-.97-2.47a.95.95 0 0 0-.885-.6H3.578a.95.95 0 0 0-.884.6l-.986 2.5a2.04 2.04 0 0 0-.12.303v.004a2.036 2.036 0 0 0-.088.592c0 1.133.924 2.052 2.064 2.052.73 0 1.37-.377 1.738-.945a2.065 2.065 0 0 0 1.738.945c.704 0 1.325-.351 1.698-.886.372.535.994.886 1.698.886a2.058 2.058 0 0 0 1.987-2.606Zm-2.27.515H3.847c-.21 0-.38-.169-.38-.377 0-.21.17-.378.38-.378h6.306c.21 0 .38.169.38.378 0 .208-.17.377-.38.377Z\"></path></g></svg>"
+  n19:
+    tag: span
+    children[1]: n18
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n20:
+    tag: span
+    text: Procurement Mgmt
+    height: 40px
+    width: 120.84px
+    styleId: style_10
+  n21:
+    tag: div
+    children[2]: n19,n20
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n22:
+    tag: span
+    children[1]: n21
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n23:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n24:
+    tag: div
+    children[2]: n22,n23
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n25:
+    tag: li
+    children[1]: n24
+    width: 204.36px
+    styleId: style_15
+  n26:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" width=\"14\" height=\"14\"><defs><clipPath id=\"project_svg__a\"><rect width=\"14\" height=\"14\" rx=\"0\"></rect></clipPath></defs><g clip-path=\"url(#project_svg__a)\"><path d=\"M10.945 2.917c-.083-.084-.167-.25-.333-.334-.084-.083-.167-.25-.25-.333A.458.458 0 0 0 9.945 2h-5.5c-.167 0-.333 0-.417.083-.083.084-.166.084-.25.167l-.25.25-.416.417c-.084.166-.25.333-.334.5h8.584c-.167-.167-.25-.334-.417-.5Zm.083 5.583h-8c-.333 0-.583.083-.75.25-.166.25-.25.417-.25.667V11c0 .333.084.583.334.75.166.167.416.25.666.25h7.917c.333 0 .583-.083.75-.25.167-.167.25-.417.25-.667V9.417c0-.25-.083-.5-.25-.667-.083-.167-.333-.25-.667-.25Zm-3.166 2c-.084.083-.084.083-.167.083h-1.25c-.083 0-.167 0-.25-.083 0-.083-.083-.167-.083-.25 0-.083 0-.167.083-.167.083-.083.083-.083.25-.083h1.167c.083 0 .166 0 .166.083.084.084.084.084.084.167.083.083 0 .167 0 .25Zm3.916-5.917c-.166-.166-.416-.25-.75-.25h-8c-.333 0-.583.084-.75.25a.757.757 0 0 0-.25.584v1.666c0 .25.084.5.25.667.167.167.417.25.75.25h8c.334 0 .584-.083.75-.25.167-.167.25-.417.25-.667V5.167a.757.757 0 0 0-.25-.584Zm-4.166 1.75H6.445c-.083 0-.167 0-.167-.083-.083-.083-.083-.083-.166-.25 0-.083 0-.167.083-.167.083-.083.083-.083.25-.083h1.167c.083 0 .166 0 .166.083A.18.18 0 0 1 7.945 6c-.083.25-.167.333-.333.333Z\"></path></g></svg>"
+  n27:
+    tag: span
+    children[1]: n26
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n28:
+    tag: span
+    text: Project Mgmt
+    height: 40px
+    width: 84.45px
+    styleId: style_10
+  n29:
+    tag: div
+    children[2]: n27,n28
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n30:
+    tag: span
+    children[1]: n29
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n31:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n32:
+    tag: div
+    children[2]: n30,n31
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n33:
+    tag: li
+    children[1]: n32
+    width: 204.36px
+    styleId: style_15
+  n34:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"account-book\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zM648.3 426.8l-87.7 161.1h45.7c5.5 0 10 4.5 10 10v21.3c0 5.5-4.5 10-10 10h-63.4v29.7h63.4c5.5 0 10 4.5 10 10v21.3c0 5.5-4.5 10-10 10h-63.4V752c0 5.5-4.5 10-10 10h-41.3c-5.5 0-10-4.5-10-10v-51.8h-63.1c-5.5 0-10-4.5-10-10v-21.3c0-5.5 4.5-10 10-10h63.1v-29.7h-63.1c-5.5 0-10-4.5-10-10v-21.3c0-5.5 4.5-10 10-10h45.2l-88-161.1c-2.6-4.8-.9-10.9 4-13.6 1.5-.8 3.1-1.2 4.8-1.2h46c3.8 0 7.2 2.1 8.9 5.5l72.9 144.3 73.2-144.3a10 10 0 018.9-5.5h45c5.5 0 10 4.5 10 10 .1 1.7-.3 3.3-1.1 4.8z\"></path></svg>"
+  n35:
+    tag: span
+    children[1]: n34
+    height: 14px
+    width: 14px
+    styleId: style_16
+  n36:
+    tag: span
+    children[1]: n35
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n37:
+    tag: span
+    text: AR AP Mgmt
+    height: 40px
+    width: 79.56px
+    styleId: style_10
+  n38:
+    tag: div
+    children[2]: n36,n37
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n39:
+    tag: span
+    children[1]: n38
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n40:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n41:
+    tag: div
+    children[2]: n39,n40
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n42:
+    tag: li
+    children[1]: n41
+    width: 204.36px
+    styleId: style_15
+  n43:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" width=\"14\" height=\"14\"><path d=\"M2.974 12.211v-.294c0-.11.09-.2.2-.2h6.37c.111 0 .2.09.2.2v.294a.2.2 0 0 1-.2.2h-6.37a.2.2 0 0 1-.2-.2m4.987-1.73-1.5-2.523a.807.807 0 0 1 0-.825l1.21-2.036a1 1 0 0 1 .86-.489h2.354a1 1 0 0 1 .86.49l1.152 1.936a1 1 0 0 1 0 1.022l-1.152 1.937a1 1 0 0 1-.86.489H7.961m.403-2.937A1.344 1.344 0 1 0 9.708 6.23a1.331 1.331 0 0 0-1.344 1.315ZM7.166 10.41H1.875a1 1 0 0 1-1-1V2.75a1 1 0 0 1 1-1h8.68a1 1 0 0 1 1 1v1.106H7.626L5.365 7.484l1.801 2.925v.001Z\"></path></svg>"
+  n44:
+    tag: span
+    children[1]: n43
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n45:
+    tag: span
+    text: User Mgmt
+    height: 40px
+    width: 68.83px
+    styleId: style_10
+  n46:
+    tag: div
+    children[2]: n44,n45
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n47:
+    tag: span
+    children[1]: n46
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n48:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n49:
+    tag: div
+    children[2]: n47,n48
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n50:
+    tag: li
+    children[1]: n49
+    width: 204.36px
+    styleId: style_15
+  n51:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"area-chart\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M888 792H200V168c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v688c0 4.4 3.6 8 8 8h752c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm-616-64h536c4.4 0 8-3.6 8-8V284c0-7.2-8.7-10.7-13.7-5.7L592 488.6l-125.4-124a8.03 8.03 0 00-11.3 0l-189 189.6a7.87 7.87 0 00-2.3 5.6V720c0 4.4 3.6 8 8 8z\"></path></svg>"
+  n52:
+    tag: span
+    children[1]: n51
+    height: 14px
+    width: 14px
+    styleId: style_16
+  n53:
+    tag: span
+    children[1]: n52
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n54:
+    tag: span
+    text: Statistics
+    height: 40px
+    width: 58.19px
+    styleId: style_10
+  n55:
+    tag: div
+    children[2]: n53,n54
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n56:
+    tag: span
+    children[1]: n55
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n57:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n58:
+    tag: div
+    children[2]: n56,n57
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n59:
+    tag: li
+    children[1]: n58
+    width: 204.36px
+    styleId: style_15
+  n60:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(38, 38, 38);stroke-width:1px;color:rgb(38, 38, 38);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"tool\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M865.3 244.7c-.3-.3-61.1 59.8-182.1 180.6l-84.9-84.9 180.9-180.9c-95.2-57.3-217.5-42.6-296.8 36.7A244.42 244.42 0 00419 432l1.8 6.7-283.5 283.4c-6.2 6.2-6.2 16.4 0 22.6l141.4 141.4c6.2 6.2 16.4 6.2 22.6 0l283.3-283.3 6.7 1.8c83.7 22.3 173.6-.9 236-63.3 79.4-79.3 94.1-201.6 38-296.6z\"></path></svg>"
+  n61:
+    tag: span
+    children[1]: n60
+    height: 14px
+    width: 14px
+    styleId: style_16
+  n62:
+    tag: span
+    children[1]: n61
+    height: 14px
+    width: 14px
+    styleId: style_9
+  n63:
+    tag: span
+    text: Tools
+    height: 40px
+    width: 34.26px
+    styleId: style_10
+  n64:
+    tag: div
+    children[2]: n62,n63
+    width: 146.36px
+    height: 40px
+    styleId: style_11
+  n65:
+    tag: span
+    children[1]: n64
+    height: 40px
+    width: 146.36px
+    styleId: style_12
+  n66:
+    tag: i
+    height: 0px
+    width: 10px
+    styleId: style_13
+  n67:
+    tag: div
+    children[2]: n65,n66
+    width: 196.36px
+    height: 40px
+    styleId: style_14
+  n68:
+    tag: li
+    children[1]: n67
+    width: 204.36px
+    styleId: style_15
+  n69:
+    tag: ul
+    children[8]: n9,n17,n25,n33,n42,n50,n59,n68
+    width: 204.36px
+    height: 761.28px
+    styleId: style_17
+  n70:
+    tag: div
+    children[1]: n69
+    width: 204.36px
+    height: 761.28px
+    styleId: style_18
+  n71:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" width=\"1em\" height=\"1em\" viewBox=\"0 0 12 12\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M6.432 7.967a.448.448 0 01-.318.133h-.228a.46.46 0 01-.318-.133L2.488 4.85a.305.305 0 010-.43l.427-.43a.293.293 0 01.42 0L6 6.687l2.665-2.699a.299.299 0 01.426 0l.42.431a.305.305 0 010 .43L6.432 7.967z\"></path></svg>"
+  n72:
+    tag: div
+    children[1]: n71
+    width: 24px
+    height: 24px
+    styleId: style_19
+  n73:
+    tag: div
+    children[2]: n70,n72
+    width: 221px
+    height: 761.28px
+    styleId: style_20
+  n74:
+    tag: aside
+    children[1]: n73
+    width: 220px
+    height: 761.28px
+    styleId: style_21
+  n75:
+    tag: header
+    width: 1218.72px
+    height: 56px
+    styleId: style_22
+  n76:
+    tag: img
+    src: assets/images/grZO+OYYtzuQbh+g3RcDQCdoCJ1ARFgUAAfq+GL5LoSqcrGQIXH7uQRw4mIr92wJ4CWAE5wCCd69JQ5eAjjBKZDg3Vvi4AQH+P8BBlXzIYMedqYAAAAASUVORK5CYII=.png
+    width: 30px
+    height: 28px
+    styleId: style_23
+  n77:
+    tag: span
+    text: Inteluck TMS
+    height: 32px
+    width: 106.9px
+    styleId: style_24
+  n78:
+    tag: span
+    text: RC
+    height: 21.28px
+    width: 30.48px
+    styleId: style_25
+  n79:
+    tag: div
+    children[3]: n76,n77,n78
+    width: 185.38px
+    height: 32px
+    styleId: style_26
+  n80:
+    tag: div
+    children[1]: n79
+    width: 185.38px
+    height: 32px
+    styleId: style_27
+  n81:
+    tag: div
+    width: 940.78px
+    height: 0px
+    styleId: style_28
+  n82:
+    tag: svg
+    _innerHTML: "<svg style=\"width:20px;height:20px;display:block;fill:rgba(0, 0, 0, 0.88);stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:20px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"download\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z\"></path></svg>"
+  n83:
+    tag: span
+    children[1]: n82
+    height: 20px
+    width: 20px
+    styleId: style_29
+  n84:
+    tag: span
+    text: "5"
+    styleId: style_30
+  n85:
+    tag: span
+    children[1]: n84
+    height: 20px
+    width: 6.74px
+    styleId: style_31
+  n86:
+    tag: bdi
+    children[1]: n85
+    width: 6.74px
+    height: 20px
+    styleId: style_32
+  n87:
+    tag: sup
+    children[1]: n86
+    height: 20px
+    width: 20px
+    styleId: style_33
+  n88:
+    tag: span
+    children[2]: n83,n87
+    height: 20px
+    width: 20px
+    styleId: style_34
+  n89:
+    tag: div
+    children[1]: n88
+    width: 36px
+    height: 54px
+    styleId: style_35
+  n90:
+    tag: div
+    children[1]: n89
+    width: 36px
+    height: 54px
+    styleId: style_36
+  n91:
+    tag: div
+    children[1]: n90
+    width: 36px
+    height: 54px
+    styleId: style_37
+  n92:
+    tag: svg
+    _innerHTML: "<svg style=\"width:20px;height:20px;display:block;fill:rgba(0, 0, 0, 0.88);stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:20px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"bell\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M816 768h-24V428c0-141.1-104.3-257.7-240-277.1V112c0-22.1-17.9-40-40-40s-40 17.9-40 40v38.9c-135.7 19.4-240 136-240 277.1v340h-24c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h216c0 61.8 50.2 112 112 112s112-50.2 112-112h216c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM512 888c-26.5 0-48-21.5-48-48h96c0 26.5-21.5 48-48 48zM304 768V428c0-55.6 21.6-107.8 60.9-147.1S456.4 220 512 220c55.6 0 107.8 21.6 147.1 60.9S720 372.4 720 428v340H304z\"></path></svg>"
+  n93:
+    tag: span
+    children[1]: n92
+    height: 20px
+    width: 20px
+    styleId: style_38
+  n94:
+    tag: span
+    children[1]: n93
+    height: 20px
+    width: 20px
+    styleId: style_34
+  n95:
+    tag: div
+    children[1]: n94
+    width: 36px
+    height: 54px
+    styleId: style_39
+  n96:
+    tag: div
+    children[1]: n95
+    width: 36px
+    height: 54px
+    styleId: style_36
+  n97:
+    tag: div
+    children[1]: n96
+    width: 36px
+    height: 54px
+    styleId: style_37
+  n98:
+    tag: img
+    src: assets/images/2vsv+7gPAQCEvBfdP09fIKAEAgIgYAQCAiBgBAICIGAEAgIgYAQCAiBgBAICIGAEAgIgYAQCAiBgBAICIGAEAgIgYAQCAiBgBAICIGAEAgIgYAQCOgHvWLak+QcZoQAAAAASUVORK5CYII=.png
+    width: 30.72px
+    height: 30.72px
+    styleId: style_40
+  n99:
+    tag: span
+    children[1]: n98
+    height: 32px
+    width: 32px
+    styleId: style_41
+  n100:
+    tag: span
+    text: Zhang Jialei
+    height: 0px
+    width: 76.56px
+    styleId: style_42
+  n101:
+    tag: svg
+    _innerHTML: "<svg style=\"width:20px;height:16px;display:block;stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"16\" fill=\"none\"><g clip-path=\"url(#icon-philippines_svg__a)\"><path d=\"M22.328 16H-1.884s.038-.077.058-.097c.366-.27.733-.56 1.08-.83.733-.56 1.486-1.121 2.219-1.701.771-.6 1.562-1.179 2.334-1.778.926-.715 1.852-1.41 2.797-2.125.637-.483 1.274-.967 1.891-1.45.039-.019.058-.038.097-.058H22.174c.058 0 .096-.019.154.039v8Z\" fill=\"#C21A28\"></path><path d=\"M8.592 8c-.232-.193-.483-.367-.714-.56A4240.537 4240.537 0 0 1-1.826.077s-.039-.02-.058-.038c0-.02.019 0 .038 0h24.097l.077.116v7.884H8.592V8Z\" fill=\"#033B95\"></path><path d=\"M.431 6.242c.116-.02.193 0 .25.096.136.213.29.425.425.638.02.039.039.039.077 0a.982.982 0 0 1 .328-.135c.058 0 .058-.039.058-.078-.058-.25-.096-.521-.154-.773 0-.058 0-.096.038-.135.02 0 .04-.039.058-.077.02.096.039.193.039.27.039.252.058.483.096.735 0 .019 0 .038.039.038s.039 0 .039-.038c0-.213-.02-.445-.039-.657 0-.136 0-.29-.039-.425 0-.04.02-.058.039-.078.116-.116.116-.116.231 0 .04.039.04.058.04.116-.02.348-.04.696-.078 1.044 0 .019-.02.058.02.058.038 0 .057 0 .057-.039l.058-.502c.02-.155.039-.31.058-.484.096.04.135.097.116.194-.058.27-.097.521-.155.792 0 .039 0 .058.039.077.116.02.231.078.328.136.038.019.058 0 .077 0 .154-.232.309-.445.444-.677.038-.058.077-.077.135-.077h.077c0 .02 0 .039-.039.058-.193.251-.386.483-.56.734 0 .02-.038.039 0 .077.04.04.059 0 .078-.019.232-.251.444-.502.675-.773a.175.175 0 0 1 .135-.058c.135 0 .135 0 .135.135 0 .058-.019.116-.077.155-.25.213-.52.445-.772.676 0 0-.057.02-.019.058.039.039.058 0 .077 0 .232-.174.483-.367.714-.54.02 0 .039-.04.077-.059v.155c0 .039-.019.039-.038.058-.232.154-.463.31-.695.444-.038.039-.058.058-.02.097.059.097.097.213.136.31 0 .038.02.038.058.038.27-.058.54-.116.81-.155.058 0 .097 0 .116.039 0 .02.038.038.077.077a.692.692 0 0 0-.212.039c-.27.038-.521.077-.791.096-.02 0-.058 0-.039.04 0 .038.039.038.058.038.347-.02.714-.039 1.061-.078.039 0 .077 0 .116.04.039.038.096.076.096.115 0 .039-.057.077-.096.116-.039.039-.077.039-.116.039-.347-.02-.694-.04-1.042-.058-.019 0-.057 0-.057.038 0 .058.019.039.057.039.328.039.656.077.984.135-.038.097-.115.135-.193.116-.27-.058-.54-.097-.81-.154-.038 0-.038 0-.058.038-.019.116-.077.232-.135.348-.02.039 0 .058 0 .077.232.155.444.31.675.445.058.038.097.077.078.154v.078c-.02-.02-.039-.039-.058-.039-.251-.193-.483-.367-.733-.56 0 0-.039-.04-.058 0-.02.019-.039.038 0 .077.25.232.52.444.771.676a.176.176 0 0 1 .078.155c0 .116 0 .116-.116.116-.077 0-.116-.02-.154-.078-.213-.25-.444-.502-.656-.753 0 0-.02-.058-.058-.039-.039 0-.039.039 0 .077.193.252.386.484.56.735 0 0 .038.038.038.058h-.135c-.039 0-.039-.02-.058-.039l-.463-.696c-.02-.038-.039-.038-.077 0a.982.982 0 0 1-.328.136c-.039 0-.058.019-.039.058l.174.811c0 .039 0 .078-.039.097-.02.02-.038.058-.077.077h-.02l-.057-.464c-.02-.173-.039-.328-.058-.502 0-.02 0-.058-.039-.058-.058 0-.038.039-.038.058.02.348.038.676.077 1.024 0 .077-.02.116-.077.155-.077.077-.077.077-.155 0-.057-.058-.077-.097-.077-.174.039-.329.039-.657.077-.986v-.058c-.019-.019-.057 0-.057.039l-.116.928c0 .019 0 .038-.02.077a.512.512 0 0 1-.096-.116v-.058l.174-.812c0-.058 0-.077-.058-.096-.116-.02-.212-.078-.309-.136-.038-.019-.058 0-.077 0-.154.232-.309.445-.444.677-.038.058-.077.096-.135.077H.566c0-.039.039-.058.039-.077.193-.232.366-.483.56-.715 0 0 .038-.02 0-.058-.02-.02-.04-.039-.078 0-.212.232-.405.464-.617.695l-.02.02c-.058.116-.173.135-.27.116-.038 0-.038 0-.038-.039-.02-.116.019-.193.115-.251.251-.213.483-.425.733-.638 0 0 .039-.02 0-.058-.038-.038-.038 0-.077 0-.25.193-.482.367-.733.56 0 0-.038.02-.058.04v-.155c0-.039.02-.039.058-.058l.695-.464c.038-.02.058-.039.019-.097a1.078 1.078 0 0 1-.135-.309c0-.039 0-.058-.077-.039-.27.058-.56.116-.83.155-.038 0-.154-.058-.154-.097 0-.019 0-.019.02-.019.192-.02.385-.058.578-.077.135 0 .25-.039.386-.058.038 0 .038 0 .038-.039 0-.038-.019-.038-.038-.038-.174 0-.348.019-.521.038-.193 0-.386.02-.579.039-.039 0-.058-.02-.077-.039-.039-.038-.097-.058-.097-.116 0-.038.058-.077.097-.116.02-.038.058-.038.116-.038.347.019.713.038 1.06.058 0 0 .04 0 .059-.02 0-.038 0-.058-.039-.058-.309-.038-.617-.077-.945-.116h-.039s0-.019.02-.038c.057-.058.096-.078.192-.058.251.058.521.096.791.154.039 0 .058 0 .058-.038a.985.985 0 0 1 .135-.329c.02-.038 0-.058-.019-.077-.232-.155-.444-.29-.675-.444-.058-.04-.077-.078-.077-.136v-.077c.038 0 .038 0 .057.039.251.193.483.367.734.56.019 0 .038.039.077 0 .019-.039 0-.039 0-.058-.251-.213-.502-.444-.772-.657-.058-.039-.077-.097-.077-.174 0-.116 0-.116.116-.116.077 0 .135 0 .173.077.212.252.444.503.675.754 0 0 .02.039.058.02.039-.02.039-.04 0-.059-.135-.173-.27-.328-.385-.502-.078-.097-.136-.193-.213-.29l-.154-.154ZM7.202 8.02c-.115.057-.25.115-.366.173-.039 0-.058.039-.058.097v.522l-.058-.116c-.058-.097-.116-.213-.173-.31-.02-.038-.04-.058-.097-.038-.135.058-.25.096-.405.154.077-.154.154-.309.231-.444a.145.145 0 0 0 0-.174c-.077-.135-.135-.27-.231-.425.135.058.25.097.366.155.078.038.116 0 .155-.058.077-.136.135-.252.212-.387v.483c0 .097.02.135.097.174.115.039.231.097.347.155V8l-.02.02Z\" fill=\"#F2CA29\"></path></g><defs><clipPath id=\"icon-philippines_svg__a\"><path fill=\"#fff\" transform=\"translate(-2)\" d=\"M0 0h24v16H0z\"></path></clipPath></defs></svg>"
+  n102:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"14\" height=\"14\" class=\"dropdownIcon___u7f4v\"><defs><clipPath id=\"dropdown_icon_svg__a\"><rect x=\"2\" y=\"3\" width=\"10\" height=\"9\" rx=\"0\"></rect></clipPath></defs><g clip-path=\"url(#dropdown_icon_svg__a)\"><path d=\"M4.879 5.322a1 1 0 0 0-1.415 1.414l2.829 2.828a.996.996 0 0 0 1.414 0l2.829-2.828A1 1 0 0 0 9.12 5.322L7 7.442l-2.121-2.12Z\" fill-rule=\"evenodd\" fill=\"#4E5569\"></path></g></svg>"
+  n103:
+    tag: span
+    children[4]: n99,n100,n101,n102
+    height: 48px
+    width: 176.56px
+    styleId: style_43
+  n104:
+    tag: div
+    children[1]: n103
+    width: 176.56px
+    height: 48px
+    styleId: style_37
+  n105:
+    tag: div
+    children[3]: n91,n97,n104
+    width: 264.56px
+    height: 54px
+    styleId: style_44
+  n106:
+    tag: div
+    children[1]: n105
+    width: 264.56px
+    height: 56px
+    styleId: style_45
+  n107:
+    tag: div
+    children[1]: n106
+    width: 264.56px
+    height: 56px
+    styleId: style_36
+  n108:
+    tag: div
+    children[1]: n107
+    width: 264.56px
+    height: 56px
+    styleId: style_46
+  n109:
+    tag: div
+    children[3]: n80,n81,n108
+    width: 1406.72px
+    height: 56px
+    styleId: style_47
+  n110:
+    tag: header
+    children[1]: n109
+    width: 1438.72px
+    height: 56px
+    styleId: style_48
+  n111:
+    tag: div
+    text: Business Statistics Summary
+    width: 1186.72px
+    height: 28px
+    styleId: style_49
+  n112:
+    tag: span
+    height: 0px
+    width: 1162.72px
+    styleId: style_50
+  n113:
+    tag: div
+    children[1]: n112
+    width: 1186.72px
+    height: 0px
+    styleId: style_51
+  n114:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n115:
+    tag: span
+    children[1]: n114
+    height: 16px
+    width: 16px
+    styleId: style_52
+  n116:
+    tag: div
+    children[1]: n115
+    text: Regular Waybills
+    _innerHTML: "Regular Waybills<span role=\"img\" aria-label=\"question-circle\" aria-describedby=\":rdi:\" class=\"anticon anticon-question-circle\" style=\"margin-left: 8px;\"><svg viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg></span>"
+    width: 174.68px
+    height: 25.14px
+    styleId: style_53
+  n117:
+    tag: div
+    text: "213,549"
+    width: 174.68px
+    height: 42px
+    styleId: style_54
+  n118:
+    tag: div
+    children[1]: n117
+    width: 174.68px
+    height: 42px
+    styleId: style_55
+  n119:
+    tag: div
+    children[2]: n116,n118
+    width: 174.68px
+    styleId: style_56
+  n120:
+    tag: svg
+    _innerHTML: "<svg style=\"width:56px;height:56px;display:inline;stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"56\" height=\"56\"><defs><clipPath id=\"waybills_svg__a\"><rect x=\"8\" y=\"8\" width=\"40\" height=\"40\" rx=\"0\"></rect></clipPath></defs><rect width=\"56\" height=\"56\" rx=\"4\" fill=\"#377BF0\" fill-opacity=\"0.1\"></rect><g clip-path=\"url(#waybills_svg__a)\"><path d=\"M21.296 11.911h11.34q.242 0 .242.242v3.936q0 .242-.242.242h-11.34q-.241 0-.241-.242v-3.936q0-.242.241-.242Z\" fill=\"#377BF0\"></path><path d=\"M24.132 42.914h-1.736a.267.267 0 0 1-.267-.266V39.43c0-.036.007-.072.021-.105l2.936-5.344a.268.268 0 0 1 .246-.16h3.12a.267.267 0 0 0 .267-.266v-3.043c0-.145.118-.261.262-.26H39.66v-14.6a.85.85 0 0 0-.843-.852H34.28v2.097a.85.85 0 0 1-.843.85H20.493a.85.85 0 0 1-.842-.85V14.8h-4.537a.85.85 0 0 0-.843.851v26.88a.85.85 0 0 0 .843.85h9.534c-.133-.286-.377-.468-.516-.468Zm-5.157-19.941c0-.217.174-.393.391-.395h15.195a.394.394 0 0 1 .391.395v2.106a.394.394 0 0 1-.39.395H19.368a.394.394 0 0 1-.39-.395l-.004-2.106Zm0 8.858v-2.106c0-.217.174-.393.391-.395h7.403c.217.002.391.179.391.395v2.106a.395.395 0 0 1-.39.395h-7.401a.394.394 0 0 1-.391-.395h-.003Z\" fill=\"#377BF0\"></path><path d=\"m26.222 35.2-2.292 4.306a.211.211 0 0 0-.02.088v2.12a.23.23 0 0 0 .235.224h1.948c.119-.003.22.086.234.204.109 1.191 1.161 2.126 2.443 2.126s2.335-.935 2.443-2.126a.231.231 0 0 1 .235-.204H34.6c.12-.002.221.086.235.204.108 1.191 1.16 2.126 2.443 2.126 1.282 0 2.334-.935 2.443-2.126a.231.231 0 0 1 .234-.204h1.458a.23.23 0 0 0 .234-.224v-9.562a.23.23 0 0 0-.234-.224H30.319a.226.226 0 0 0-.23.22v2.692a.23.23 0 0 1-.235.224H26.44a.237.237 0 0 0-.218.135Zm9.813 6.776c-.022-.673.557-1.224 1.266-1.203.642.02 1.165.517 1.186 1.127.022.673-.557 1.224-1.266 1.203-.642-.02-1.165-.517-1.186-1.127Zm-8.49 0c-.023-.673.557-1.224 1.266-1.203.642.02 1.165.517 1.185 1.127.023.673-.557 1.224-1.266 1.203-.642-.02-1.164-.517-1.185-1.127Zm2.315-2.428h-4.02a.225.225 0 0 1-.216-.313l1.507-2.737a.234.234 0 0 1 .217-.136h2.512a.23.23 0 0 1 .235.224v2.738a.23.23 0 0 1-.235.224Z\" fill=\"#377BF0\"></path></g></svg>"
+  n121:
+    tag: div
+    children[1]: n120
+    width: 56px
+    height: 85.14px
+    styleId: style_57
+  n122:
+    tag: div
+    children[2]: n119,n121
+    width: 230.68px
+    height: 95.14px
+    styleId: style_58
+  n123:
+    tag: div
+    text: "0"
+    width: 11.48px
+    height: 24px
+    styleId: style_59
+  n124:
+    tag: div
+    children[1]: n123
+    width: 11.48px
+    height: 24px
+    styleId: style_60
+  n125:
+    tag: div
+    children[1]: n124
+    text: Executed last 7 Days
+    _innerHTML: " Executed last 7 Days<div class=\"statistics_lastCount___x4K6D\"><div>0</div></div>"
+    width: 230.68px
+    height: 24px
+    styleId: style_61
+  n126:
+    tag: div
+    children[2]: n122,n125
+    width: 278.68px
+    height: 167.14px
+    styleId: style_62
+  n127:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n128:
+    tag: span
+    children[1]: n127
+    height: 16px
+    width: 16px
+    styleId: style_52
+  n129:
+    tag: div
+    children[1]: n128
+    text: Regular Projects
+    _innerHTML: "Regular Projects<span role=\"img\" aria-label=\"question-circle\" aria-describedby=\":rdk:\" class=\"anticon anticon-question-circle\" style=\"margin-left: 8px;\"><svg viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg></span>"
+    width: 174.68px
+    height: 25.14px
+    styleId: style_53
+  n130:
+    tag: div
+    text: "351"
+    width: 174.68px
+    height: 42px
+    styleId: style_54
+  n131:
+    tag: div
+    children[1]: n130
+    width: 174.68px
+    height: 42px
+    styleId: style_55
+  n132:
+    tag: div
+    children[2]: n129,n131
+    width: 174.68px
+    styleId: style_56
+  n133:
+    tag: svg
+    _innerHTML: "<svg style=\"width:56px;height:56px;display:inline;stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"56\" height=\"56\"><defs><clipPath id=\"projects_svg__a\"><rect x=\"8\" y=\"8\" width=\"40\" height=\"40\" rx=\"0\"></rect></clipPath></defs><rect width=\"56\" height=\"56\" rx=\"4\" fill=\"#0DB5A5\" fill-opacity=\"0.1\"></rect><g clip-path=\"url(#projects_svg__a)\"><path d=\"m26.802 42.818-12.834-6.166a2.815 2.815 0 0 1-1.5-3.334l14.334 7 1.333.667 12.834-6.167 2.666-1.5a3.022 3.022 0 0 1-1.5 3.334l-12.833 6.166c-.758.5-1.742.5-2.5 0Zm0-6-12.834-6.166a2.812 2.812 0 0 1-1.5-3.334l14.334 7 1.333.667 12.834-6.167 2.666-1.5a3.018 3.018 0 0 1-1.5 3.334l-12.833 6.166c-.758.5-1.742.5-2.5 0Zm0-6-12.834-6.175a2.793 2.793 0 0 1-1.333-3.825 2.642 2.642 0 0 1 1.333-1.333l12.834-6.167a2.257 2.257 0 0 1 2.5 0l12.833 6.167a2.805 2.805 0 0 1 1.333 3.833 2.57 2.57 0 0 1-1.333 1.334l-12.833 6.175c-.76.496-1.74.496-2.5 0v-.009Z\" fill=\"#0DB5A5\"></path></g></svg>"
+  n134:
+    tag: div
+    children[1]: n133
+    width: 56px
+    height: 85.14px
+    styleId: style_57
+  n135:
+    tag: div
+    children[2]: n132,n134
+    width: 230.68px
+    height: 95.14px
+    styleId: style_58
+  n136:
+    tag: div
+    text: "0"
+    width: 11.48px
+    height: 24px
+    styleId: style_59
+  n137:
+    tag: div
+    children[1]: n136
+    width: 11.48px
+    height: 24px
+    styleId: style_60
+  n138:
+    tag: div
+    children[1]: n137
+    text: Added last 7 Days
+    _innerHTML: " Added last 7 Days<div class=\"statistics_lastCount___x4K6D\"><div>0</div></div>"
+    width: 230.68px
+    height: 24px
+    styleId: style_61
+  n139:
+    tag: div
+    children[2]: n135,n138
+    width: 278.68px
+    height: 167.14px
+    styleId: style_62
+  n140:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n141:
+    tag: span
+    children[1]: n140
+    height: 16px
+    width: 16px
+    styleId: style_52
+  n142:
+    tag: div
+    children[1]: n141
+    text: Existing Customers
+    _innerHTML: "Existing Customers<span role=\"img\" aria-label=\"question-circle\" aria-describedby=\":rdm:\" class=\"anticon anticon-question-circle\" style=\"margin-left: 8px;\"><svg viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg></span>"
+    width: 174.68px
+    height: 25.14px
+    styleId: style_53
+  n143:
+    tag: div
+    text: "175"
+    width: 174.68px
+    height: 42px
+    styleId: style_54
+  n144:
+    tag: div
+    children[1]: n143
+    width: 174.68px
+    height: 42px
+    styleId: style_55
+  n145:
+    tag: div
+    children[2]: n142,n144
+    width: 174.68px
+    styleId: style_56
+  n146:
+    tag: svg
+    _innerHTML: "<svg style=\"width:56px;height:56px;display:inline;stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"56\" height=\"56\"><defs><clipPath id=\"customers_svg__a\"><rect x=\"10\" y=\"10\" width=\"36\" height=\"36\" rx=\"0\"></rect></clipPath></defs><rect width=\"56\" height=\"56\" rx=\"4\" fill=\"#9280FF\" fill-opacity=\"0.1\"></rect><g clip-path=\"url(#customers_svg__a)\"><path d=\"M32.782 14.026a2.455 2.455 0 0 1 1.456.917c.383.489.6 1.094.65 1.814 0 .225.014.577.039 1.048.024.475.038.974.038 1.498 0 .52-.017.998-.056 1.42-.038.425-.109.685-.21.784-.155.176-.303.257-.44.243-.14-.015-.211.06-.211.207 0 .077-.018.337-.06.787-.039.45-.148 1.073-.323 1.87-.106.426-.25.806-.44 1.14-.19.337-.39.643-.594.917-.257.3-.513.573-.766.823-.025.327-.04.636-.04.939v.784c0 .277.015.488.04.636.024.302.102.513.228.636.13.127.383.24.767.338.126.05.358.126.689.225.334.098.727.232 1.188.394.46.161.939.33 1.438.502.496.176.977.345 1.438.507.457.161.868.312 1.227.45.358.137.625.242.801.316.51.25.85.51 1.016.787.165.275.313.626.443 1.048.05.225.12.636.211 1.234.088.598.183 1.22.285 1.87.102.647.186 1.26.25 1.836.063.573.108.935.133 1.082.025.324-.032.598-.172.823-.14.225-.464.397-.978.524-.432.098-1.065.207-1.894.32-.83.112-1.793.218-2.89.316a82.072 82.072 0 0 1-3.618.243c-1.315.063-2.7.095-4.155.095-1.456 0-2.848-.025-4.177-.078a87.869 87.869 0 0 1-3.656-.204 58.39 58.39 0 0 1-2.95-.298c-.854-.113-1.526-.232-2.01-.355a2.054 2.054 0 0 1-.384-.148 2.398 2.398 0 0 1-.44-.285c-.14-.109-.249-.25-.326-.411a.951.951 0 0 1-.078-.542c.025-.175.099-.57.211-1.18.116-.613.25-1.266.401-1.966.155-.696.295-1.354.422-1.965.13-.612.218-.992.267-1.14.102-.302.25-.611.44-.938.193-.324.516-.661.977-1.009.228-.172.65-.362 1.266-.559.611-.2 1.248-.387 1.912-.563.665-.172 1.29-.323 1.877-.45.588-.123.97-.21 1.15-.26.383-.074.72-.168 1.016-.277.295-.113.44-.271.44-.468V28.13a7.605 7.605 0 0 1-.806-.745 6.537 6.537 0 0 1-.689-.805 7.513 7.513 0 0 1-.611-.991c-.359-.672-.587-1.29-.69-1.85-.105-.562-.165-.893-.193-.991-.024-.099-.123-.183-.288-.243-.165-.063-.285-.193-.362-.393a2.87 2.87 0 0 1-.288-1.347c.014-.474.045-1.15.098-2.021.074-.872.221-1.709.44-2.507.217-.798.696-1.536 1.437-2.208.384-.323.893-.59 1.53-.805.636-.21 1.29-.369 1.954-.467a12.972 12.972 0 0 1 1.899-.148c.597 0 1.05.039 1.357.112.334.099.6.204.805.317.204.112.365.218.478.316.116.099.21.194.288.281.074.088.151.159.229.208.126.102.295.13.495.095.2-.042.56-.01 1.07.088ZM29.26 34.529l1.033 3.892 1.688-4.413-1.61-1.125-1.111 1.646Zm-2.76-1.723-1.53 1.199 1.723 4.412.918-3.927-1.111-1.684Zm13.633-14.625c.359.05.644.225.862.524.218.299.34.66.365 1.086 0 .127.014.33.039.62.025.287.039.58.039.878 0 .302-.014.58-.039.84-.025.264-.063.419-.116.468-.102.102-.197.144-.288.13-.088-.01-.134.031-.134.13 0 .05-.007.207-.017.467-.015.26-.085.644-.211 1.14a2.59 2.59 0 0 1-.232.675c-.102.2-.218.372-.345.523a2.836 2.836 0 0 1-.46.486c-.029.2-.04.386-.04.562v.861c.029.173.078.3.156.373.073.077.228.137.457.186.105.025.344.102.727.225.383.127.798.268 1.245.43l1.244.45c.384.136.65.242.802.32.306.15.517.305.633.467.112.161.197.383.25.654.024.126.063.362.115.71.053.348.102.724.152 1.121.052.398.105.76.154 1.083.05.324.074.534.074.636a.734.734 0 0 1-.095.503c-.091.137-.288.232-.594.281-.253.05-.587.113-.995.187-.408.077-.946.137-1.61.186a4.634 4.634 0 0 0-.229-.861c-.073-.25-.165-.51-.267-.784a2.673 2.673 0 0 0-.383-.71 4.442 4.442 0 0 0-.879-.897 6.135 6.135 0 0 0-.917-.562 5.799 5.799 0 0 0-.918-.355 30.298 30.298 0 0 1-.918-.282c-1.304-.45-2.348-.759-3.14-.935-.79-.176-1.237-.323-1.339-.45a.578.578 0 0 1-.094-.26 2.473 2.473 0 0 1 .02-.749c.356-.098.626-.162.806-.186a4.47 4.47 0 0 0 .995-.243c.179-.063.267-.154.267-.281v-1.304l-.078-.039-.15-.074c-.053-.024-.103-.084-.152-.186.151-.324.306-.71.457-1.16a19.57 19.57 0 0 0 .766-3.516 25.209 25.209 0 0 0 .19-2.992v-1.16c.306-.049.633-.074.978-.074.344 0 .618.025.822.074.433.123.696.25.784.376.092.123.187.225.289.3.102.048.21.07.327.055.109-.017.32 0 .625.053Zm-1.95 11.97.266 1.01.69.225.537-1.347-.805-.671-.689.784Zm-1.994-.674-.65.636.038.148 1.188.337.152-.411-.728-.71ZM19.187 17.358a6.811 6.811 0 0 0-1.227-.038 7.395 7.395 0 0 0-1.167.186 3.332 3.332 0 0 0-1.167.524c-.31.2-.548.436-.728.71-.18.274-.313.556-.4.844a4.202 4.202 0 0 0-.173.805c-.024.25-.038.45-.038.598-.025.323-.05.618-.074.879a2 2 0 0 0 .038.692c.053.2.088.338.116.411a.35.35 0 0 0 .152.187c.077.049.14.08.19.095.052.014.101.179.154.506.025.323.11.643.25.953.14.313.288.57.443.766.077.123.172.243.288.355.116.113.221.229.323.355.106.127.232.25.384.376v1.087a.717.717 0 0 1-.173.376c-.091.098-.263.172-.516.225-.13.024-.342.074-.633.148-.296.073-.612.154-.96.246-.345.084-.69.179-1.034.277-.344.099-.618.187-.822.26-.739.352-1.185.95-1.34 1.797-.105.4-.218.9-.344 1.498-.127.597-.218 1.02-.267 1.272-.05.25-.046.51.017.784.063.275.274.45.633.524.18.05.4.085.668.11.267.024.53.062.784.112.281.049.576.084.879.109.052-.3.13-.598.228-.897a4.448 4.448 0 0 1 .844-1.607c.204-.225.454-.443.745-.653.296-.211.58-.419.862-.62.309-.224.636-.435.995-.636l-.38-.935.844-.636.882.974.46-.113a.619.619 0 0 0 .233-.074.34.34 0 0 1 .15-.035l.729-.822.65.524c.13-.025.243-.05.344-.074.102-.025.218-.05.345-.074l.383-.077c.285-.05.52-.099.71-.148.194-.05.3-.172.324-.373 0-.102.007-.183.02-.242a.769.769 0 0 0 .018-.17v-.112a15.567 15.567 0 0 1-.653-.225l-.535-.147a2.906 2.906 0 0 1-.422-.151c-.204-.074-.32-.183-.344-.32a3.169 3.169 0 0 1-.039-.542v-.376c0-.123.014-.25.039-.373 0-.123.014-.274.038-.45a16.668 16.668 0 0 1-.611-.97 10.006 10.006 0 0 1-.517-1.03 6.944 6.944 0 0 1-.4-1.216 12.533 12.533 0 0 1-.268-1.832 13.785 13.785 0 0 1-.039-1.758 13.15 13.15 0 0 1 .11-1.839Z\" fill=\"#9280FF\"></path></g></svg>"
+  n147:
+    tag: div
+    children[1]: n146
+    width: 56px
+    height: 85.14px
+    styleId: style_57
+  n148:
+    tag: div
+    children[2]: n145,n147
+    width: 230.68px
+    height: 95.14px
+    styleId: style_58
+  n149:
+    tag: div
+    text: "0"
+    width: 11.48px
+    height: 24px
+    styleId: style_59
+  n150:
+    tag: div
+    children[1]: n149
+    width: 11.48px
+    height: 24px
+    styleId: style_60
+  n151:
+    tag: div
+    children[1]: n150
+    text: Added last 7 Days
+    _innerHTML: " Added last 7 Days<div class=\"statistics_lastCount___x4K6D\"><div>0</div></div>"
+    width: 230.68px
+    height: 24px
+    styleId: style_61
+  n152:
+    tag: div
+    children[2]: n148,n151
+    width: 278.68px
+    height: 167.14px
+    styleId: style_62
+  n153:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n154:
+    tag: span
+    children[1]: n153
+    height: 16px
+    width: 16px
+    styleId: style_52
+  n155:
+    tag: div
+    children[1]: n154
+    text: Vendors
+    _innerHTML: "Vendors<span role=\"img\" aria-label=\"question-circle\" aria-describedby=\":rdo:\" class=\"anticon anticon-question-circle\" style=\"margin-left: 8px;\"><svg viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg></span>"
+    width: 174.68px
+    height: 25.14px
+    styleId: style_53
+  n156:
+    tag: div
+    text: "2,802"
+    width: 174.68px
+    height: 42px
+    styleId: style_54
+  n157:
+    tag: div
+    children[1]: n156
+    width: 174.68px
+    height: 42px
+    styleId: style_55
+  n158:
+    tag: div
+    children[2]: n155,n157
+    width: 174.68px
+    styleId: style_56
+  n159:
+    tag: svg
+    _innerHTML: "<svg style=\"width:56px;height:56px;display:inline;stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"56\" height=\"56\"><defs><clipPath id=\"vendors_svg__a\"><rect x=\"12\" y=\"12\" width=\"32\" height=\"32\" rx=\"0\"></rect></clipPath></defs><rect width=\"56\" height=\"56\" rx=\"4\" fill=\"#F18D37\" fill-opacity=\"0.1\"></rect><g clip-path=\"url(#vendors_svg__a)\"><path d=\"M43.068 41.912c.412 0 .67-.11.812-.393.142-.287.075-1.886.075-2.336v-7.196c0-1.035-.064-1.247-1.135-1.247h-7.195c-2.457 0-2.141-.23-2.141 2.7v7.16c0 1.046.014 1.312 1.113 1.309h2.375c.482-2.829 4.413-2.829 4.895 0 .4 0 .801 0 1.201.003Zm-10.977-.014c.528-.004.695-.393.695-.907v-6.455c0-.535-.096-.925-.603-.996l-3.226-.01c-.58.02-.755.34-1.006.634-.11.127-.234.308-.351.464-.475.635-1.35 1.701-1.634 2.375-.266.638-.163 2.261-.163 3.062 0 1.301-.206 2.014 1.382 1.83.135-.316.117-.529.301-.855 1.05-1.857 4.052-1.747 4.605.858Zm-5.108-4.179c.018-.372.971-1.567 1.266-1.978.251-.35.475-.794.815-.815.45-.025 1.173-.021 1.627.007v2.782c-.975.032-2.69.015-3.708.004Zm10.112 4.183c-.227.97.46 1.761 1.212 1.928.975.22 1.74-.447 1.921-1.202.241-1-.443-1.744-1.205-1.939-.978-.244-1.755.465-1.928 1.213Zm-9.808.195a1.6 1.6 0 0 0 1.446 1.761 1.6 1.6 0 0 0 1.755-1.467c.081-.957-.624-1.649-1.479-1.734-.903-.088-1.644.624-1.722 1.44ZM12.602 19.588v24.263h5.54V24.02h19.46v3.956h5.54v-8.316c0-.297-.578-.457-.812-.563l-1.439-.68c-.202-.09-.301-.164-.503-.252-.373-.167-.614-.288-.986-.45-1.761-.784-4.012-1.971-5.763-2.723L28.3 12.464c-.95-.461-.734-.465-1.46-.138l-4.779 2.413c-.322.163-.63.291-.971.468l-7.61 3.821c-.206.107-.88.291-.88.56Zm7.177 15.582h3.41v2.95h-3.41v-2.95Zm0-3.934h3.41v2.885h-3.41v-2.885Z\" fill=\"#F18D37\"></path></g></svg>"
+  n160:
+    tag: div
+    children[1]: n159
+    width: 56px
+    height: 85.14px
+    styleId: style_57
+  n161:
+    tag: div
+    children[2]: n158,n160
+    width: 230.68px
+    height: 95.14px
+    styleId: style_58
+  n162:
+    tag: div
+    text: "0"
+    width: 11.48px
+    height: 24px
+    styleId: style_59
+  n163:
+    tag: div
+    children[1]: n162
+    width: 11.48px
+    height: 24px
+    styleId: style_60
+  n164:
+    tag: div
+    children[1]: n163
+    text: Added last 7 Days
+    _innerHTML: " Added last 7 Days<div class=\"statistics_lastCount___x4K6D\"><div>0</div></div>"
+    width: 230.68px
+    height: 24px
+    styleId: style_61
+  n165:
+    tag: div
+    children[2]: n161,n164
+    width: 278.68px
+    height: 167.14px
+    styleId: style_62
+  n166:
+    tag: div
+    children[4]: n126,n139,n152,n165
+    width: 1186.72px
+    styleId: style_63
+  n167:
+    tag: div
+    text: Business Performance
+    width: 1186.72px
+    height: 28px
+    styleId: style_49
+  n168:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:16px;font-family:Roboto, sans-serif;font-weight:500;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n169:
+    tag: span
+    children[1]: n168
+    height: 16px
+    width: 16px
+    styleId: style_64
+  n170:
+    tag: div
+    children[1]: n169
+    text: Data Summary
+    _innerHTML: "Data Summary<span role=\"img\" aria-label=\"question-circle\" aria-describedby=\":rd1:\" class=\"anticon anticon-question-circle\" style=\"color: rgb(131, 140, 161); margin-left: 8px;\"><svg viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg></span>"
+    width: 480px
+    height: 24px
+    styleId: style_65
+  n171:
+    tag: div
+    text: "Data last updated at 11:33 on April 10,2026"
+    width: 480px
+    height: 20px
+    styleId: style_66
+  n172:
+    tag: div
+    children[2]: n170,n171
+    width: 480px
+    height: 81.28px
+    styleId: style_67
+  n173:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" width=\"16\" height=\"16\"><defs><clipPath id=\"dashboard_file_svg__a\"><rect width=\"16\" height=\"16\" rx=\"0\"></rect></clipPath></defs><g fill=\"#BFBFBF\" clip-path=\"url(#dashboard_file_svg__a)\"><path d=\"M12.389 7.534H6.34a.338.338 0 0 0-.331.332c0 .178.153.33.331.33h6.049a.338.338 0 0 0 .33-.33.322.322 0 0 0-.33-.332Zm0 2.783H6.34a.338.338 0 0 0-.331.331c0 .178.153.332.331.332h6.049a.338.338 0 0 0 .33-.332.338.338 0 0 0-.33-.33Zm1.736-6.431h-4.34L9.71 3.68c-.511-1.43-1.506-1.786-2.245-1.812H1.85a.855.855 0 0 0-.868.842v10.642c0 .46.383.842.868.842h12.275a.855.855 0 0 0 .867-.842V4.728a.855.855 0 0 0-.867-.842ZM1.85 3.096c0-.665.23-.562 1.2-.562h3.47c1.48 0 1.862.332 2.144.817l.204.511H1.85v-.767Zm12.325 9.338c0 .97-.332.996-1.149.996H2.998c-.995 0-1.148-.077-1.148-1.149V4.676h11.38c1.073 0 .945.408.945 1.149v6.61ZM3.253 7.28h1.072V8.35H3.253V7.28Zm0 2.832h1.072v1.072H3.253v-1.072Z\"></path><path d=\"M15.242 13.353V4.728q0-.451-.327-.772-.327-.32-.79-.32H9.959l-.016-.042q-.683-1.91-2.47-1.975H1.85q-.464 0-.79.32-.328.32-.328.772v10.642q0 .452.327.772t.79.32h12.276q.463 0 .79-.32t.327-.772Zm-.677-9.04q.177.174.177.415v8.625q0 .241-.177.415-.181.177-.44.177H1.85q-.26 0-.44-.177-.178-.174-.178-.415V2.711q0-.242.177-.415.181-.177.44-.177h5.61q1.446.054 2.016 1.65l.137.367h4.513q.259 0 .44.177ZM1.6 3.095v1.017h7.638l-.349-.87-.009-.016q-.282-.487-.735-.693-.548-.249-1.625-.249H3.05q-.125 0-.34-.003-.621-.01-.808.092-.302.165-.302.722Zm.5.517h6.399l-.06-.15q-.2-.337-.501-.474-.449-.204-1.418-.204H3.05q-.129 0-.347-.003-.49-.008-.562.031-.041.023-.041.283v.517Zm12.325 8.822v-6.61l.002-.209q.012-.621-.157-.847-.254-.342-1.04-.342H1.6v7.855q0 .895.28 1.158.254.24 1.118.24h10.028q.765 0 1.023-.177.376-.26.376-1.068Zm-.498-6.828-.002.219v6.61q0 .545-.16.655-.13.09-.739.09H2.998q-.665 0-.776-.105-.122-.115-.122-.794V4.926h11.13q.535 0 .639.14.066.09.058.54ZM3.003 7.03V8.6h1.572V7.03H3.003Zm.5 1.071h.572V7.53h-.572V8.1Zm9.295.174q.172-.172.172-.41 0-.255-.177-.423-.167-.158-.404-.158H6.34q-.237 0-.409.172t-.172.41q0 .237.172.409t.41.172h6.048q.237 0 .409-.172Zm-.41-.49q.082 0 .082.08 0 .082-.081.082H6.34q-.081 0-.081-.081 0-.082.081-.082h6.049ZM3.004 9.861v1.572h1.572V9.862H3.003Zm9.795 1.196q.172-.173.172-.41t-.172-.409q-.172-.172-.41-.172H6.34q-.237 0-.409.172t-.172.41q0 .236.172.409.172.172.41.172h6.048q.237 0 .409-.172Zm-9.295-.124v-.572h.572v.572h-.572Zm8.886-.367q.08 0 .08.081 0 .082-.08.082H6.34q-.081 0-.081-.082 0-.08.081-.08h6.049Z\" fill-rule=\"evenodd\"></path></g></svg>"
+  n174:
+    tag: span
+    children[1]: n173
+    height: 24px
+    width: 16px
+    styleId: style_68
+  n175:
+    tag: input
+    width: 200.72px
+    height: 24px
+    styleId: style_69
+  n176:
+    tag: span
+    height: 24px
+    width: 12px
+    styleId: style_70
+  n177:
+    tag: span
+    children[3]: n174,n175,n176
+    height: 33.28px
+    width: 260px
+    styleId: style_71
+  n178:
+    tag: div
+    text: Group By
+    width: 56.49px
+    height: 22px
+    styleId: style_67
+  n179:
+    tag: span
+    text: Day
+    height: 22px
+    width: 23.32px
+    styleId: style_72
+  n180:
+    tag: button
+    children[1]: n179
+    width: 54.6px
+    height: 32px
+    styleId: style_73
+  n181:
+    tag: span
+    text: Week
+    height: 22px
+    width: 34.14px
+    styleId: style_74
+  n182:
+    tag: button
+    children[1]: n181
+    width: 65.42px
+    height: 32px
+    styleId: style_75
+  n183:
+    tag: span
+    text: Month
+    height: 22px
+    width: 40.21px
+    styleId: style_74
+  n184:
+    tag: button
+    children[1]: n183
+    width: 71.49px
+    height: 32px
+    styleId: style_75
+  n185:
+    tag: div
+    children[4]: n178,n180,n182,n184
+    width: 296px
+    height: 32px
+    styleId: style_76
+  n186:
+    tag: input
+    width: 103.68px
+    height: 22px
+    styleId: style_77
+  n187:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"calendar\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z\"></path></svg>"
+  n188:
+    tag: span
+    children[1]: n187
+    height: 14px
+    width: 14px
+    styleId: style_78
+  n189:
+    tag: span
+    children[1]: n188
+    height: 14px
+    width: 14px
+    styleId: style_79
+  n190:
+    tag: div
+    children[2]: n186,n189
+    width: 121.68px
+    height: 22px
+    styleId: style_80
+  n191:
+    tag: div
+    children[1]: n190
+    width: 144.96px
+    height: 31.28px
+    styleId: style_81
+  n192:
+    tag: div
+    children[1]: n191
+    width: 144.96px
+    height: 31.28px
+    styleId: style_82
+  n193:
+    tag: div
+    children[1]: n192
+    width: 144.96px
+    height: 32px
+    styleId: style_83
+  n194:
+    tag: div
+    children[1]: n193
+    width: 144.96px
+    height: 32px
+    styleId: style_84
+  n195:
+    tag: div
+    children[1]: n194
+    width: 144.96px
+    height: 32px
+    styleId: style_85
+  n196:
+    tag: div
+    children[1]: n195
+    width: 144.96px
+    height: 32px
+    styleId: style_67
+  n197:
+    tag: span
+    text: "-"
+    height: 25px
+    width: 3.87px
+    styleId: style_86
+  n198:
+    tag: input
+    width: 103.68px
+    height: 22px
+    styleId: style_77
+  n199:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"calendar\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z\"></path></svg>"
+  n200:
+    tag: span
+    children[1]: n199
+    height: 14px
+    width: 14px
+    styleId: style_78
+  n201:
+    tag: span
+    children[1]: n200
+    height: 14px
+    width: 14px
+    styleId: style_79
+  n202:
+    tag: div
+    children[2]: n198,n201
+    width: 121.68px
+    height: 22px
+    styleId: style_80
+  n203:
+    tag: div
+    children[1]: n202
+    width: 144.96px
+    height: 31.28px
+    styleId: style_81
+  n204:
+    tag: div
+    children[1]: n203
+    width: 144.96px
+    height: 31.28px
+    styleId: style_82
+  n205:
+    tag: div
+    children[1]: n204
+    width: 144.96px
+    height: 32px
+    styleId: style_83
+  n206:
+    tag: div
+    children[1]: n205
+    width: 144.96px
+    height: 32px
+    styleId: style_84
+  n207:
+    tag: div
+    children[1]: n206
+    width: 144.96px
+    height: 32px
+    styleId: style_85
+  n208:
+    tag: div
+    children[1]: n207
+    width: 144.96px
+    height: 32px
+    styleId: style_67
+  n209:
+    tag: div
+    children[3]: n196,n197,n208
+    width: 305.79px
+    height: 32px
+    styleId: style_87
+  n210:
+    tag: svg
+    _innerHTML: "<svg style=\"width:16px;height:16px;display:block;fill:rgba(0, 0, 0, 0.88);stroke-width:1px;color:rgba(0, 0, 0, 0.88);font-size:16px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"download\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z\"></path></svg>"
+  n211:
+    tag: span
+    children[1]: n210
+    height: 16px
+    width: 16px
+    styleId: style_88
+  n212:
+    tag: button
+    children[1]: n211
+    width: 32px
+    height: 32px
+    styleId: style_89
+  n213:
+    tag: div
+    children[4]: n177,n185,n209,n212
+    width: 658.72px
+    height: 81.28px
+    styleId: style_90
+  n214:
+    tag: div
+    children[1]: n213
+    width: 658.72px
+    height: 81.28px
+    styleId: style_91
+  n215:
+    tag: div
+    children[2]: n172,n214
+    width: 1186.72px
+    height: 105.92px
+    styleId: style_92
+  n216:
+    tag: img
+    src: assets/images/6gPDugAAAAGSURBVAMA3LGuiiOVAjEAAAAASUVORK5CYII=.png
+    width: 1139px
+    height: 450px
+    styleId: style_93
+  n217:
+    tag: div
+    children[1]: n216
+    width: 1139px
+    height: 450px
+    styleId: style_94
+  n218:
+    tag: div
+    width: 1138.72px
+    height: 0px
+    styleId: style_95
+  n219:
+    tag: div
+    children[2]: n217,n218
+    width: 1138.72px
+    height: 450px
+    styleId: style_94
+  n220:
+    tag: div
+    children[1]: n219
+    width: 1186.72px
+    height: 450px
+    styleId: style_96
+  n221:
+    tag: div
+    children[2]: n215,n220
+    width: 1186.72px
+    height: 603.92px
+    styleId: style_97
+  n222:
+    tag: span
+    text: Last 7 Days Avg Trend
+    height: 24px
+    width: 158.83px
+    styleId: style_98
+  n223:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n224:
+    tag: span
+    children[1]: n223
+    height: 14px
+    width: 14px
+    styleId: style_99
+  n225:
+    tag: span
+    children[1]: n224
+    height: 22px
+    width: 14px
+    styleId: style_100
+  n226:
+    tag: div
+    children[2]: n222,n225
+    width: 237.68px
+    height: 24px
+    styleId: style_101
+  n227:
+    tag: div
+    text: "Data last updated at 2026-04-10 11:33"
+    width: 237.68px
+    height: 20px
+    styleId: style_102
+  n228:
+    tag: div
+    children[2]: n226,n227
+    width: 237.68px
+    height: 44px
+    styleId: style_67
+  n229:
+    tag: input
+    width: 103.72px
+    height: 22px
+    styleId: style_77
+  n230:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"calendar\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z\"></path></svg>"
+  n231:
+    tag: span
+    children[1]: n230
+    height: 14px
+    width: 14px
+    styleId: style_78
+  n232:
+    tag: span
+    children[1]: n231
+    height: 14px
+    width: 14px
+    styleId: style_79
+  n233:
+    tag: div
+    children[2]: n229,n232
+    width: 121.72px
+    height: 22px
+    styleId: style_80
+  n234:
+    tag: div
+    children[1]: n233
+    width: 145px
+    height: 31.28px
+    styleId: style_81
+  n235:
+    tag: div
+    children[1]: n234
+    width: 145px
+    height: 31.28px
+    styleId: style_82
+  n236:
+    tag: div
+    children[1]: n235
+    width: 145px
+    height: 32px
+    styleId: style_83
+  n237:
+    tag: div
+    children[1]: n236
+    width: 145px
+    height: 32px
+    styleId: style_84
+  n238:
+    tag: div
+    children[1]: n237
+    width: 145px
+    height: 32px
+    styleId: style_85
+  n239:
+    tag: div
+    children[1]: n238
+    width: 145px
+    height: 32px
+    styleId: style_103
+  n240:
+    tag: span
+    text: "-"
+    height: 49px
+    width: 3.87px
+    styleId: style_86
+  n241:
+    tag: input
+    width: 103.72px
+    height: 22px
+    styleId: style_77
+  n242:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"calendar\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z\"></path></svg>"
+  n243:
+    tag: span
+    children[1]: n242
+    height: 14px
+    width: 14px
+    styleId: style_78
+  n244:
+    tag: span
+    children[1]: n243
+    height: 14px
+    width: 14px
+    styleId: style_79
+  n245:
+    tag: div
+    children[2]: n241,n244
+    width: 121.72px
+    height: 22px
+    styleId: style_80
+  n246:
+    tag: div
+    children[1]: n245
+    width: 145px
+    height: 31.28px
+    styleId: style_81
+  n247:
+    tag: div
+    children[1]: n246
+    width: 145px
+    height: 31.28px
+    styleId: style_82
+  n248:
+    tag: div
+    children[1]: n247
+    width: 145px
+    height: 32px
+    styleId: style_83
+  n249:
+    tag: div
+    children[1]: n248
+    width: 145px
+    height: 32px
+    styleId: style_84
+  n250:
+    tag: div
+    children[1]: n249
+    width: 145px
+    height: 32px
+    styleId: style_85
+  n251:
+    tag: div
+    children[1]: n250
+    width: 145px
+    height: 32px
+    styleId: style_103
+  n252:
+    tag: div
+    children[3]: n239,n240,n251
+    width: 305.87px
+    styleId: style_87
+  n253:
+    tag: span
+    children[1]: n252
+    height: 56px
+    width: 877.04px
+    styleId: style_50
+  n254:
+    tag: div
+    children[2]: n228,n253
+    width: 1186.72px
+    height: 100px
+    styleId: style_104
+  n255:
+    tag: img
+    src: assets/images/njiw8gAAAAZJREFUAwDJ+mpM5QyycgAAAABJRU5ErkJggg==.png
+    width: 1139px
+    height: 420px
+    styleId: style_93
+  n256:
+    tag: div
+    children[1]: n255
+    width: 1139px
+    height: 420px
+    styleId: style_94
+  n257:
+    tag: div
+    width: 1138.72px
+    height: 0px
+    styleId: style_95
+  n258:
+    tag: div
+    children[2]: n256,n257
+    width: 1138.72px
+    height: 420px
+    styleId: style_94
+  n259:
+    tag: div
+    children[1]: n258
+    width: 1138.72px
+    height: 420px
+    styleId: style_105
+  n260:
+    tag: div
+    children[1]: n259
+    width: 1138.72px
+    height: 420px
+    styleId: style_94
+  n261:
+    tag: div
+    children[1]: n260
+    width: 1186.72px
+    height: 468px
+    styleId: style_106
+  n262:
+    tag: div
+    children[2]: n254,n261
+    width: 1186.72px
+    height: 569px
+    styleId: style_107
+  n263:
+    tag: div
+    text: Performance Comparison
+    width: 1186.72px
+    height: 28px
+    styleId: style_49
+  n264:
+    tag: span
+    text: Monthly Data Comparison
+    height: 24px
+    width: 186.27px
+    styleId: style_98
+  n265:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n266:
+    tag: span
+    children[1]: n265
+    height: 14px
+    width: 14px
+    styleId: style_99
+  n267:
+    tag: span
+    children[1]: n266
+    height: 22px
+    width: 14px
+    styleId: style_100
+  n268:
+    tag: div
+    children[2]: n264,n267
+    width: 237.68px
+    height: 24px
+    styleId: style_108
+  n269:
+    tag: div
+    text: "Data last updated at 2026-04-10 11:33"
+    width: 237.68px
+    height: 20px
+    styleId: style_102
+  n270:
+    tag: div
+    children[2]: n268,n269
+    width: 237.68px
+    height: 44px
+    styleId: style_109
+  n271:
+    tag: input
+    width: 103.68px
+    height: 22px
+    styleId: style_77
+  n272:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgba(0, 0, 0, 0.25);stroke-width:1px;color:rgba(0, 0, 0, 0.25);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"calendar\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z\"></path></svg>"
+  n273:
+    tag: span
+    children[1]: n272
+    height: 14px
+    width: 14px
+    styleId: style_78
+  n274:
+    tag: span
+    children[1]: n273
+    height: 14px
+    width: 14px
+    styleId: style_79
+  n275:
+    tag: div
+    children[2]: n271,n274
+    width: 121.68px
+    height: 22px
+    styleId: style_80
+  n276:
+    tag: div
+    children[1]: n275
+    width: 144.96px
+    height: 31.28px
+    styleId: style_110
+  n277:
+    tag: span
+    children[1]: n276
+    height: 31.28px
+    width: 877.04px
+    styleId: style_111
+  n278:
+    tag: div
+    children[2]: n270,n277
+    width: 1186.72px
+    height: 88px
+    styleId: style_112
+  n279:
+    tag: div
+    text: Trip Numbers
+    width: 326.23px
+    height: 24px
+    styleId: style_113
+  n280:
+    tag: img
+    src: assets/images/7MohZQAAAAZJREFUAwCO3gsdvAEHTgAAAABJRU5ErkJggg==.png
+    width: 326px
+    height: 420px
+    styleId: style_114
+  n281:
+    tag: div
+    children[1]: n280
+    width: 326px
+    height: 420px
+    styleId: style_115
+  n282:
+    tag: div
+    width: 326.23px
+    height: 0px
+    styleId: style_116
+  n283:
+    tag: div
+    children[2]: n281,n282
+    width: 326.23px
+    height: 420px
+    styleId: style_115
+  n284:
+    tag: div
+    children[2]: n279,n283
+    width: 406.23px
+    height: 444px
+    styleId: style_117
+  n285:
+    tag: div
+    text: Rev & GM
+    width: 326.23px
+    height: 24px
+    styleId: style_113
+  n286:
+    tag: img
+    src: assets/images/GB2AAAAAElFTkSuQmCC.png
+    width: 326px
+    height: 420px
+    styleId: style_114
+  n287:
+    tag: div
+    children[1]: n286
+    width: 326px
+    height: 420px
+    styleId: style_115
+  n288:
+    tag: div
+    width: 326.23px
+    height: 0px
+    styleId: style_116
+  n289:
+    tag: div
+    children[2]: n287,n288
+    width: 326.23px
+    height: 420px
+    styleId: style_115
+  n290:
+    tag: div
+    children[2]: n285,n289
+    width: 406.23px
+    height: 444px
+    styleId: style_117
+  n291:
+    tag: div
+    text: Rev / GP per Trip
+    width: 326.23px
+    height: 24px
+    styleId: style_113
+  n292:
+    tag: img
+    src: assets/images/+2SqrcAAAAGSURBVAMAkqXDKzLzoAcAAAAASUVORK5CYII=.png
+    width: 326px
+    height: 420px
+    styleId: style_114
+  n293:
+    tag: div
+    children[1]: n292
+    width: 326px
+    height: 420px
+    styleId: style_115
+  n294:
+    tag: div
+    width: 326.23px
+    height: 0px
+    styleId: style_116
+  n295:
+    tag: div
+    children[2]: n293,n294
+    width: 326.23px
+    height: 420px
+    styleId: style_115
+  n296:
+    tag: div
+    children[2]: n291,n295
+    width: 406.23px
+    height: 444px
+    styleId: style_117
+  n297:
+    tag: div
+    children[3]: n284,n290,n296
+    width: 1218.72px
+    height: 444px
+    styleId: style_118
+  n298:
+    tag: div
+    children[1]: n297
+    width: 1186.72px
+    height: 492px
+    styleId: style_119
+  n299:
+    tag: div
+    children[1]: n298
+    width: 1186.72px
+    height: 492px
+    styleId: style_120
+  n300:
+    tag: div
+    children[1]: n299
+    width: 1186.72px
+    height: 492px
+    styleId: style_115
+  n301:
+    tag: div
+    children[3]: n263,n278,n300
+    width: 1186.72px
+    height: 629px
+    styleId: style_121
+  n302:
+    tag: div
+    text: Business Rankings
+    width: 1186.72px
+    height: 28px
+    styleId: style_49
+  n303:
+    tag: span
+    text: Top 15 Customers
+    height: 24px
+    width: 130.54px
+    styleId: style_98
+  n304:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n305:
+    tag: span
+    children[1]: n304
+    height: 14px
+    width: 14px
+    styleId: style_99
+  n306:
+    tag: span
+    children[1]: n305
+    height: 22px
+    width: 14px
+    styleId: style_100
+  n307:
+    tag: div
+    children[2]: n303,n306
+    width: 237.68px
+    height: 24px
+    styleId: style_101
+  n308:
+    tag: div
+    text: "Data last updated at 2026-04-10 11:33"
+    width: 237.68px
+    height: 20px
+    styleId: style_102
+  n309:
+    tag: div
+    children[2]: n307,n308
+    width: 237.68px
+    height: 44px
+    styleId: style_67
+  n310:
+    tag: span
+    height: 0px
+    width: 271.68px
+    styleId: style_50
+  n311:
+    tag: div
+    children[2]: n309,n310
+    width: 581.36px
+    height: 88px
+    styleId: style_104
+  n312:
+    tag: img
+    src: assets/images/Wjc4NAAAAAElFTkSuQmCC.png
+    width: 581px
+    height: 600px
+    styleId: style_93
+  n313:
+    tag: div
+    children[1]: n312
+    width: 581px
+    height: 600px
+    styleId: style_94
+  n314:
+    tag: div
+    width: 581.36px
+    height: 0px
+    styleId: style_95
+  n315:
+    tag: div
+    children[2]: n313,n314
+    width: 581.36px
+    height: 600px
+    styleId: style_122
+  n316:
+    tag: div
+    children[2]: n311,n315
+    width: 605.36px
+    height: 689px
+    styleId: style_123
+  n317:
+    tag: span
+    text: Top 15 Projects
+    height: 24px
+    width: 111.59px
+    styleId: style_98
+  n318:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n319:
+    tag: span
+    children[1]: n318
+    height: 14px
+    width: 14px
+    styleId: style_99
+  n320:
+    tag: span
+    children[1]: n319
+    height: 22px
+    width: 14px
+    styleId: style_100
+  n321:
+    tag: div
+    children[2]: n317,n320
+    width: 237.68px
+    height: 24px
+    styleId: style_101
+  n322:
+    tag: div
+    text: "Data last updated at 2026-04-10 11:33"
+    width: 237.68px
+    height: 20px
+    styleId: style_102
+  n323:
+    tag: div
+    children[2]: n321,n322
+    width: 237.68px
+    height: 44px
+    styleId: style_67
+  n324:
+    tag: span
+    height: 0px
+    width: 271.68px
+    styleId: style_50
+  n325:
+    tag: div
+    children[2]: n323,n324
+    width: 581.36px
+    height: 88px
+    styleId: style_104
+  n326:
+    tag: img
+    src: assets/images/osFxmgAAAAZJREFUAwBTDTd2TmMsTAAAAABJRU5ErkJggg==.png
+    width: 581px
+    height: 600px
+    styleId: style_93
+  n327:
+    tag: div
+    children[1]: n326
+    width: 581px
+    height: 600px
+    styleId: style_94
+  n328:
+    tag: div
+    width: 581.36px
+    height: 0px
+    styleId: style_95
+  n329:
+    tag: div
+    children[2]: n327,n328
+    width: 581.36px
+    height: 600px
+    styleId: style_122
+  n330:
+    tag: div
+    children[2]: n325,n329
+    width: 605.36px
+    height: 689px
+    styleId: style_123
+  n331:
+    tag: div
+    children[2]: n316,n330
+    width: 1210.72px
+    height: 689px
+    styleId: style_124
+  n332:
+    tag: div
+    children[2]: n302,n331
+    width: 1186.72px
+    height: 737px
+    styleId: style_125
+  n333:
+    tag: div
+    text: New Customers
+    width: 1186.72px
+    height: 28px
+    styleId: style_49
+  n334:
+    tag: span
+    text: New Customers Daily
+    height: 24px
+    width: 153.06px
+    styleId: style_98
+  n335:
+    tag: svg
+    _innerHTML: "<svg style=\"width:14px;height:14px;display:block;fill:rgb(131, 140, 161);stroke-width:1px;color:rgb(131, 140, 161);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" viewBox=\"64 64 896 896\" focusable=\"false\" data-icon=\"question-circle\" width=\"1em\" height=\"1em\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z\"></path><path d=\"M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0130.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3zM472 732a40 40 0 1080 0 40 40 0 10-80 0z\"></path></svg>"
+  n336:
+    tag: span
+    children[1]: n335
+    height: 14px
+    width: 14px
+    styleId: style_99
+  n337:
+    tag: span
+    children[1]: n336
+    height: 22px
+    width: 14px
+    styleId: style_100
+  n338:
+    tag: div
+    children[2]: n334,n337
+    width: 175.06px
+    height: 24px
+    styleId: style_101
+  n339:
+    tag: div
+    children[1]: n338
+    width: 175.06px
+    height: 24px
+    styleId: style_67
+  n340:
+    tag: span
+    height: 0px
+    width: 939.66px
+    styleId: style_50
+  n341:
+    tag: div
+    children[2]: n339,n340
+    width: 1186.72px
+    height: 68px
+    styleId: style_104
+  n342:
+    tag: img
+    src: assets/images/QfEAAAAASUVORK5CYII=.png
+    width: 1139px
+    height: 420px
+    styleId: style_93
+  n343:
+    tag: div
+    children[1]: n342
+    width: 1139px
+    height: 420px
+    styleId: style_94
+  n344:
+    tag: div
+    width: 1138.72px
+    height: 0px
+    styleId: style_95
+  n345:
+    tag: div
+    children[2]: n343,n344
+    width: 1138.72px
+    height: 420px
+    styleId: style_94
+  n346:
+    tag: div
+    children[1]: n345
+    width: 1186.72px
+    height: 468px
+    styleId: style_106
+  n347:
+    tag: p
+    width: 770px
+    height: 24.64px
+    styleId: style_126
+  n348:
+    tag: col
+    width: 300px
+    height: 223.28px
+    styleId: style_127
+  n349:
+    tag: colgroup
+    children[1]: n348
+    width: 300px
+    height: 223.28px
+    styleId: style_128
+  n350:
+    tag: th
+    text: Customer
+    width: 300px
+    height: 66.64px
+    styleId: style_129
+  n351:
+    tag: th
+    text: Daily Trip Numbers
+    width: 112.5px
+    height: 66.64px
+    styleId: style_130
+  n352:
+    tag: th
+    text: Daily income
+    width: 112.5px
+    height: 66.64px
+    styleId: style_130
+  n353:
+    tag: th
+    text: Daily Spending
+    width: 112.5px
+    height: 66.64px
+    styleId: style_130
+  n354:
+    tag: th
+    text: Daily Gp
+    width: 112.5px
+    height: 66.64px
+    styleId: style_131
+  n355:
+    tag: tr
+    children[5]: n350,n351,n352,n353,n354
+    width: 750px
+    height: 66.64px
+    styleId: style_132
+  n356:
+    tag: thead
+    children[1]: n355
+    width: 750px
+    height: 66.64px
+    styleId: style_133
+  n357:
+    tag: svg
+    _innerHTML: "<svg style=\"width:64px;height:40px;display:inline;fill:rgb(0, 0, 0);stroke-width:1px;color:rgba(0, 0, 0, 0.45);font-size:14px;font-family:Roboto, sans-serif;font-weight:400;vertical-align:baseline;overflow:hidden;visibility:visible\" width=\"64\" height=\"41\" viewBox=\"0 0 64 41\" xmlns=\"http://www.w3.org/2000/svg\"><title>No data</title><g transform=\"translate(0 1)\" fill=\"none\" fill-rule=\"evenodd\"><ellipse fill=\"#f5f5f5\" cx=\"32\" cy=\"33\" rx=\"32\" ry=\"7\"></ellipse><g fill-rule=\"nonzero\" stroke=\"#d9d9d9\"><path d=\"M55 12.76L44.854 1.258C44.367.474 43.656 0 42.907 0H21.093c-.749 0-1.46.474-1.947 1.257L9 12.761V22h46v-9.24z\"></path><path d=\"M41.613 15.931c0-1.605.994-2.93 2.227-2.931H55v18.137C55 33.26 53.68 35 52.05 35h-40.1C10.32 35 9 33.259 9 31.137V13h11.16c1.233 0 2.227 1.323 2.227 2.928v.022c0 1.605 1.005 2.901 2.237 2.901h14.752c1.232 0 2.237-1.308 2.237-2.913v-.007z\" fill=\"#fafafa\"></path></g></g></svg>"
+  n358:
+    tag: div
+    children[1]: n357
+    width: 712px
+    height: 40px
+    styleId: style_134
+  n359:
+    tag: div
+    text: No data
+    width: 712px
+    height: 22px
+    styleId: style_135
+  n360:
+    tag: div
+    children[2]: n358,n359
+    width: 712px
+    height: 70px
+    styleId: style_136
+  n361:
+    tag: td
+    children[1]: n360
+    width: 750px
+    styleId: style_137
+  n362:
+    tag: tr
+    children[1]: n361
+    width: 750px
+    height: 156.64px
+    styleId: style_138
+  n363:
+    tag: tbody
+    children[1]: n362
+    width: 750px
+    height: 156.64px
+    styleId: style_139
+  n364:
+    tag: table
+    children[3]: n349,n356,n363
+    width: 750px
+    height: 223.28px
+    styleId: style_140
+  n365:
+    tag: div
+    children[1]: n364
+    width: 750px
+    height: 223.28px
+    styleId: style_95
+  n366:
+    tag: div
+    children[1]: n365
+    width: 750px
+    height: 223.28px
+    styleId: style_141
+  n367:
+    tag: div
+    children[1]: n366
+    width: 750px
+    height: 223.28px
+    styleId: style_142
+  n368:
+    tag: div
+    children[1]: n367
+    width: 750px
+    height: 223.28px
+    styleId: style_105
+  n369:
+    tag: div
+    children[1]: n368
+    width: 750px
+    height: 223.28px
+    styleId: style_94
+  n370:
+    tag: div
+    children[1]: n369
+    width: 750px
+    height: 223.28px
+    styleId: style_143
+  n371:
+    tag: div
+    children[1]: n370
+    width: 750px
+    height: 223.28px
+    styleId: style_144
+  n372:
+    tag: div
+    children[2]: n347,n371
+    width: 750px
+    height: 259.92px
+    styleId: style_95
+  n373:
+    tag: div
+    children[1]: n372
+    width: 750px
+    height: 259.92px
+    styleId: style_145
+  n374:
+    tag: div
+    children[4]: n333,n341,n346,n373
+    width: 1186.72px
+    height: 585px
+    styleId: style_125
+  n375:
+    tag: div
+    children[9]: n111,n113,n166,n167,n221,n262,n301,n332,n374
+    width: 1186.72px
+    height: 3500.06px
+    styleId: style_67
+  n376:
+    tag: main
+    children[1]: n375
+    width: 1218.72px
+    height: 3532.06px
+    styleId: style_146
+  n377:
+    tag: div
+    children[3]: n75,n110,n376
+    width: 1218.72px
+    height: 3588.06px
+    styleId: style_147
+  n378:
+    tag: div
+    children[3]: n2,n74,n377
+    width: 1438.72px
+    height: 3588.06px
+    styleId: style_148
+  n379:
+    tag: div
+    children[2]: n1,n378
+    width: 1438.72px
+    height: 3588.06px
+    styleId: style_95
+  n380:
+    tag: div
+    children[1]: n379
+    width: 1438.72px
+    height: 3588.06px
+    styleId: style_95
+  n381:
+    tag: div
+    children[1]: n380
+    width: 1438.72px
+    height: 3588.06px
+    styleId: style_95
+  n382:
+    tag: div
+    children[1]: n381
+    id: root
+    width: 1438.72px
+    height: 3588.06px
+    styleId: style_149
+  n383:
+    tag: body
+    children[1]: n382
+    width: 1438.72px
+    height: 817.28px
+    styleId: style_149
+  n384:
+    tag: root
+    children[1]: n383
+root: n384

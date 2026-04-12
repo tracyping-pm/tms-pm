@@ -1,0 +1,430 @@
+16falsedefaultlistfalse
+# 零、功能逻辑
+
+# 一，Tools--Contract Management
+
+## 1、说明
+- 新增Tools--Contract Mgmt菜单，进行合同的全域管理（包含客户及供应商价格合同，后续可能会纳入框架合同等）
+- 价格合同涉及模块：1. Contract Mgmt 2. Project--Contract 切页 3.Vendor--Contract 切页 4.Customer--Contract 切页
+- 合同管理模块不设置数据权限，即有合同管理页面权限即可查看所有合同，其中合同操作项目，新增合同需对功能权限进行控制
+
+- 合同状态：**Under Review**创建完成，**Pending Effective**审核通过未到生效时间**，Active** 审核通过已到生效时间，**Rejected**审核拒绝，**Expired**当天已超过合同有效期（该状态每日00：00刷新）
+- 合同状态流转：
+
+## 2、Create contract
+- 创建入口：
+- 允许在项目--合同切页创建，此时默认创建该项目合同；
+- 可在合同管理中创建合同。
+- Contract Number 最多输入2000字符，不允许特殊字符；超过后不允许继续输入；失焦后校验唯一性，不唯一进行提示
+- 保存时，校验该项目下是否有route lib, 若无 ，则不允许创建并 弹窗提示：【A route library must be created under the project to create a contract】,点击【ok】回合同列表页；
+
+| 字段名称 | 说明 |
+| Contract Number | 字符输入，限制2000字符；
+
+需进行唯一性校验 |
+| Project Name | project中创建：默认为当前project name, 不允许修改
+
+contract mgmt中创建：则输入两个字符后，进行模糊匹配 |
+| Contract Type | 枚举值：
+
+Customer Price Contract for Logistics Project
+
+Vendor Price Contract for Logistics Project |
+| Contract Signer | 默认不可用，选取contract type后，则该行可用
+
+已选取contract type, 为customer ,则默认为该项目对应客户
+
+type为 vendor， 可选范围为该 project中的vendor
+
+输入两个字符后，进行模糊匹配； |
+| Contract Validity Period | 时间段选择，日期限制，末日不得早于当天；【包含当天】
+
+允许同一项目中存在Contract Validity Period 时间交叉的合同 |
+| Contract Attachment | 合同附件，只允许上传单个文件，格式允许pdf, png,jpeg,jpg，与当前通用规则保持一致，限制20M大小 |
+| Fuel Basis | 非必填，数字，保留小数点后两位，TH单位为 ฿，PH单位为 ₱ |
+| Does the contract vary based on fuel ? | 非必填，仅Fuel Basis 有填写了值展示该行
+
+选项:  Yes , No |
+| Fuel change frequency | 非必填，仅Does the contract vary based on fuel ?有填写了值展示该行
+
+该值影响通知
+
+枚举值：
+
+Monthly
+
+Quarterly
+
+Every half year
+
+Per year |
+
+## 3、合同列表
+
+Contract list 可进行客户，供应商价格合同管理
+- 列表字段：**Contract Number**、**Project Name**、**Contract Type**、**Contract Signer、Contract Validity Period、Contract Attachment**、**Contract Status， Fuel Basis，Fuel change frequency**
+- 列表排序：
+- 默认排序规则：
+- 1.按状态正序：**Under Review**，**Active，Pending Effective**，**Expired**，**Rejected**；
+- 2. **Under Review**，**Pending Effective**，**Active**按有效期结束时间正序，即最快结束排最前
+- 3. **Expired**，**Rejected**按有效期结束时间倒序，即最晚结束排最前
+- 列表操作：
+- 预览，对合同附件进行预览
+- 下载：下载合同附件
+- 审核通过，删除
+- 操作记录：点击展示操作记录（包含： 创建，审核拒绝（包含拒绝理由description），审核通过）
+
+| 状态 | 操作 |
+| Under Review | 预览，下载，审核拒绝，审核通过，操作记录，删除 |
+| Pending Effective | 预览，下载，操作记录 |
+| Active | 预览，下载，操作记录 |
+| Rejected | 预览，下载，操作记录 |
+| Expired | 预览，下载，操作记录 |
+
+审核拒绝：需填写拒绝理由；Description限制2000字符，不允许特殊字符，超过不允许继续输入
+
+- 当合同通过审核，contract status= active/Pending Effective， 则创建一个对应类型的price version,；从Pending Effective到active已创建过，则不再创建price version；
+- **Customer Price Contract for Logistics Project** 类型则创建 customer price version,
+- **Vendor Price Contract for Logistics Project**类型则创建 vendor price version
+- 取该合同Contract Validity Period 为对应price version 有效期
+- price version 排序规则按照结束期正序，即结束最晚越靠后
+- 每创建一个合同，则该合同同步至customer /vendor合同模块进行展示，有状态变更同样同步至customer /vendor/project合同模块，rejected合同不展示至对应customer /vendor
+- 搜索：
+- 按Contract Number（模糊搜索），project name（模糊搜索）,  Contract Type（单选），Contract Signer（模糊搜索, 当 Contract Type未选择，该搜索框禁用）Contract Status（多选）
+
+## 4、 Convension Tool， Slack Group Message 迁移至 一级菜单Tools下
+
+# 二，Project
+
+## 1 、启动Preparing状态下的Project逻辑更新：
+
+减少部分校验条件，新校验条件如下：
+1. Route Librabry关联校验，如果当前项目无关联的Route Librabry，则弹窗提示”The project has no associated Route Library and cannot be started“
+2. Route Librabry数据校验，如果关联的Route Librabry中线路数量为0，则弹窗提示”The Route Librabry associated with the project is empty, and the project cannot be started“
+3. Capacity Pool关联校验，如果当前项目无关联的Capacity Pool，则弹窗提示”The project has no associated Capacity Pool and cannot be started“
+4. Capacity Pool准入校验，如果关联的Capacity Pool中Approved的车辆数量为0，则弹窗提示”The Capacity Pool associated with the project does not have approved vehicles, so the project cannot be started“
+
+如上述校验全部通过，则二次弹窗确认”Confirm the kickoff project and notify all stakeholders“
+
+确认后，项目置为In Progress状态，刷新当前页面。
+
+## 2、 Basic Info.
+1. Basic information默认折叠，可展开
+2. 原Agreed Start Time，Agreed End Time 更新为：Project Validity Period 字段；
+1. 新增，编辑project时，Project Validity Period 为时间段选取 yyyymmdd；其中末日不允许比当前时间早，否则失焦提示【Project end date cannot be before today】；
+2. 展示当日距离最后有效期时长（如：Expires in 15 days）（按天展示，每日凌晨刷新）【备注：涉及到后续通知消息发送】
+3. 若已过期，则展示（Expired）【备注：已过期项目不可创建运单，详细见[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/580911126#2.-%E5%88%9B%E5%BB%BA%E8%BF%90%E5%8D%95%EF%BC%88%E6%A0%87%E5%87%86%E8%BF%90%E5%8D%95%EF%BC%89%E5%85%B3%E4%BA%8E%E9%A1%B9%E7%9B%AE%E6%9C%89%E6%95%88%E6%9C%9F%E7%9A%84%E9%80%BB%E8%BE%91%E5%88%A4%E6%96%AD](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/580911126#2.-%E5%88%9B%E5%BB%BA%E8%BF%90%E5%8D%95%EF%BC%88%E6%A0%87%E5%87%86%E8%BF%90%E5%8D%95%EF%BC%89%E5%85%B3%E4%BA%8E%E9%A1%B9%E7%9B%AE%E6%9C%89%E6%95%88%E6%9C%9F%E7%9A%84%E9%80%BB%E8%BE%91%E5%88%A4%E6%96%AD) 】
+3. 增加Customer Latest Price Validity Period ：展示客户最新的价格版本有效期
+
+## 3、 Contracts 切页
+1. Contracts Tab 内容更新, 展示所有该项目下客户+供应商合同；排序等逻辑同【合同管理】；
+2. 展示该项目下的所有合同列表；需进行分页；
+3. 在此处Add contract 同【contracts mgmt】，不同点：默认项目名称为当前项目，不允许修改
+4. 历史数据处理：Project中的合同从合同模块转移至该项目Business Documents,   type 为：History Contracts；
+5. 权限：能看project，即能查看contract 切页所有合同，对合同的操作项进行权限控制，包括创建合同也许进行权限控制
+
+## 4、 Route Library 详情页
+- 将原来customer，vendor在一个价格版本【Pricing Version】中管理，更新为分别管理， Customer Price 管理该客户在不同路线，不同车型的价格情况；
+- Vendor Price则管理不同vendor在不同路线，不同车型的价格情况；
+- Customer Price Version与Vendor Price Version 均根据价格合同生成，每审核通过一个价格合同，则生成对应版本的客户+供应商价格版本
+
+### 4.1 Customer Price
+- 点击【Customer Price】跳转至该页，默认跳转至最后一个价格版本；展示根据合同所创建的所有价格版本, 并展示相关油价；
+- 价格版本排序：price version 排序规则按照结束期正序，即结束最晚越靠后
+- **Price Setting：**设置是否对价格版本有效期进行强校验，具体应用见后文
+- 价格版本详情页展示该route lib所有route, mileage range, 及truck type逻辑不变（可参考：[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#3.Pricing-Version---Route-Pricing(by-Route)](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#3.Pricing-Version---Route-Pricing(by-Route))
+- 对customer price version版本的维护允许通过sheet维护，亦支持在当前页面进行维护；以最新维护的内容为准
+- Manage Sheet
+- 当price Version 为空时，不展示该按钮
+- 逻辑与价格版本中manage sheet 保持一致
+- 相关校验与原逻辑一致：1. route lib结构完整性 2. lib数据同步至sheet 3. 不允许多人同时打开
+- 有变化的点：将Vendor Price Version 剥离
+- Sync from sheet：
+- 当price Version 为空时，不展示该按钮
+- 参考原price version  Sync from sheet时做相关校验， 不同点：本版本 不比较customer price与vendor [https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#6.Sync-from-sheet](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#6.Sync-from-sheet)
+- price super 角色允许的范围：减少一个填写customer价格低于Vendor价格的权限
+- 锁定与提示与原来保持一致[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#3%EF%BC%89%E9%94%81%E5%AE%9A%E4%B8%8E%E6%8F%90%E7%A4%BA](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#3%EF%BC%89%E9%94%81%E5%AE%9A%E4%B8%8E%E6%8F%90%E7%A4%BA)
+
+### 4.2 Vendor Price
+
+- 基本逻辑同Customer Price ， 由于存在多个vendor,故按照vendor 维护该vendor的价格版本，并展示相关油价
+- 本页中的按钮(price setting, manage sheet, sync from sheet )均只对该vendor生效，如点击manage sheet 为编辑此时页面中被选中Vendor的sheet
+- Vendor Price页面默认选中列表中第一个供应商，并展示其价格版本,Vendor排序，按添加时间倒序
+- 新建Vendor price 时，若为该Vendor第一个 价格版本，则价格复制创建时间最新的一个价格版本，若为该vendor的第N个（N>1)，则价格复制该Vendor创建时间最新的一个价格版本
+- Manage Sheet
+- 当price Version 为空时，不展示该按钮
+- 与原价格版本manage sheet校验逻辑一致：1. route lib结构完整性 2. lib数据同步至sheet 3. 同步时，进行页面编辑锁定
+- Sync from sheet：
+- 前置校验逻辑与原Sync from sheet一致
+- sheet 解析：[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#2%EF%BC%89Sheet%E8%A7%A3%E6%9E%90](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#2%EF%BC%89Sheet%E8%A7%A3%E6%9E%90)
+- 基本逻辑是：
+- 当price Version 为空时，不展示该按钮
+- Version：必须对齐
+- Route：命中则导入，未命中则跳过
+- Mileage Range：命中则导入，未命中则跳过
+- Truck Type：命中则修改，未命中跳过
+- 锁定与提示与原来保持一致
+- 导入细节：
+1. 先逐行读取导入文件中的路线信息
+2. Version 遍历，一致[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A0Version%E9%81%8D%E5%8E%86](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A0Version%E9%81%8D%E5%8E%86)
+3. Version循环，一致[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A1Version%E5%BE%AA%E7%8E%AF](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A1Version%E5%BE%AA%E7%8E%AF)
+4. Route 循环
+1. 比对Origin和Destination的Region是否是标准Region库，如是则进入后续逻辑，否则视为不合规Region并跳过
+2. 比对Origin和Destination的Region是否属于当前Project所属Domain，如是则进入后续逻辑，否则视为不合规Region并跳过
+3. 如Origin（三级Region），WayPoint，Destination（三级Region）组成的路线，不存在于当前Library中，则跳过该条
+4. 如Origin（三级Region），WayPoint，Destination（三级Region）组成的路线，已存在于当前Library中，则将文件中的Origin Address、Destination Address、Route Code，Label, 是否一致；不一致，则跳过该条
+5. Mileage Range循环，一致[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A3Mileage-Range%E5%BE%AA%E7%8E%AF](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A3Mileage-Range%E5%BE%AA%E7%8E%AF)
+6. Truck Type循环，一致[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A4Truck-Type%E5%BE%AA%E7%8E%AF](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A4Truck-Type%E5%BE%AA%E7%8E%AF)
+7. Pricing Standard，一致，删除客户/供应商价格对比逻辑[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A5Pricing-Standard](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/452427889/Route+Library+Details#%E2%91%A5Pricing-Standard)
+
+### 4.3 价格版本对标准运单的影响
+
+#### 1. 封装价格版本校验服务：
+- 客户价格版本校验，Vendor价格版本校验
+- 校验流程如下，当不具备该条件，则不校验该条件，如创建运单时，无route信息，则只需校验至position time即可
+
+- 不同判断条件报错文案：position time未命中【There is no valid customer/vendor price version at the time】
+
+truck type 未命中【The truck type is not in the route library】
+
+route 未命中【The route is not  in the route library】
+
+未填写价格【Please add specific price in  the customer/ vendor price version】
+
+#### 2. 创建运单（标准运单）关于项目有效期的逻辑判断
+- 全局隐藏【Quick Dispatch】按钮，业务暂时未使用该功能
+- 增加判断in progress状态项目当前时间是否在项目有效期内，不在有效期内则不允许创建运单，【create waybill】时，运单类型字段默认选择【Temporary waybill】，不可修改；【copy waybill】时若有标准运单则copy 失败，提示【Copy failed, only temporary waybills are allowed to be created in non-valid project】
+- create waybill：选择项目后，根据项目是否在有效期，限制 Dispatch Type, 若不在有效期内，则Dispatch Type 默认选择【Temporary waybill】，不可修改；若先行选择Dispatch Type ，则选择项目后进行清空；
+- copy waybill：**confirm**时，校验 若有被copy标准运单所属项目不在有效期内，copy失败，提示：【Copy Failed, because some standard waybills belong to projects that are not within the validity period.】
+- 批量导入时：增加 project 有效期校验，错误原因： Projects is not within the validity period
+
+#### 3. 价格版本命中相关校验
+- 校验时机：create waybill ；Confirm时校验position time是否有命中客户价格版本；未命中，则confirm 时，Toast 提示 【There is no valid customer/vendor price version at the time】，不阻塞运单
+- copy waybill ：position time 则不进行价格版本校验
+- 价格版本时间命中逻辑：参考价格版本校验逻辑
+- 批量导入时：不校验
+
+#### 4. Assign truck 更新
+- 增加判断：是否已完成路线规划；否则弹窗提示【Please plan route before assign truck】，点击 **OK**，关闭报错弹窗，回 运单详情页；点击**plan route**，关闭报错弹窗打开plan route 弹窗。
+- 备注：由于Assign truck时已完成 plan route校验，故 submit planning waybill时，只做carrier校验
+- Select Truck时，展示所有capacity pool中的truck,【其中原过滤route lib中所属type的车辆逻辑保留】 允许展示 not approved/   approved+out of use/ Unaccredited状态的车辆，但置灰不可选取，点击/hover 提示：【The truck is not approved /out of use/ Unaccredited】，临调逻辑保持现状，不变
+- Select Truck后，点击 **Next**调用客户/供应商价格版本校验服务，
+- 该Truck Type是否在route lib中的truck type中，若未命中，则阻塞提示【The truck type is the route library】，点击OK，关闭报错弹窗回到选择车辆页面。
+- 该Truck 所属Vendor 是否有对应供应商价格版本，若未命中，阻塞，并提示【There is no valid vendor price version at the time】，点击OK，关闭报错弹窗回到选择车辆页面。
+- 该Truck  所属vendor 无价格版本且 type 不在route lib中的truck type中，阻塞提示【* The truck type is the route library  换行 *There is no valid vendor price version at the time】
+
+#### 5. Planning状态运单 **Submit**更新
+- 增加判断该运单billing 信息是否为空，若为空，不允许提交；提示【The billing information cannot be empty.】点击 **OK**，关闭报错弹窗，回 运单详情页
+
+#### 6. 时间标准
+- 原逻辑不变：
+- 运费因为各种原因发生变更时，需要根据现在所在Waybill不同的时间节点，使用不同的时间来对比有效期
+- Position Time之前，以Positoin Time为准
+- Position Time与Unloading Completion Time之间，以当前时间为主
+- Unloading Completion Time之后，以Unloading Completion Time为准
+- 增加当修改position time 时，调用customer价格版本校验，Vendor价格版本校验服务【要求必须命中价格，才允许修改】
+
+#### 7. 毛利判断
+1. 当触发价格计算时，判断运单的 **Gross Profit**，若毛利≤0，则弹窗提示【Gross profit ≤0，the waybill is losing money】, 不阻塞运单操作；
+2. 并Slack+通知中心发送消息给本项目 pricer【{Alias Name} submitted waybill: Gross profit ≤0，the waybill is losing money ，{waybill number} **Waybill link**】
+3. 弹窗更新为Toast
+4. 4.29 补充： 原逻辑：应收/应付=0 提示逻辑不变，若同时满足两种，则提示内容为两类提示拼接，临调运单仅在填写价格的时候判断毛利情况
+
+1. Waybill Detail页，Billing模块，**Gross Profit**，若毛利≤0，需标红展示
+
+#### 8. 定时任务
+
+completed, delivered两张表增加Growth Profit 字段，顺序为Time of Arrival at Destination字段后
+
+## 5、Capacity Pool 详情页
+1. 展示该项目下的运力池，capacity pool detail 分两个tab（Trucks, Vendors）两个维度展示 , 默认收起 pool basic info.
+2. 更新运力池与truck的关系，运力池不再直接与truck关联，而是通过Vendor进行关联；故去掉Edit capacity 直接管理truck的操作
+3. Capacity Pool 基础信息展示Approved Vendors为vendor access status=approved的数量，与原逻辑不一致
+4. Capacity Pool 在project下的切页，vendor页增加查看vendor详情按钮
+
+### 5.1 按vendor维度展示：
+- 点击添加，弹窗添加vendor，
+- 填入两个字母开始模糊匹配；仅允许添加Accredited状态Vendor；其他状态置灰，不可被选中，点击/ hover提示：【Vendor is not accredited】;
+- 该Vendor已被选中过，同样置灰，不可被选中，点击/ hover提示：【The vendor is already in the capacity pool】;
+- 添加Vendor的权限与原 Edit capacity 权限角色一致，
+- 添加vendor后，该Vendor access status 默认为Approved；
+- Approved Vendor，即添加该vendor所有状态的truck【包括 Out of use, in use, Accredited，Unaccredited】至该Capacity Pool的Truck list， 在Truck list，默认刚添加的truck均为Not Approved状态
+- 若该Vendor添加了 truck，需同时同步该truck至capacity pool --truck list, 且状态为Not Approved；
+- Vendor切页列表逻辑：
+- 排序：按添加时间倒序，即最新添加排最前，需分页
+- 搜索：允许按 Vendor name （模糊匹配）Vendor Tag（模糊匹配），Vendor Access Status（多选）
+- vendor列表字段：**Vendor Name**，**Vendor Tag，Trucks**
+
+**Vendor Access Status:**（Not Approved,  Approved）
+
+**Latest Price Validity Period ：**该Vendor价格版本的有效期最新的(有效截止日期最后面的版本）
+- 操作：
+- 查看价格版本 : 跳转至本项目该vendor价格版本页面，默认至最后一个价格版本(有效截止日期最后面的版本）
+- 查看vendor详情，跳转至该vendor detail 页面，同时删除truck list 查看所属vendor的操作
+- Revoke/Approve
+
+| 状态 | 操作 |
+| Approved | 查看价格版本 查看合同 Revoke |
+| Not Approved | 查看价格版本 查看合同 Approve |
+
+- 若Revoke Vendor：
+- 1. Revoke时需弹窗二次确认 ：点击 **Revoke** 则进行2校验，点击 **Cancel**回vendor list tab页
+- 2. 无车辆在非终态运单中，Revoke时需弹窗二次确认 ：点击 **Revoke** 则移除Truck list该Vendor所有 车辆，点击 **Cancel**回vendor list tab页； Revoke 成功需toast 提示【The vendor has been revoked .】
+- **Not Approved**的 vendor被approved, 则同时该供应商下所有车辆被加入至Truck list，且状态为Not Approved
+
+- 调度车辆：
+- 保持当前逻辑：即需同时检查该truck 的 **Access Status**是否为Approved****， 且需在Truck Mgmt中的状态为 Accredited/In Use，否则select truck 置灰+提示 （[https://inteluck.atlassian.net/wiki/spaces/CPT/pages/580911126#4.-Assign-truck-%E6%9B%B4%E6%96%B0](https://inteluck.atlassian.net/wiki/spaces/CPT/pages/580911126#4.-Assign-truck-%E6%9B%B4%E6%96%B0) ）
+
+### 5.2 按车辆维度展示：
+- 保持当前样式，详情页增加**Access Status、**Truck Status的筛选项
+- 列表增加字段：Truck Status ，（accredited , unaccredited ,in use ,out of use ）顺序在Access Status后；
+- 更新排序规则：1. 按vendor排，同一个vendor的排一起 2. 同一个Vendor下按添加时间 3.不同Vendor 按vendor的添加时间倒序
+
+# 三、Customer Detail
+
+## 1、合同切页
+1. 更新Customer Detail合同切页展示形式，从项目--合同切页或合同管理中同步Customer类型的合同至该处进行展示；
+2. 展示范围：该Customer 所有under Review, Pending Effictive, Active, Expired状态合同
+3. 所有状态均允许查看，下载，查看历史记录
+4. 历史数据处理：历史客户合同删除，Project中的合同从合同模块转移至该项目Business Documents,   type 为：History Contracts
+
+## 2、基本信息
+1. 允许折叠
+2. 原Service Duration 取数逻辑更新：
+1. 计算该客户所有项目最早开始时间（Project Validity Period的开始日期）截止当日天数（每日凌晨刷新），若所有项目均已终态，则Service Duration 与Contract Service Duration一样
+2. Contract service duration 取该客户所有项目Project Validity Period最早开始时间与最晚结束时间的天数；非连续project导致的时长不精确问题忽略）,
+3. Canceled 状态 project不参与时长计算；当有项目被取消，则服务时间需重新计算
+4. 项目状态为非终态, 但有效期已到期，服务期持续计算
+5. 历史数据处理：按最新逻辑重刷
+
+# 四、Vendor Detail
+
+## 1、合同切页
+1. Vendor 增加合同切页，从项目--合同切页或合同管理中同步 Vendor类型的合同至该处进行展示；
+2. 展示范围：该vendor 所有under Review,  Pending Effictive, Active, Expired状态合同
+3. 所有状态均允许查看，下载，查看历史记录
+
+## 2、基本信息
+
+允许折叠
+
+# 五、通知
+
+增加/修改相关通知信息
+
+## 1、Project 任务
+
+针对In Progress状态下的Project，需要对其约定的开始和结束时间进行下述的任务和通知。
+
+每日08:00做一次任务。
+
+| 触发条件 | 接收方 | 通知 |
+| 客户项目即将过期
+
+0 ≤ （有效期末尾 - 当前时间） ≤ 15天 | 项目的Pricer+Dispatcher+OC | TMS内部通知
+
+The project xxx (Project Name) will reach the agreed end time in xx（剩余天数） days
+**View Details**（按钮，跳转Project详情链接）
+
+Slack通知
+
+The project xxx (Project Name) will reach the agreed end time in xx（剩余天数） days
+**Project link** |
+| 客户项目过期当日（有效期末日后一天） | 项目的Pricer+Dispatcher+OC | TMS内部通知
+
+Alert: The project  xxx (Project Name)has expired and the waybill cannot be created in this project
+
+View Details
+
+Slack通知
+
+Alert: The project  xxx (Project Name)has expired and the waybill cannot be created in this project
+**Project link** |
+
+## 2、Quotation 有效期
+
+针对In Progress状态下的Project，需要对其关联的价格合同中的有效期进行下述的任务和通知。
+
+每日08:00做一次任务。
+
+| 触发条件 | 接收方 | 通知 |
+| 客户报价即将过期
+
+已经命中最后的Version的有效期且
+
+0 ≤ （客户价格版本有效期末日 - 当前时间） ≤ 15天 | 项目的Team Members的Pricer，Customer BD | TMS内部通知
+
+The customer quotation for the project xxx (Project Name) has xx（剩余天数） days to expire
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+The customer quotation for the project xxx (Project Name) has xx（剩余天数） days to expire
+**contract  link** |
+| 客户价格版本过期当日（有效期末日后一天） | 项目的Team Members的Pricer，Customer BD | TMS内部通知
+
+The customer quotation for the project xxx (Project Name)  has expired 
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+The customer quotation for the project xxx (Project Name)  has expired 
+**contract  link** |
+| 供应商报价即将过期
+
+已经命中的Version的有效期且
+
+0 ≤ （Vendor价格合同末日- 当前时间） ≤ 15天 | 项目的Team Members的Pricer
+
++
+
+项目的Team Members的Vendor PIC | TMS内部通知
+
+The Vendor（vendor name)  quotation  for the project xxx (Project Name) has xx（剩余天数） days to expire
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+The vendor（vendor name)  quotation for the project xxx (Project Name) has xx（剩余天数） days to expire
+**contract  link** |
+| 供应商报价过期当日（有效期末日后一天） | 项目的Team Members的Pricer
+
++
+
+项目的Team Members的Vendor PIC | TMS内部通知
+
+Alert: The Vendor（vendor name)  quotation  for the project xxx (Project Name) has expired and the waybill cannot calculate the price.
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+Alert: The Vendor（vendor name)   quotation  for the project xxx (Project Name) has expired and the waybill cannot calculate the price.
+**contract  link** |
+| 供应商价格合同中油价更新频率到期（有效期开始日+频率到期当日）
+
+空则不提醒 | 项目的Team Members的Pricer+Vendor PIC | TMS内部通知
+
+Alert: The Vendor（vendor name)  quotation  for the project xxx (Project Name) Fuel basis expires.
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+Alert: The Vendor（vendor name)   quotation  for the project xxx (Project Name) Fuel basis expires.
+**contract  link** |
+| 客户价格合同中油价更新频率到期（有效期开始日+频率到期日）
+
+空则不提醒 | 项目的Team Members的Pricer+Customer BD | TMS内部通知
+
+Alert: The Vendor（vendor name)  quotation  for the project xxx (Project Name) Fuel basis expires.
+**View Details**（按钮，跳转该项目合同切页链接）
+
+Slack通知
+
+Alert: The Vendor（vendor name)   quotation  for the project xxx (Project Name) Fuel basis expires.
+**contract  link** |
+
+## 3、运单毛利为负
+
+| 触发条件 | 接收方 | TMS内部通知 | Slack通知 |
+| 该waybill 计算价格时，gross profit ≤0 | 项目的Pricer | Attention: {Alias Name} submitted waybill: Gross profit= {毛利值}，the waybill is losing money ，{waybill number} **Waybill link** | Attention: {Alias Name} submitted waybill: Gross profit= {毛利值}，the waybill is losing money ，{waybill number} **Waybill link** |
+|  |  |  |  |

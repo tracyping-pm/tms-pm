@@ -1,0 +1,2322 @@
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('assets/fonts/Roboto-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto BlackItalic';
+  src: url('assets/fonts/Roboto-BlackItalic.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto BoldItalic';
+  src: url('assets/fonts/Roboto-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto LightItalic';
+  src: url('assets/fonts/Roboto-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto MediumItalic';
+  src: url('assets/fonts/Roboto-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto ThinItalic';
+  src: url('assets/fonts/Roboto-ThinItalic.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'D DIN';
+  src: url('assets/fonts/D-DIN-Bold-13.otf') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+
+.style_1 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  background: rgb(245, 245, 245) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(245, 245, 245);
+}
+
+.style_2 {
+  min-width: 220px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  transition: 0.2s;
+}
+
+.style_3 {
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+}
+
+.style_4 {
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+}
+
+.style_5 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+}
+
+.style_6 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+  transition: color 0.3s;
+}
+
+.style_7 {
+  min-width: 0px;
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+  transition: color 0.3s;
+}
+
+.style_8 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 0px 16px;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+  margin-block-start: 4px;
+  margin-block-end: 4px;
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(0, 150, 136);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(0, 150, 136);
+  border-color: rgb(0, 150, 136);
+  border-radius: 6px;
+  background: rgb(236, 246, 244) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(236, 246, 244);
+}
+
+.style_9 {
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+}
+
+.style_10 {
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+}
+
+.style_11 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+}
+
+.style_12 {
+  min-width: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  transition: color 0.3s;
+}
+
+.style_13 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 20px;
+  right: 16px;
+  bottom: 20px;
+  left: 170.36px;
+  inset-inline-start: 170.36px;
+  inset-inline-end: 16px;
+  inset-block-start: 20px;
+  inset-block-end: 20px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  transform: matrix(1, 0, 0, 1, 0, 0);
+  transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.3s;
+}
+
+.style_14 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 0px 34px 0px 16px;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+  margin-block-start: 4px;
+  margin-block-end: 4px;
+  padding-inline-start: 16px;
+  padding-inline-end: 34px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  border-radius: 6px;
+  transition: border-color 0.3s, background 0.3s, padding 0.1s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.style_15 {
+  display: list-item;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  border-radius: 6px;
+  transition: border-color 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), background 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), padding 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.style_16 {
+  min-width: 14px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  transition: font-size 0.2s cubic-bezier(0.215, 0.61, 0.355, 1), margin 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), color 0.3s;
+}
+
+.style_17 {
+  min-width: 0px;
+  min-height: 100%;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.style_18 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  overflow: hidden auto;
+}
+
+.style_19 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 18px;
+  right: -13px;
+  bottom: 719.28px;
+  left: 209.36px;
+  inset-inline-start: 209.36px;
+  inset-inline-end: -13px;
+  inset-block-start: 18px;
+  inset-block-end: 719.28px;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 0, 0, 0.25);
+  border-radius: 40px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px -2px, rgba(25, 15, 15, 0.07) 0px 1px 4px -1px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
+  transition: transform 0.3s;
+}
+
+.style_20 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: -0.1px -1px 0px 0px;
+  padding: 0px 8px;
+  margin-inline-end: -1px;
+  margin-block-start: -0.1px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px 0.64px 0px 0px none solid none none rgba(0, 0, 0, 0.88) rgba(5, 5, 5, 0.06) rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88);
+}
+
+.style_21 {
+  min-width: 220px;
+  min-height: 0px;
+  top: 56px;
+  right: 1218.72px;
+  bottom: 0px;
+  left: 0px;
+  inset-inline-end: 1218.72px;
+  inset-block-start: 56px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  transition: 0.2s, background;
+}
+
+.style_22 {
+  padding: 0px 50px;
+  padding-inline-start: 50px;
+  padding-inline-end: 50px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_23 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  overflow: clip;
+}
+
+.style_24 {
+  color: rgb(0, 0, 0);
+  font-size: 18px;
+  font-family: Roboto, sans-serif;
+  line-height: 32px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_25 {
+  margin: 0px 8px 0px 0px;
+  padding: 0px 7px;
+  margin-inline-end: 8px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0.64px solid rgba(0, 0, 0, 0);
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0);
+  border-radius: 4px;
+  background: rgb(16, 142, 233) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(16, 142, 233);
+  transition: 0.2s;
+}
+
+.style_26 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_27 {
+  margin: 0px 16px 0px 0px;
+  margin-inline-end: 16px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_28 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_29 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_30 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.style_31 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.style_32 {
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.style_33 {
+  min-width: 20px;
+  min-height: 0px;
+  top: 0px;
+  right: -7px;
+  bottom: 0px;
+  left: 7px;
+  inset-inline-start: 7px;
+  inset-inline-end: -7px;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+  border-radius: 10px;
+  background: rgb(255, 77, 79) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 77, 79);
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 1px;
+  transform: matrix(1, 0, 0, 1, 10, -10);
+  transition: 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46);
+}
+
+.style_34 {
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_35 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 12px 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
+  padding-block-start: 12px;
+  padding-block-end: 12px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_36 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_37 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_38 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_39 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 12px 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
+  padding-block-start: 12px;
+  padding-block-end: 12px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_40 {
+  color: rgb(24, 144, 255);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(24, 144, 255);
+  border-color: rgb(24, 144, 255);
+  overflow: clip;
+}
+
+.style_41 {
+  margin: 0px 8px 0px 0px;
+  margin-inline-end: 8px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(24, 144, 255);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0.64px solid rgba(0, 0, 0, 0);
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+.style_42 {
+  margin: 0px 10px 0px 0px;
+  margin-inline-end: 10px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_43 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 0px 0px 0px 12px;
+  padding-inline-start: 12px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  transition: 0.3s;
+}
+
+.style_44 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_45 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_46 {
+  min-width: 264px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_47 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 16px;
+  margin-inline-start: 16px;
+  margin-inline-end: 16px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_48 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 761.28px;
+  left: 0px;
+  inset-block-end: 761.28px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  line-height: 56px;
+  text-align: start;
+  text-overflow: clip;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  transition: background-color 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88) rgba(5, 5, 5, 0.06);
+}
+
+.style_49 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 20px;
+  margin-block-end: 20px;
+  color: rgb(0, 0, 0);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_50 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_51 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 1px;
+  margin-block-end: 1px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  border-radius: 2px 2px 0px 0px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_52 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 0px 8px;
+  margin-inline-start: 8px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_53 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_54 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 32px;
+  font-family: D-DIN-Bold;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_55 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 14px 0px;
+  margin-block-start: 14px;
+  margin-block-end: 14px;
+  color: rgb(0, 0, 0);
+  font-size: 32px;
+  font-family: D-DIN-Bold;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_56 {
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_57 {
+  margin: 10px 0px 0px;
+  margin-block-start: 10px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_58 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_59 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_60 {
+  color: rgb(0, 0, 0);
+  font-size: 20px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_61 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_62 {
+  margin: 0px 0px 24px;
+  margin-block-end: 24px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-start: 24px;
+  padding-block-end: 24px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+  border-radius: 4px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_63 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_64 {
+  margin: 0px 0px 0px 8px;
+  margin-inline-start: 8px;
+  color: rgb(131, 140, 161);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_65 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(38, 38, 38);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+}
+
+.style_66 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 5px 0px 0px;
+  margin-block-start: 5px;
+  color: rgb(110, 112, 121);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(110, 112, 121);
+  border-color: rgb(110, 112, 121);
+}
+
+.style_67 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_68 {
+  margin: 0px 4px 0px 0px;
+  margin-inline-end: 4px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_69 {
+  min-width: 0px;
+  padding: 2px 0px 0px;
+  padding-block-start: 2px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: ellipsis;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  overflow: clip;
+  transition: 0.2s;
+}
+
+.style_70 {
+  margin: 0px 0px 0px 4px;
+  margin-inline-start: 4px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_71 {
+  min-width: 0px;
+  padding: 4px 11px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 4px;
+  padding-block-end: 4px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0.64px solid rgb(217, 217, 217);
+  border-style: solid;
+  border-color: rgb(217, 217, 217);
+  border-radius: 6px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  transition: 0.2s;
+}
+
+.style_72 {
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.style_73 {
+  padding: 0px 15px;
+  padding-inline-start: 15px;
+  padding-inline-end: 15px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(255, 255, 255);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0.64px solid rgba(0, 0, 0, 0);
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0);
+  border-radius: 6px;
+  background: rgb(0, 150, 136) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(0, 150, 136);
+  transition: 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.style_74 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_75 {
+  padding: 0px 15px;
+  padding-inline-start: 15px;
+  padding-inline-end: 15px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0.64px solid rgb(217, 217, 217);
+  border-style: solid;
+  border-color: rgb(217, 217, 217);
+  border-radius: 6px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 2px 0px 0px;
+  transition: 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.style_76 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_77 {
+  min-width: 1px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  overflow: clip;
+  transition: 0.2s;
+}
+
+.style_78 {
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.style_79 {
+  margin: 0px 0px 0px 4px;
+  margin-inline-start: 4px;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 0, 0, 0.25);
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.style_80 {
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_81 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 4px 11px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 4px;
+  padding-block-end: 4px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0.64px solid rgb(217, 217, 217);
+  border-style: solid;
+  border-color: rgb(217, 217, 217);
+  border-radius: 6px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.style_82 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_83 {
+  min-width: 0px;
+  min-height: 32px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_84 {
+  min-height: 1px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_85 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_86 {
+  margin: 7px 0px 0px;
+  margin-block-start: 7px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_87 {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_88 {
+  margin: 2px 0px 0px;
+  margin-block-start: 2px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_89 {
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0.64px solid rgb(217, 217, 217);
+  border-style: solid;
+  border-color: rgb(217, 217, 217);
+  border-radius: 6px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 2px 0px 0px;
+  transition: 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.style_90 {
+  justify-content: end;
+  gap: 16px 32px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_91 {
+  justify-content: end;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_92 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 0px 24px 24px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-end: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88) rgb(238, 238, 238);
+}
+
+.style_93 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  overflow: clip;
+}
+
+.style_94 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_95 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_96 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 0px 24px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_97 {
+  min-width: 0px;
+  min-height: 0px;
+  padding: 24px 0px;
+  padding-block-start: 24px;
+  padding-block-end: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  border-radius: 4px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_98 {
+  color: rgb(38, 38, 38);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(38, 38, 38);
+  border-color: rgb(38, 38, 38);
+}
+
+.style_99 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(131, 140, 161);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_100 {
+  margin: 0px 0px 0px 8px;
+  margin-inline-start: 8px;
+  color: rgb(131, 140, 161);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(131, 140, 161);
+  border-color: rgb(131, 140, 161);
+}
+
+.style_101 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_102 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(110, 112, 121);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(110, 112, 121);
+  border-color: rgb(110, 112, 121);
+}
+
+.style_103 {
+  margin: 0px 0px 24px;
+  margin-block-end: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_104 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 1px;
+  padding: 24px 24px 20px;
+  margin-block-end: 1px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-start: 24px;
+  padding-block-end: 20px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  border-radius: 2px 2px 0px 0px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_105 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  transition: opacity 0.3s;
+}
+
+.style_106 {
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-start: 24px;
+  padding-block-end: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_107 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 16px 0px 0px;
+  margin-block-start: 16px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_108 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_109 {
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_110 {
+  padding: 4px 11px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 4px;
+  padding-block-end: 4px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0.64px solid rgb(217, 217, 217);
+  border-style: solid;
+  border-color: rgb(217, 217, 217);
+  border-radius: 6px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.style_111 {
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_112 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 1px;
+  padding: 24px 24px 20px;
+  margin-block-end: 1px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-start: 24px;
+  padding-block-end: 20px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+  border-radius: 2px 2px 0px 0px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_113 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_114 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+  overflow: clip;
+}
+
+.style_115 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_116 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_117 {
+  min-height: 1px;
+  max-width: 33.3333%;
+  padding: 0px 40px;
+  padding-inline-start: 40px;
+  padding-inline-end: 40px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_118 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px -40px;
+  margin-inline-start: -40px;
+  margin-inline-end: -40px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_119 {
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 24px;
+  padding-inline-end: 24px;
+  padding-block-start: 24px;
+  padding-block-end: 24px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+  border-radius: 0px 0px 2px 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_120 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+  transition: opacity 0.3s;
+}
+
+.style_121 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 24px 0px 0px;
+  margin-block-start: 24px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}
+
+.style_122 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_123 {
+  min-height: 1px;
+  max-width: 50%;
+  padding: 0px 12px;
+  padding-inline-start: 12px;
+  padding-inline-end: 12px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_124 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px -12px;
+  margin-inline-start: -12px;
+  margin-inline-end: -12px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_125 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 24px 0px 0px;
+  margin-block-start: 24px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_126 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px -10px 12px;
+  padding: 12px 10px;
+  margin-inline-start: -10px;
+  margin-inline-end: -10px;
+  margin-block-end: 12px;
+  padding-inline-start: 10px;
+  padding-inline-end: 10px;
+  padding-block-start: 12px;
+  padding-block-end: 12px;
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px 0px 0.64px none none solid rgb(0, 0, 0) rgb(0, 0, 0) rgb(202, 202, 202);
+}
+
+.style_127 {
+  display: table-column;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_128 {
+  display: table-column-group;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_129 {
+  display: table-cell;
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 11px;
+  padding-block-end: 11px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: ellipsis;
+  border-radius: 8px 0px 0px;
+  border-top-left-radius: 8px;
+  background: rgb(250, 250, 250) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(250, 250, 250);
+  transition: background 0.2s;
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88) rgb(240, 240, 240);
+}
+
+.style_130 {
+  display: table-cell;
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 11px;
+  padding-block-end: 11px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  background: rgb(250, 250, 250) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(250, 250, 250);
+  transition: background 0.2s;
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88) rgb(240, 240, 240);
+}
+
+.style_131 {
+  display: table-cell;
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 11px;
+  padding-block-end: 11px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  border-radius: 0px 8px 0px 0px;
+  border-top-right-radius: 8px;
+  background: rgb(250, 250, 250) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(250, 250, 250);
+  transition: background 0.2s;
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.88) rgba(0, 0, 0, 0.88) rgb(240, 240, 240);
+}
+
+.style_132 {
+  display: table-row;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(128, 128, 128);
+  border-color: rgb(128, 128, 128);
+}
+
+.style_133 {
+  display: table-header-group;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(128, 128, 128);
+  border-color: rgb(128, 128, 128);
+}
+
+.style_134 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 0px 0px 8px;
+  margin-block-end: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.45);
+}
+
+.style_135 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.45);
+}
+
+.style_136 {
+  min-width: 0px;
+  min-height: 0px;
+  margin: 32px 8px;
+  margin-inline-start: 8px;
+  margin-inline-end: 8px;
+  margin-block-start: 32px;
+  margin-block-end: 32px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.45);
+}
+
+.style_137 {
+  display: table-cell;
+  min-width: 0px;
+  min-height: 0px;
+  padding-inline-start: 11px;
+  padding-inline-end: 11px;
+  padding-block-start: 11px;
+  padding-block-end: 11px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  transition: background 0.2s, border-color 0.2s;
+  border: 0px 0px 0.64px none none solid rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.25) rgb(240, 240, 240);
+}
+
+.style_138 {
+  display: table-row;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-overflow: clip;
+  border: 0px none rgb(128, 128, 128);
+  border-color: rgb(128, 128, 128);
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_139 {
+  display: table-row-group;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(128, 128, 128);
+  border-color: rgb(128, 128, 128);
+}
+
+.style_140 {
+  display: table;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(128, 128, 128);
+  border-color: rgb(128, 128, 128);
+  border-radius: 8px 8px 0px 0px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.style_141 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  border-radius: 8px 8px 0px 0px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.style_142 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+  border-radius: 8px 8px 0px 0px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+  background-color: rgb(255, 255, 255);
+}
+
+.style_143 {
+  clear: both;
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_144 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_145 {
+  min-width: 0px;
+  min-height: 0px;
+  top: -100000px;
+  right: 100469px;
+  bottom: 103272px;
+  left: -100000px;
+  inset-inline-start: -100000px;
+  inset-inline-end: 100469px;
+  inset-block-start: -100000px;
+  inset-block-end: 103272px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_146 {
+  min-height: 0px;
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
+  padding-block-start: 16px;
+  padding-block-end: 16px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_147 {
+  min-width: 0px;
+  min-height: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_148 {
+  min-width: 0px;
+  min-height: 100%;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgba(0, 0, 0, 0.88);
+  border-color: rgba(0, 0, 0, 0.88);
+}
+
+.style_149 {
+  min-width: 0px;
+  min-height: 0px;
+  color: rgb(0, 0, 0);
+  font-size: 16px;
+  font-family: Roboto, sans-serif;
+  text-align: start;
+  text-overflow: clip;
+  border: 0px none rgb(0, 0, 0);
+  border-color: rgb(0, 0, 0);
+}

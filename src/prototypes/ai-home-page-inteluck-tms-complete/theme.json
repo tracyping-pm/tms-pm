@@ -1,0 +1,723 @@
+{
+  "colors": {
+    "background": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 32,
+        "tags": [
+          "aside",
+          "div",
+          "header",
+          "span",
+          "button",
+          "tr"
+        ]
+      },
+      {
+        "value": "rgb(250, 250, 250)",
+        "count": 5,
+        "tags": [
+          "th"
+        ]
+      },
+      {
+        "value": "rgb(245, 245, 245)",
+        "count": 1,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "value": "rgb(236, 246, 244)",
+        "count": 1,
+        "tags": [
+          "li"
+        ]
+      },
+      {
+        "value": "rgb(16, 142, 233)",
+        "count": 1,
+        "tags": [
+          "span"
+        ]
+      },
+      {
+        "value": "rgb(255, 77, 79)",
+        "count": 1,
+        "tags": [
+          "sup"
+        ]
+      },
+      {
+        "value": "rgb(19, 194, 194)",
+        "count": 1,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "value": "rgba(255, 255, 255, 0.85)",
+        "count": 1,
+        "tags": [
+          "span"
+        ]
+      },
+      {
+        "value": "rgb(0, 150, 136)",
+        "count": 1,
+        "tags": [
+          "button"
+        ]
+      }
+    ],
+    "text": [
+      {
+        "value": "rgba(0, 0, 0, 0.88)",
+        "count": 196,
+        "tags": [
+          "div",
+          "aside",
+          "header",
+          "img",
+          "span",
+          "svg",
+          "path",
+          "g",
+          "defs",
+          "clippath",
+          "rect",
+          "main",
+          "input",
+          "button",
+          "table",
+          "colgroup",
+          "col",
+          "thead",
+          "tr",
+          "th",
+          "tbody"
+        ]
+      },
+      {
+        "value": "rgb(131, 140, 161)",
+        "count": 99,
+        "tags": [
+          "div",
+          "span",
+          "svg",
+          "path",
+          "defs",
+          "clippath",
+          "rect",
+          "g"
+        ]
+      },
+      {
+        "value": "rgb(38, 38, 38)",
+        "count": 86,
+        "tags": [
+          "ul",
+          "li",
+          "div",
+          "span",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path",
+          "i"
+        ]
+      },
+      {
+        "value": "rgb(0, 0, 0)",
+        "count": 53,
+        "tags": [
+          "body"
+        ]
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.25)",
+        "count": 45,
+        "tags": [
+          "div",
+          "svg",
+          "path",
+          "button",
+          "span",
+          "tr",
+          "td"
+        ]
+      },
+      {
+        "value": "rgb(0, 150, 136)",
+        "count": 12,
+        "tags": [
+          "li",
+          "span",
+          "a",
+          "div",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path"
+        ]
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.45)",
+        "count": 10,
+        "tags": [
+          "div",
+          "svg",
+          "title",
+          "g",
+          "ellipse",
+          "path"
+        ]
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 9,
+        "tags": [
+          "span",
+          "sup",
+          "bdi",
+          "div",
+          "p",
+          "button"
+        ]
+      },
+      {
+        "value": "rgb(110, 112, 121)",
+        "count": 5,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "value": "rgb(24, 144, 255)",
+        "count": 2,
+        "tags": [
+          "span",
+          "img"
+        ]
+      }
+    ],
+    "border": [
+      {
+        "value": "rgba(0, 0, 0, 0.88)",
+        "count": 899,
+        "tags": [
+          "div",
+          "aside",
+          "header",
+          "img",
+          "span",
+          "svg",
+          "path",
+          "g",
+          "defs",
+          "clippath",
+          "rect",
+          "main",
+          "input",
+          "colgroup",
+          "col",
+          "th"
+        ]
+      },
+      {
+        "value": "rgb(131, 140, 161)",
+        "count": 495,
+        "tags": [
+          "div",
+          "span",
+          "svg",
+          "path",
+          "defs",
+          "clippath",
+          "rect",
+          "g"
+        ]
+      },
+      {
+        "value": "rgb(38, 38, 38)",
+        "count": 430,
+        "tags": [
+          "ul",
+          "li",
+          "div",
+          "span",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path",
+          "i"
+        ]
+      },
+      {
+        "value": "rgb(0, 0, 0)",
+        "count": 263,
+        "tags": [
+          "body"
+        ]
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.25)",
+        "count": 218,
+        "tags": [
+          "div",
+          "svg",
+          "path",
+          "button",
+          "span",
+          "td"
+        ]
+      },
+      {
+        "value": "rgb(0, 150, 136)",
+        "count": 60,
+        "tags": [
+          "li",
+          "span",
+          "a",
+          "div",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path"
+        ]
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.45)",
+        "count": 50,
+        "tags": [
+          "div",
+          "svg",
+          "title",
+          "g",
+          "ellipse",
+          "path"
+        ]
+      },
+      {
+        "value": "rgb(217, 217, 217)",
+        "count": 45,
+        "tags": [
+          "span",
+          "button",
+          "div"
+        ]
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 35,
+        "tags": [
+          "sup",
+          "bdi",
+          "span",
+          "div",
+          "p"
+        ]
+      },
+      {
+        "value": "rgb(110, 112, 121)",
+        "count": 25,
+        "tags": [
+          "div"
+        ]
+      }
+    ]
+  },
+  "typography": {
+    "families": [
+      {
+        "value": "Roboto, sans-serif",
+        "count": 509,
+        "tags": [
+          "body"
+        ]
+      },
+      {
+        "value": "D-DIN-Bold",
+        "count": 8,
+        "tags": [
+          "div"
+        ]
+      }
+    ],
+    "textStyles": [
+      {
+        "size": "14px",
+        "lineHeight": "22px",
+        "weight": "400",
+        "count": 182,
+        "tags": [
+          "div",
+          "aside",
+          "svg",
+          "path",
+          "p",
+          "main",
+          "span",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "input",
+          "button",
+          "img",
+          "table",
+          "colgroup",
+          "col",
+          "thead",
+          "tr",
+          "tbody",
+          "td",
+          "title",
+          "ellipse"
+        ]
+      },
+      {
+        "size": "14px",
+        "lineHeight": "40px",
+        "weight": "400",
+        "count": 74,
+        "tags": [
+          "li",
+          "span",
+          "a",
+          "div",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path",
+          "i"
+        ]
+      },
+      {
+        "size": "14px",
+        "lineHeight": "14px",
+        "weight": "400",
+        "count": 60,
+        "tags": [
+          "svg",
+          "path",
+          "span",
+          "div"
+        ]
+      },
+      {
+        "size": "16px",
+        "lineHeight": "25.1429px",
+        "weight": "400",
+        "count": 50,
+        "tags": [
+          "div",
+          "svg",
+          "defs",
+          "clippath",
+          "rect",
+          "g",
+          "path"
+        ]
+      },
+      {
+        "size": "14px",
+        "lineHeight": "56px",
+        "weight": "400",
+        "count": 32,
+        "tags": [
+          "header",
+          "div",
+          "img",
+          "span",
+          "svg",
+          "g",
+          "path",
+          "defs",
+          "clippath",
+          "rect"
+        ]
+      },
+      {
+        "size": "14px",
+        "lineHeight": "0px",
+        "weight": "400",
+        "count": 25,
+        "tags": [
+          "ul",
+          "li",
+          "span"
+        ]
+      },
+      {
+        "size": "16px",
+        "lineHeight": "16px",
+        "weight": "400",
+        "count": 14,
+        "tags": [
+          "svg",
+          "path"
+        ]
+      },
+      {
+        "size": "32px",
+        "lineHeight": "42px",
+        "weight": "700",
+        "count": 8,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "size": "20px",
+        "lineHeight": "24px",
+        "weight": "700",
+        "count": 8,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "size": "16px",
+        "lineHeight": "24px",
+        "weight": "400",
+        "count": 7,
+        "tags": [
+          "div"
+        ]
+      }
+    ]
+  },
+  "spacing": [
+    {
+      "value": "24px",
+      "count": 37,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "8px",
+      "count": 32,
+      "tags": [
+        "div",
+        "span",
+        "button"
+      ]
+    },
+    {
+      "value": "4px",
+      "count": 22,
+      "tags": [
+        "li",
+        "div",
+        "svg",
+        "span"
+      ]
+    },
+    {
+      "value": "16px",
+      "count": 14,
+      "tags": [
+        "li",
+        "div",
+        "main"
+      ]
+    },
+    {
+      "value": "11px",
+      "count": 12,
+      "tags": [
+        "span",
+        "div",
+        "th",
+        "td"
+      ]
+    },
+    {
+      "value": "10px",
+      "count": 10,
+      "tags": [
+        "span",
+        "div",
+        "p"
+      ]
+    },
+    {
+      "value": "20px",
+      "count": 10,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "12px",
+      "count": 8,
+      "tags": [
+        "div",
+        "span",
+        "p"
+      ]
+    },
+    {
+      "value": "34px",
+      "count": 7,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "1px",
+      "count": 6,
+      "tags": [
+        "div"
+      ]
+    }
+  ],
+  "radius": [
+    {
+      "value": "6px",
+      "count": 26,
+      "tags": [
+        "li",
+        "div",
+        "span",
+        "button"
+      ]
+    },
+    {
+      "value": "4px",
+      "count": 6,
+      "tags": [
+        "span",
+        "div"
+      ]
+    },
+    {
+      "value": "2px 2px 0px 0px",
+      "count": 6,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "8px 8px 0px 0px",
+      "count": 3,
+      "tags": [
+        "div",
+        "table"
+      ]
+    },
+    {
+      "value": "40px",
+      "count": 1,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "10px",
+      "count": 1,
+      "tags": [
+        "sup"
+      ]
+    },
+    {
+      "value": "50%",
+      "count": 1,
+      "tags": [
+        "span"
+      ]
+    },
+    {
+      "value": "0px 0px 2px 2px",
+      "count": 1,
+      "tags": [
+        "div"
+      ]
+    },
+    {
+      "value": "8px 0px 0px",
+      "count": 1,
+      "tags": [
+        "th"
+      ]
+    },
+    {
+      "value": "0px 8px 0px 0px",
+      "count": 1,
+      "tags": [
+        "th"
+      ]
+    }
+  ],
+  "lineWidth": [
+    {
+      "value": "0.64px",
+      "count": 70,
+      "tags": [
+        "div",
+        "header",
+        "span",
+        "button",
+        "p",
+        "th",
+        "td"
+      ]
+    },
+    {
+      "value": "0px 0px 0.64px",
+      "count": 9,
+      "tags": [
+        "header",
+        "div",
+        "p",
+        "th",
+        "td"
+      ]
+    },
+    {
+      "value": "0px 0.64px 0px 0px",
+      "count": 1,
+      "tags": [
+        "div"
+      ]
+    }
+  ],
+  "shadow": {
+    "box": [
+      {
+        "value": "rgba(0, 0, 0, 0.02) 0px 2px 0px 0px",
+        "count": 3,
+        "tags": [
+          "button"
+        ]
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.05) 0px 2px 8px -2px, rgba(25, 15, 15, 0.07) 0px 1px 4px -1px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px",
+        "count": 1,
+        "tags": [
+          "div"
+        ]
+      },
+      {
+        "value": "rgb(255, 255, 255) 0px 0px 0px 1px",
+        "count": 1,
+        "tags": [
+          "sup"
+        ]
+      }
+    ],
+    "text": []
+  }
+}

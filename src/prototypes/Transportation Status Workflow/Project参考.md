@@ -1,0 +1,520 @@
+none
+本期迭代主要目标：能将当前客户线索及客户商机（潜在项目）的跟进线上化，实现对商机管理的可追踪，可统计，及对跟进情况进行过程管理；以便提升销售效率及管理效率。
+
+其中商机需关联对应的线索或客户
+
+## 1. 状态流转
+
+### 1.1 线索状态流转
+
+状态说明：
+- **Open**: 新线索创建后的初始状态
+- **Following Up**: 对线索进行跟进，如果有正式项目则成功关闭。
+- **Dormant**: 如果没有新的非终态项目，则线索进入休眠状态。
+- **Successful Closed**: 该线索已有成功跟进的项目，并自动创建Negotiating状态客户。
+
+### 1.2 商机状态流转
+
+状态说明：
+
+所有状态均如图正序推进（必须经过所有主状态），不允许跳过（子状态允许）
+- **Reach Out**: 新项目创建后的初始状态。
+- **Successful Contacted**: 成功联系，其有两个子状态分别为
+- pendig customer meeting （允许跳过）
+- requirement acquire（允许跳过）
+- **Quotation Request Received**: 收到报价请求
+- **Quotation Submitted**: 报价提交，其有两个子状态分别为
+- Waiting feedback（允许跳过）
+- Quotation Update（允许跳过）
+- 此两个子状态允许互相切换
+- **Successful Closed**: 客户接受报价，项目成功关闭，并自动创建项目记录。
+- **Lost**: 如果项目未能成功跟进或交易失败，则标记为丢失
+- **Canceled**： 如果项目不能支持等情况，进行主动取消
+
+需记录同一商机进入Quotation Feedback 状态的次数（业务意义：记录报价次数，暂时不展示在前端）
+
+## 2. 功能说明
+
+### 2.1 Leads List
+
+#### 搜索区域
+
+搜索区域允许用户根据多种参数来筛选线索。
+
+| Field Name | 类型 | 搜索逻辑 |
+| Customer Name | 输入框 | 模糊匹配，输入2个及以上字符时展示匹配结果， |
+| Customer Tag | 输入框 | 模糊匹配，输入2个及以上字符时展示匹配结果， |
+| Industry | 下拉选择 | 支持多选。 |
+| Lead Status | 下拉选择 | 支持多选。 |
+| Creation Time | 时间选择器 | 允许用户选择创建时间的日期范围。 |
+| Priority | 下拉选择 | 支持多选。 |
+| BU | 输入搜索 | 支持多选。like搜索 |
+| BD | 下拉选择 | 支持多选。 |
+|  |  |  |
+
+#### 列表区域
+
+展示内容
+
+列表展示了符合搜索条件的所有线索，每个线索的每一行包含以下字段：
+
+| Field Name | 描述 |
+| Customers Name | 客户的名称。 |
+| Customer Tag | 客户的标签。 |
+| Industry | 客户所属行业。 |
+| Priority | 优先级。 |
+| Status | 客户状态。 |
+| BU | 归属业务单元。 |
+| BD | 归属业务负责人 |
+| Creation Time | 创建时间。 |
+| Operate | 操作列，包括查看详情和编辑。 |
+
+操作列
+- **Details:** 用户点击后可以查看详情。
+- **Edit:** 用户点击后展示编辑弹窗。
+
+排序
+
+列表默认按以下顺序进行排序：
+- **Creation Time:** 创建时间进行降序排列，即更晚创建的排更前。
+
+分页参考当前TMS分页样式，确保用户体验的一致性和熟悉度。每页显示指定数量的记录，支持用户翻页浏览更多内容。提供“上一页”、“下一页”、“跳转到指定页码”等功能。
+
+### 2.2 Create Lead
+
+@UI UI建议：创建页面的选项，若项目不多，请尽量平铺选项，以加快创建效率，具体以UI设计为准
+
+**Basic：**均为必填字段，默认展开，允许收起；允许通过Tab 导航至**Contact**
+
+| 字段名称 | 说明 |
+| Customer Name | 输入公司名称的文本框。必填项。用于在创建线索时识别客户。
+
+允许特殊字符，最大支持128字符，空格处理参考当前系统处理方式
+
+失焦后基于此字段进行查重, 重复弹窗提示
+
+查重范围为lead表+Customer表 |
+| Customer Tag | 标签输入框或下拉框。允许用户为线索添加自定义标签，便于后续分类和检索。 |
+| Industry | 行业选择下拉框。
+
+枚举值使用当前系统已有
+
+其中第二级选项需增加All选项（**注意**，当前系统该字段均统一增加） |
+| Office Address | 多级下拉框（国家、省，市，区，具体地址）
+
+其中国家默认当前登录客户角色所在国家
+
+允许点击【定位】按钮弹窗地图进行选择具体地址，（@UI 需补充相关交互，搜索地址--选择地址--确认地址） |
+| Reach out Channel | 联系渠道选择下拉框。
+
+枚举值：Telemarketing, Instant Messaging, Email, Onsite Visit |
+| Website | 公司网站输入框。 |
+| BU | 业务部门选择下拉框。为全局选项，后续不再说明
+
+枚举值：Transportation/International Freight Forwarding/Warehouse and Storage |
+| BD | 单选，可选范围为 所有角色名带BD 的账号
+
+可选范围参考当前 Transfer Customer 逻辑，范围为有创建线索权限的所有人--12/30 update
+
+选择框需列出 Alias Name +角色名（具体可参考当前Transfer Customer弹窗） |
+| CAM | 暂不展示在前端, 可在创建默认，也可在successful Closed时 再默认该字段信息
+
+PH侧默认为：[jeanelle@inteluck.com](mailto:jeanelle@inteluck.com)
+
+TH侧默认为：[sherrycai@inteluck.com](mailto:sherrycai@inteluck.com)                  12/31 update |
+| Priority | 优先级选择下拉框。用户可以根据客户需求的紧急程度选择不同的优先级
+
+选择1-10之间的数字
+
+点击展示说明：PRIORITY (1-10)     Description                     
+1     Use 1 time                    
+2     logistics company check price wait end customer confirm                     
+3     logistics company check price for project                    
+4     Bidding price have time for check                     
+5     Just provoide for compare price                     
+6     Midder company, small vollume , on call                    
+7     Big company, small volume , on call                    
+8     Big company , small volume , log in  < - Job in Hand                     
+9     Big Company , Big volume , on call <- Midder company, big volume , log in                    
+10     Big Company , Big volume , log in |
+| Customer Logo | 上传客户Logo的图片，允许单张
+
+与当前TMS 图片上传逻辑保持一致 |
+
+**Contact ：**均为必填字段，默认展开，允许收起
+
+**Contact Name** 联系人姓名输入框。必填, 允许特殊字符，最大128字符
+
+**Position** ：职位输入，非必填, 不允许特殊字符，最大128字符
+
+**E-mail** ：邮箱输入框。与**Phone 任选其一**必填。需作相关正则校验，有值时若不符合规则失焦提示
+
+**Phone** | 电话号码输入框。其中区号根据登录角色所在国家自动带出，与**email 其一**必填。需作相关正则校验，有值时若不符合规则失焦提示
+
+**Confirm**时进行必填性校验，有误的信息参考当前TMS样式，外框标红并对应提示相关错误信息
+
+查重提示
+
+若客户名称与当前已有线索或客户名重复，则进行如下提示，点击**Confirm**或取消按钮，回退至添加页面并清空name
+
+提示文案：The customer name is duplicated with an existing customer, TMS will automatically update the existing customer information if you confirm
+
+**Edit Lead**参考新增页面（@UI），除客户名以外所有字段均允许编辑
+
+#### Transfer Leads --12/31 update
+
+在Lead list 允许批量转派线索所属BD，选中对应Leads, 将该批Leads 统一转派至新的BD，BD可选范围与创建lead 时一致（有Lead 创建权限的人）
+
+若所选Lead 为终态（Successful Closed）,则该Lead 转派不成功
+
+Transfer**confirm**  之后message 提示成功转派条数即可“ x（成功转派的leads 数量） leads have been transfered to Y(被转派BD）”
+
+### 2.3  Lead Details
+
+Basic 信息默认展示，允许收起
+
+点击编辑，展示编辑弹窗，终态（successful closed）不允许编辑信息，添加商机
+
+**Associated Cusotmer :**若有存在关联的客户，则展示该按钮，否则不展示。点击跳转至关联的客户详情
+
+其中自动创建的客户，需将以下字段带入客户详情：
+
+Customer Name，Customer Tag，Office Address，Reach out Channel，Website，BU，BD，Priority，Customer Logo，Contact信息, Creation Time（取线索创建客户的时间）
+
+**Opportunities 列表 :**展示该线索所关联的所有商机，若为空，需展示默认样式（@UI）
+- 列表排序规则：按创建时间倒序
+- 点击 **Create Opportunity，**展示添加商机弹窗，若Lead 状态为 successful closed , 则不展示该按钮 12/30 update
+- 点击商机列表中的**Details，**跳转至该商机详情
+
+### 2.4 Opportunities List
+
+#### 搜索区域
+
+搜索区域允许用户根据多种参数来筛选商机。
+
+| Field Name | 类型 | 搜索逻辑 |
+| Follow-up Check | 下拉选择 | 默认全部 |
+| Follow-up Duration | 数字范围选择（@UI）
+
+如允许输入0-1，左右均为闭区间
+
+左侧如为空则从0开始算
+
+右侧如为空，则认为∞ | 默认全部 |
+| BU | 下拉选择 | 支持多选。 |
+| BD | 输入搜索 | 支持多选。like搜索 |
+| Opportunity Status | 下拉选择 | 支持多选。 |
+| Project name | 输入框 | 模糊匹配，输入2个及以上字符时展示匹配结果。 |
+| Customer Type | 下拉选择 | 默认全部 |
+| Customer/lead Status | 下拉选择 | 支持多选。 |
+| Latest Follow-up Time | 时间选择器 | 允许用户选择日期范围。
+
+参考当前已有控件，增加默认时间（近7天，近30天，本月等默认选项） |
+| Potential Volume | 数字范围选择
+
+参考Follow-up Duration | 默认全部 |
+| Creation Time | 时间选择器 | 允许用户选择创建时间的日期范围。
+
+参考当前已有控件，增加默认时间（近7天，近30天，本月等默认选项） |
+
+#### 列表区域
+
+**展示内容**
+
+列表展示了符合搜索条件的所有商机。包含以下字段：
+
+| Field Name | 描述 |
+| Follow-up Check | 跟进情况（正常或超时），hover展示说明文档
+
+说明文案： If a project remains in a non-final state for more than 14 days, it will be marked as "Overtime"
+
+停留在非终态商机状态（包括子状态）大于14天，则为Overtime, 否则为Normal (@UI 需做样式区别）
+
+终态包含：Success closed，	Lost	，Canceled，其他均为非终态 |
+| Follow-up Duration | 跟进持续时间（天数）
+
+非终态商机：从创建开始至当前日期持续天数
+
+终态商机：从创建开始至终态日期持续天数
+
+大于60天需做样式区别 @UI |
+| BU | 商机归属业务单元。 |
+| Project Name | 商机名称。 |
+| Opportunity Status | 商机状态。 |
+| Customer Type | 客户类型：Existing customer ,New Customer
+
+若商机关联客户为customer 则为Existing customer
+
+若商机关联客户为lead 则为New Customer
+
+以商机创建时为准，不做更新 |
+| Customer Name | 关联客户名称。 |
+| Customer/lead  Status | 关联客户/线索状态。 |
+| Latest Follow-up Time | 最新跟进时间。最新一次添加Follow up的时间 |
+| BD | 商机归属BD |
+| Potential Volume | 潜在业务量，在列表中均换算为XXX /M
+
+如：填写为10 trips /day ，则列表中*30，换成为月，若填写的为年量，同理，除以12换算为每月的量 |
+| Remark | 展示最近一次Follow up中的remark ,最近一次若为空，同样进行覆盖 |
+| Creation Time | 线索创建时间。yy-mm-dd hh-mm-ss |
+| Operate | 操作列，包括查看详情和跟进。 |
+
+操作列
+- **Details:** 用户点击后可以查看详情。
+- **follow up:** 点击follow up, 展示跟进弹窗（终态商机不允许编辑及跟进，则不再展示跟进按钮）
+
+排序
+
+列表默认按以下顺序进行排序：
+- **Latest Follow-up Time:** 跟进时间进行降序排列，即更晚跟进的排更前。若跟进时间一致，则按创建时间倒序 1/9
+
+分页参考当前TMS分页样式，确保用户体验的一致性
+
+### 2.5 Create Opportunity
+
+@UI UI建议：创建页面的选项，若项目不多，请尽量平铺选项，以加快创建效率，具体以UI设计为准
+
+|  | Field Name | 类型 | 说明 |
+| 1 | Customer Name | 输入框 | 客户名称，必填项。
+
+输入两个字母后进行模糊匹配，展示客户名称，命中字母，及该客户状态
+
+但若该客户A为从Lead 转为Customer的客户，需屏蔽Lead状态的该客户A
+
+匹配范围为lead表+Customer表 |
+| 2 | Customer Type | 系统返回 | 根据所选择客户为lead或Customer
+
+关联客户为customer 则为Existing customer
+
+关联客户为lead 则为New Customer |
+| 3 | Project Name | 输入框 | 商机项目名称，必填项。
+
+验证逻辑与TMS当前Project Name保持一致 |
+| 4 | Opportunity Status | 默认值 | 默认为Reach Out
+
+须在后续跟进中持续更新该字段值，此处不允许修改 |
+| 5 | BU | 单选 | 必填项。 |
+| 6 | BD PIC | 单选 | 单选，必填项。可选范围与线索一样， 所有角色名带BD 的账号
+
+参考当前project Team Member分配，可选范围为有对应功能权限的人（如BD为线索创建权限，Pricing为 RL 创建权限，VD为 capacity Pool 创建权限）---12/30 update
+
+选择框需列出 Alias Name +角色（具体可参考当前Transfer Customer弹窗） |
+| 7 | Pricing PIC | 单选 | 单选，非必填项，参考BD |
+| 8 | VD PIC | 单选，非必填 | 非必填项，参考BD |
+| 9 | Requirement Type | 单选，非必填 | 需求类型，枚举值为“RFQ”和“Bidding”。 |
+| 10 | Current Requirement | 多选，非必填 | 枚举：
+
+Trucking (Dry)
+Trucking (Reefer)
+DFF (LCL)
+
+DFF (FCL)
+
+IFF (LCL)
+
+IFF (FCL)
+Customs Brokerage
+Warehouse & Storage
+Contract Logistics |
+| 11 | Potential Requirement | 多选，非必填 | 潜在需求
+
+枚举（注意都是首字母大写）：
+
+land transportation
+
+international freight forwarding
+
+warehouse & storage |
+| 12 | Requirement Frequency | 单选，非必填 | 需求频率，枚举:
+
+On Call - Stable Volume
+
+On Call - On demand Volume
+
+Lock in |
+| 13 | Potential Volume | 数值输入+单位选择
+
+非必填 | 潜在业务量
+
+数值仅允许正整数，否则失焦提示“ Enter a positive whole number”
+
+在列表展示的时候，若换算时除不尽，则四舍五入展示为正整数即可--12/30 update
+
+频率选项：Daily ,Monthly, Quarterly，Yearly |
+| 14 | Distance | 单选，非必填 | 距离，枚举:
+
+Drops
+
+Long |
+| 15 | Quotation request received Date | 日期选择器，非必填 | 报价请求接收日期。 |
+| 16 | Quotation Submitted date | 日期选择器，非必填 | 报价提交日期。 |
+| 17 | RFQ Bidding Deadline date | 日期选择器，非必填 | RFQ 投标截止日期。 |
+| 18 | Service Truck | 多选，非必填
+
+下拉选择，需允许搜索，输入两个字母进行模糊匹配 | 可选项为当前登录角色所在国家可选车型 |
+
+### 2.6 Opportunity Details
+
+#### 商机时间线
+
+显示商机的关键时间节点，按实际流转过程展示，如当前商机状态为Quotation Request Received，则仅展示至该状态
+
+节点展示逻辑：
+- 时间，展示该状态的最新跟进时间
+- 节点，若在该状态停留时间超过14天，则标红展示
+- Visit Record, 展示该状态的跟进次数，点击展示在该状态的所有跟进记录弹窗, 添加时间倒序排列
+
+#### **商机信息区域**:
+
+显示详细的商机信息，包括项目名称、项目状态、需求类型、当前需求、潜在需求等。
+
+编辑商机信息弹窗，参考新建商机弹窗。其中Project Name，Opportunity Status不允许编辑，其他均允许编辑
+
+#### 关联客户信息区域:
+
+显示该商机所关联客户或线索的基本信息，包括客户名称、标签、行业、办公地址、接触渠道和网站。
+
+编辑客户信息弹窗，参考新建客户弹窗。其中Customer Name，Customer Status,Customer Type不允许编辑，其他均允许编辑
+
+1/6 Add: 客户信息展示最新的客户信息，当商机转为客户后，该区域展示Customer 实体的信息
+
+#### 跟进记录区域:
+
+显示所有跟进记录，包括跟进人，时间，项目状态、备注、访问类型、访问目标、行动计划和材料。
+
+排序为按跟进时间倒序排列
+
+**不**允许删除与编辑
+
+页面操作：
+
+所有编辑与跟进在商机终态后均不允许编辑
+
+**Associated Project**，若已为Successful Closed 的商机，需自动生成一个Preparing 状态的Project
+
+点击该按钮，跳转至该关联项目详情
+
+其他状态商机，不展示该按钮
+
+**Follow Up，**点击展示跟进弹窗， 终态商机则不展示该按钮
+
+状态默认为当前状态，其他字段根据所选择状态有以下区别
+1. 若跟进状态为Lost 或 Canceled, 则需填写 Lost Reason 或Cancel Reason, Reason需展示在跟进记录中
+1. 若跟进状态为Successeful Closed
+
+点击Confirm时，生成关联的项目
+
+需带至关联项目的信息有：新增字段：BU,Current Requirement,Requirement Type，Potential Volume，Service Truck，Requirement Frequency，Project Name,
+
+已有字段：BD, Pricer,VD,Creation time（取商机自动创建项目的时间），Customer name, Customer Tag
+
+项目生成成功，弹窗提示已完成，若点击 View Project ,跳转至 关联项目详情； 若点击Cancel,回到该线索详情并刷新页面
+
+1. 若跟进状态为Reach Out,  successful contacted--pendig customer meeting，	successful contacted-- requirement acquire	，Quotation request received ，Quotation Submitted - Waiting feedback，Quotation Submitted -  Quotation Update
+- 其中状态变更，仅允许当前状态或下一状态（其中successful contacted--pendig customer meeting 状态可跳过）或canceled及Lost，选项仅给可选状态
+- Visit Activity
+- 其中Visit Type 枚举值为 Onsite Visit, Call
+- Visit Objective，Visit Content ，Action Plan  ：均允许特殊字符，2000字以内；Visit Content 采用当前TMS已有富文本插件即可
+- Material，非必填，采用当前TMS 附件上传插件即可，支持多格式，允许多个
+- 若更新为Quotation request received，且Quotation Request Received Date为空；则当前日期自动填入Quotation Request Received Date，允许修改
+- 若更新为Quotation Submitted，且RFQ Submit Date为空；则当前日期自动填入RFQ Submit Date，允许修改
+
+1. 其中若更新为 Quotation Submitted
+- 需补充Opportunity Information 至完整；
+- 已填写的字段自动带入，均允许修改；填写逻辑参照新建商机
+
+### 2.7 Customers Detail Update
+
+基本信息
+
+更新为默认展开，允许收起
+
+新增字段：Website ,Reach Out Channel,BU, Office Adress
+
+Edit 客户信息时允许编辑 Website ,BU,Office Adress ，Reach Out Channel,
+
+历史数据处理：为空即可
+
+切页
+
+新增Opportunities，展示该客户关联的所有商机。允许从此入口新增商机
+
+需做无数据的默认页面
+
+创建客户
+
+创建客户 页面同样需新增 Website ,Reach Out Channel,BU,Office Adress  字段，均为必填项目
+
+由线索创建的客户需将线索中的已有信息进行回填
+
+Transfer Customer--1/2 update
+
+暂屏蔽掉 BD Transfer 中Leads Pool 的选项
+
+### 2.8 Project Detail Update
+
+基本信息
+
+更新为默认展开，允许收起； 注意字段顺序亦有更新@UI
+
+新增字段：BU,Current Requirement,Requirement Type，Potential Volume，Service Truck，Requirement Frequency
+
+编辑项目时，BU,Current Requirement,Requirement Type，Service Truck，Requirement Frequency ，Potential Volume允许编辑， 增加Logistic category 允许编辑 1/2 update
+
+由商机创建的项目需将商机中的已有信息进行回填
+
+历史数据处理：为空即可
+
+创建项目
+
+创建客户 页面同样需新增 BU,Current Requirement,Requirement Type，Potential Volume，Service Truck，Requirement Frequency  字段，均为必填项目
+
+其他如客户详情页等的项目切页暂不进行字段更新
+
+### 2.9 Statistics
+
+Leads Follow-up Funnel
+
+线索跟进漏斗
+
+By Team 按BU展示所有线索的漏斗情况，允许选择All, 默认选择ALL
+
+By Personal 允许按每个跟进人展示漏斗情况，跟进人允许模糊搜索,允许选择All， 默认选择ALL，可选范围为有关联Lead的 账号，like搜索
+
+选择时间段，即展示该时间段内所有线索的漏斗，默认上周（上周一至上周日），参考TMS当前时间段选择，给几个快速选项，如本周，本月，上月等
+
+漏斗计算逻辑：
+
+第一层：Open, 即所选人员，所选时间段内，所有在Open状态过的线索数，100%
+
+第二层： Following Up,即所选人员，所选时间段内，从Open更新为Following Up状态过的线索数，比率为 Following Up数量/Open 数量*100%
+
+第三层： Successful Closed同理
+
+Opportunities Follow-up Funnel
+
+同线索跟进漏斗，可选范围为有关联 Opportunity 的账号，like搜索
+
+展示从 Reach out 漏至Successful Closed 的漏斗情况
+
+Opportunities Volume
+
+表格：按BD展示其当前跟进商机情况统计
+
+表格排序，按照**Opportunities Number**从大到小排列，展示当前该BD所有商机数量及各状态商机数量
+
+Total 行展示该状态所有人加总商机数
+
+状态所有人加总商机数
+
+柱状图：按BD展示各状态商机数量，同样按商机总数排序
+
+注意需保持柱状图各状态颜色与商机漏斗各状态颜色一致, 刷新频率暂定10min.
+
+### 2.10 权限设置
+
+需对各新增菜单，页面均进行相关权限空置
+
+各列表页独立按钮（如新建，转移）均需设置相应权限
+
+各详情页面 的编辑，新增，Follow Up 按钮均需设置相应权限
