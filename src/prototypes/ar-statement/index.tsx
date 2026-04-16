@@ -21,8 +21,9 @@ import StatementDetailManual from './components/StatementDetailManual';
 import AddInvoiceDialog from './components/AddInvoiceDialog';
 import EditInvoiceDialog from './components/EditInvoiceDialog';
 import ExportPreviewDialog from './components/ExportPreviewDialog';
+import ClaimTicketManage from './components/ClaimTicketManage';
 
-type View = 'list' | 'create' | 'detail-auto' | 'detail-manual';
+type View = 'list' | 'create' | 'detail-auto' | 'detail-manual' | 'claim';
 type Dialog = 'add-invoice' | 'edit-invoice' | 'export' | null;
 
 const Component = function ARStatement() {
@@ -72,24 +73,34 @@ const Component = function ARStatement() {
             onEditInvoice={() => setDialog('edit-invoice')}
           />
         );
+      case 'claim':
+        return (
+          <ClaimTicketManage onBack={() => setView('list')} />
+        );
     }
   };
 
   const getTitle = () => {
     switch (view) {
-      case 'list': return 'AR  Statement';
-      case 'create': return 'AR  Statement';
+      case 'list':
+      case 'create':
       case 'detail-auto':
-      case 'detail-manual': return 'AR  Statement';
+      case 'detail-manual':
+        return 'AR Statement';
+      case 'claim':
+        return 'Claim Ticket Manage';
     }
   };
+
+  const activeMenu = view === 'claim' ? 'claim' : 'ar-statement';
 
   return (
     <AppShell
       title={getTitle()}
-      activeMenu="ar-statement"
+      activeMenu={activeMenu}
       onMenuChange={(menu) => {
         if (menu === 'ar-statement') setView('list');
+        if (menu === 'claim') setView('claim');
       }}
     >
       {renderView()}

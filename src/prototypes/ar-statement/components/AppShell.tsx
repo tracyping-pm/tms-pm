@@ -2,12 +2,16 @@ import React from 'react';
 
 interface AppShellProps {
   title: string;
-  activeMenu: string; // 'ar-statement' | 'ap-statement'
+  activeMenu: string; // 'ar-statement' | 'claim'
   onMenuChange: (menu: string) => void;
   children: React.ReactNode;
+  breadcrumb?: string;
 }
 
-function AppShell({ title, activeMenu, onMenuChange, children }: AppShellProps) {
+function AppShell({ title, activeMenu, onMenuChange, children, breadcrumb }: AppShellProps) {
+  // Derive breadcrumb label from activeMenu if not explicitly provided
+  const breadcrumbCurrent = breadcrumb ?? (activeMenu === 'claim' ? 'Claim Ticket Manage' : 'AR Statement');
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       {/* 左侧导航 */}
@@ -48,33 +52,16 @@ function AppShell({ title, activeMenu, onMenuChange, children }: AppShellProps) 
 
         {/* 菜单 */}
         <div style={{ paddingTop: 8 }}>
-          <div className="nav-item" onClick={() => onMenuChange('home')}>
-            <span style={{ marginRight: 8 }}>&#127968;</span>Home Page
-          </div>
-          <div className="nav-item" onClick={() => onMenuChange('customer')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><span style={{ marginRight: 8 }}>&#128100;</span>Customer Mgmt</span>
-            <span style={{ fontSize: 10, color: '#999' }}>&#9662;</span>
-          </div>
-          <div className="nav-item" onClick={() => onMenuChange('procurement')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><span style={{ marginRight: 8 }}>&#128230;</span>Procurement Mgmt</span>
-            <span style={{ fontSize: 10, color: '#999' }}>&#9662;</span>
-          </div>
-          <div className="nav-item" onClick={() => onMenuChange('project')}>
-            <span style={{ marginRight: 8 }}>&#128203;</span>Project Mgmt
-          </div>
-
-          <div className="nav-group-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Financial Management group */}
+          <div
+            className="nav-group-label"
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+          >
             <span style={{ display: 'inline-block', width: 10, height: 10, backgroundColor: '#00b96b', borderRadius: 2 }} />
-            AR&amp;AP Mgmt
+            Financial Management
             <span style={{ fontSize: 10, color: '#999', marginLeft: 'auto' }}>&#9652;</span>
           </div>
-          <div
-            className="nav-item"
-            onClick={() => onMenuChange('ar-dashboard')}
-            style={{ paddingLeft: 36 }}
-          >
-            AR Dashboard
-          </div>
+
           <div
             className={`nav-item${activeMenu === 'ar-statement' ? ' active' : ''}`}
             onClick={() => onMenuChange('ar-statement')}
@@ -82,25 +69,13 @@ function AppShell({ title, activeMenu, onMenuChange, children }: AppShellProps) 
           >
             AR Statement
           </div>
+
           <div
-            className={`nav-item${activeMenu === 'ap-statement' ? ' active' : ''}`}
-            onClick={() => onMenuChange('ap-statement')}
+            className={`nav-item${activeMenu === 'claim' ? ' active' : ''}`}
+            onClick={() => onMenuChange('claim')}
             style={{ paddingLeft: 36 }}
           >
-            AP Statement
-          </div>
-
-          <div className="nav-item" onClick={() => onMenuChange('user')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><span style={{ marginRight: 8 }}>&#128101;</span>User Mgmt</span>
-            <span style={{ fontSize: 10, color: '#999' }}>&#9662;</span>
-          </div>
-          <div className="nav-item" onClick={() => onMenuChange('statistics')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><span style={{ marginRight: 8 }}>&#128202;</span>Statistics</span>
-            <span style={{ fontSize: 10, color: '#999' }}>&#9662;</span>
-          </div>
-          <div className="nav-item" onClick={() => onMenuChange('tools')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><span style={{ marginRight: 8 }}>&#128295;</span>Tools</span>
-            <span style={{ fontSize: 10, color: '#999' }}>&#9662;</span>
+            Claim Ticket Manage
           </div>
         </div>
       </nav>
@@ -109,12 +84,13 @@ function AppShell({ title, activeMenu, onMenuChange, children }: AppShellProps) 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* 顶部 Header */}
         <header className="top-header" style={{ justifyContent: 'space-between' }}>
-          {/* 左侧：页面标题 + 下拉箭头 */}
+          {/* 左侧：面包屑导航 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#333' }}>{title}</span>
-            <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-              <path d="M0 0l5 6 5-6z" fill="#555" />
+            <span style={{ fontSize: 15, color: '#888' }}>Financial Management</span>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M1 1l4 4-4 4" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#333' }}>{breadcrumbCurrent}</span>
           </div>
 
           {/* 右侧：工具栏 */}

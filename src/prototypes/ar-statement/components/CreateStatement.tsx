@@ -1,129 +1,288 @@
 import React, { useState } from 'react';
 
-interface WaybillItem {
-  id: string;
-  waybillNumber: string;
-  projectName: string;
-  customerCode: string;
-  billingTruckType: string;
-  positionTime: string;
-  unloadingTime: string;
-}
-
-const WAYBILL_DATA: WaybillItem[] = [
-  { id: '1', waybillNumber: 'PHW26021360D', projectName: 'Ethan0417, URC-Cebu', customerCode: 'External Code:P301499632', billingTruckType: '10 Wheeler Wing Van', positionTime: '2026-02-13 15:00:00', unloadingTime: '2026-02-16 14:55:46' },
-  { id: '2', waybillNumber: 'PHW2602183L1', projectName: 'Ethan0417, URC-Cebu', customerCode: 'External Code:P301505260', billingTruckType: '10 Wheeler Wing Van', positionTime: '2026-02-18 17:00:00', unloadingTime: '2026-02-21 12:01:39' },
-  { id: '3', waybillNumber: 'PHW2603055A2', projectName: 'Richard Project', customerCode: 'RC-20250301', billingTruckType: '6 Wheeler', positionTime: '2026-03-05 08:00:00', unloadingTime: '2026-03-06 10:30:00' },
-  { id: '4', waybillNumber: 'PHW2603112B7', projectName: 'Ethan0417, URC-Cebu', customerCode: 'External Code:P301499632', billingTruckType: '10 Wheeler Wing Van', positionTime: '2026-03-11 14:00:00', unloadingTime: '2026-03-13 09:15:00' },
-  { id: '5', waybillNumber: 'PHW2603198C4', projectName: 'Overview project', customerCode: 'OV-20250320', billingTruckType: '4 Wheeler', positionTime: '2026-03-19 06:00:00', unloadingTime: '2026-03-20 11:00:00' },
-];
-
 interface CreateStatementProps {
   onGenerate: (allocationMode: 'auto' | 'manual') => void;
   onAddInvoice: () => void;
   onBack: () => void;
 }
 
-const TOOLTIP_TEXT =
-  'Manual Allocation: applicable when settlement waybills are inconsistent across multiple entities.\nAutomatic Allocation: The system distributes all settlement items proportionally based on the invoice amount\'s share of the statement total.';
+const CUSTOMER_TAX_MARKS: Record<string, string> = {
+  customerA: 'Tax-inclusive',
+  customerB: 'Tax-exclusive',
+  customerC: 'Tax-inclusive',
+};
 
-const INVOICE_ROWS = [
-  {
-    entity: 'Nestels Comsdfh PH',
-    number: '1234567898',
-    date: '18,12/2025',
-    creditTerm: 40,
-    proof: 'CL2510001.pdf',
-  },
-  {
-    entity: 'Nestels Comsdfh PH',
-    number: '1234567898',
-    date: '18,11/2025',
-    creditTerm: 40,
-    proof: 'CL2510001.pic',
-  },
-];
+const SETTLEMENT_ITEM_KEYS = [
+  'customerBasicAmount',
+  'customerAdditionalCharge',
+  'customerExceptionFee',
+  'reimbursementExpense',
+] as const;
 
-const CLAIM_TICKETS = [
-  {
-    number: 'CL2510001',
-    type: 'Claim Ticket',
-    party: 'ACAA Trucking Services',
-    claimType: 'KPI Claim',
-    amount: '1,025.00',
-    customer: 'Deducted',
-    vendor: 'Deducted',
-    creator: 'Jhea',
-  },
-  {
-    number: 'CL2510002',
-    type: 'Refund Ticket',
-    party: 'ACAA Trucking Services',
-    claimType: 'Delivery late',
-    amount: '10,000.00',
-    customer: 'Deducted',
-    vendor: 'Deducted',
-    creator: 'Jhea',
-  },
-  {
-    number: 'CL2510003',
-    type: 'Claim Ticket',
-    party: 'Inteluck',
-    claimType: 'Delivery late',
-    amount: '200.25',
-    customer: 'Deducted',
-    vendor: 'Deducted',
-    creator: 'Jhea',
-  },
-];
+type SettlementItemKey = (typeof SETTLEMENT_ITEM_KEYS)[number];
+
+const SETTLEMENT_ITEM_LABELS: Record<SettlementItemKey, string> = {
+  customerBasicAmount: 'Customer Basic Amount',
+  customerAdditionalCharge: 'Customer Additional Charge',
+  customerExceptionFee: 'Customer Exception Fee',
+  reimbursementExpense: 'Reimbursement Expense',
+};
 
 function CreateStatement({ onGenerate, onAddInvoice, onBack }: CreateStatementProps) {
-  const [basedOnWaybill, setBasedOnWaybill] = useState<'yes' | 'no'>('yes');
-  const [taxInclusive, setTaxInclusive] = useState<'yes' | 'no' | null>(null);
-  const [allocationMode, setAllocationMode] = useState<'auto' | 'manual'>('manual');
-  const [activeTab, setActiveTab] = useState<'waybill' | 'claim-ticket'>('waybill');
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [selectedWaybills, setSelectedWaybills] = useState<Set<string>>(new Set(['1', '2']));
+  // Basic Information state
+  const [statementType, setStatementType] = useState<'standard' | 'standalone'>('standard');
+  const [customer, setCustomer] = useState('');
+  const [reconciliationStart, setReconciliationStart] = useState('');
+  const [reconciliationEnd, setReconciliationEnd] = useState('');
+  const [settlementItems, setSettlementItems] = useState<Record<SettlementItemKey | 'all', boolean>>({
+    all: false,
+    customerBasicAmount: false,
+    customerAdditionalCharge: false,
+    customerExceptionFee: false,
+    reimbursementExpense: false,
+  });
+  const [statementTaxMark, setStatementTaxMark] = useState<'tax-inclusive' | 'tax-exclusive' | ''>('');
 
-  const toggleWaybill = (id: string) => {
-    setSelectedWaybills(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  // Source Modules state
+  const [activeTab, setActiveTab] = useState<'waybill' | 'claim'>('waybill');
+  const [allocationMode, setAllocationMode] = useState<'auto' | 'manual'>('auto');
+
+  // Settlement item helpers
+  const handleAllToggle = () => {
+    const next = !settlementItems.all;
+    const updated = { all: next } as Record<SettlementItemKey | 'all', boolean>;
+    SETTLEMENT_ITEM_KEYS.forEach(k => { updated[k] = next; });
+    setSettlementItems(updated);
   };
 
-  const toggleAllWaybills = () => {
-    if (selectedWaybills.size === WAYBILL_DATA.length) {
-      setSelectedWaybills(new Set());
-    } else {
-      setSelectedWaybills(new Set(WAYBILL_DATA.map(w => w.id)));
-    }
+  const handleItemToggle = (key: SettlementItemKey) => {
+    const next = { ...settlementItems, [key]: !settlementItems[key] };
+    const allChecked = SETTLEMENT_ITEM_KEYS.every(k => next[k]);
+    next.all = allChecked;
+    setSettlementItems(next);
   };
 
-  const [settledItems, setSettledItems] = useState({
-    all: true,
-    basicAmount: false,
-    exceptionFee: false,
-    additionalCharge: false,
-    reimbursement: false,
+  const customerTaxMark = customer ? (CUSTOMER_TAX_MARKS[customer] ?? '-') : '-';
+
+  // Derived summary tax display
+  const taxInclusiveActive = statementTaxMark === 'tax-inclusive';
+  const taxExclusiveActive = statementTaxMark === 'tax-exclusive';
+
+  // Checked settlement items for summary sub-list
+  const checkedItems = SETTLEMENT_ITEM_KEYS.filter(k => settlementItems[k]);
+
+  // Styles
+  const sectionStyle: React.CSSProperties = {
+    backgroundColor: '#fff',
+    padding: '20px 24px',
+    borderRadius: 4,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: 15,
+    fontWeight: 600,
+    color: '#333',
+    marginBottom: 16,
+    paddingBottom: 10,
+    borderBottom: '1px solid #f0f0f0',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 13,
+    color: '#333',
+    whiteSpace: 'nowrap',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 3,
+  };
+
+  const requiredStar = <span style={{ color: '#ff4d4f', marginRight: 2 }}>*</span>;
+
+  const formGroupStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-start',
+    flexDirection: 'column',
+    gap: 6,
+  };
+
+  const inlineGroupStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    flexWrap: 'wrap',
+  };
+
+  const radioLabelStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    cursor: 'pointer',
+    fontSize: 13,
+    color: '#333',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    border: '1px solid #d9d9d9',
+    borderRadius: 4,
+    padding: '5px 10px',
+    fontSize: 13,
+    color: '#333',
+    outline: 'none',
+    minWidth: 220,
+    backgroundColor: '#fff',
+  };
+
+  const dateInputStyle: React.CSSProperties = {
+    border: '1px solid #d9d9d9',
+    borderRadius: 4,
+    padding: '5px 10px',
+    fontSize: 13,
+    color: '#333',
+    outline: 'none',
+    minWidth: 150,
+  };
+
+  const infoValueStyle: React.CSSProperties = {
+    fontSize: 13,
+    color: '#666',
+    padding: '5px 0',
+  };
+
+  const btnPrimaryStyle: React.CSSProperties = {
+    backgroundColor: '#00b96b',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    padding: '6px 14px',
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+  };
+
+  const btnDefaultStyle: React.CSSProperties = {
+    backgroundColor: '#fff',
+    color: '#333',
+    border: '1px solid #d9d9d9',
+    borderRadius: 4,
+    padding: '6px 14px',
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+  };
+
+  const btnDangerStyle: React.CSSProperties = {
+    backgroundColor: '#fff',
+    color: '#ff4d4f',
+    border: '1px solid #ff4d4f',
+    borderRadius: 4,
+    padding: '5px 12px',
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+  };
+
+  const btnSuccessStyle: React.CSSProperties = {
+    backgroundColor: '#00b96b',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    padding: '6px 14px',
+    fontSize: 13,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+  };
+
+  const tabBarStyle: React.CSSProperties = {
+    display: 'flex',
+    borderBottom: '2px solid #f0f0f0',
+    marginBottom: 16,
+    gap: 0,
+  };
+
+  const getTabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '8px 20px',
+    fontSize: 14,
+    cursor: 'pointer',
+    borderBottom: active ? '2px solid #00b96b' : '2px solid transparent',
+    color: active ? '#00b96b' : '#555',
+    fontWeight: active ? 600 : 400,
+    marginBottom: -2,
+    userSelect: 'none',
   });
 
-  const handleAllToggle = () => {
-    const next = !settledItems.all;
-    setSettledItems({
-      all: next,
-      basicAmount: next,
-      exceptionFee: next,
-      additionalCharge: next,
-      reimbursement: next,
-    });
+  const tableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: 13,
+  };
+
+  const thStyle: React.CSSProperties = {
+    backgroundColor: '#fafafa',
+    padding: '10px 12px',
+    textAlign: 'left',
+    fontWeight: 600,
+    color: '#333',
+    borderBottom: '1px solid #e8e8e8',
+    whiteSpace: 'nowrap',
+  };
+
+  const tdStyle: React.CSSProperties = {
+    padding: '10px 12px',
+    borderBottom: '1px solid #f0f0f0',
+    color: '#333',
+    verticalAlign: 'middle',
+  };
+
+  const emptyRowStyle: React.CSSProperties = {
+    textAlign: 'center',
+    color: '#999',
+    padding: '32px 12px',
+    fontSize: 13,
+  };
+
+  const dotStyle = (active: boolean): React.CSSProperties => ({
+    display: 'inline-block',
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: active ? '#00b96b' : '#d9d9d9',
+    marginRight: 5,
+    verticalAlign: 'middle',
+  });
+
+  const amountColHeadStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 0',
+    borderBottom: '1px solid #f0f0f0',
+    marginBottom: 8,
+  };
+
+  const badgeStyle: React.CSSProperties = {
+    display: 'inline-block',
+    backgroundColor: '#f0f0f0',
+    color: '#666',
+    fontSize: 12,
+    padding: '1px 8px',
+    borderRadius: 10,
+    marginLeft: 8,
+    fontWeight: 400,
+    verticalAlign: 'middle',
   };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Top action bar */}
+      {/* ── Top action bar ── */}
       <div
         style={{
           backgroundColor: '#fff',
@@ -134,446 +293,452 @@ function CreateStatement({ onGenerate, onAddInvoice, onBack }: CreateStatementPr
           justifyContent: 'space-between',
         }}
       >
-        {/* Breadcrumb */}
-        <div style={{ fontSize: 14, color: '#666', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span
-            className="link-blue"
-            onClick={onBack}
-            style={{ cursor: 'pointer' }}
-          >
-            Customer Statement
-          </span>
-          <span style={{ color: '#999' }}>\</span>
-          <span style={{ color: '#333', fontWeight: 500 }}>Create AR Statement</span>
-        </div>
-
-        {/* Action buttons */}
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#222' }}>Create AR Statement</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-default">Reset</button>
-          <button
-            className="btn-primary"
-            onClick={() => onGenerate(allocationMode)}
-            disabled={selectedWaybills.size === 0}
-            style={selectedWaybills.size === 0 ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-          >
-            Generate
+          <button style={btnDefaultStyle} onClick={onBack}>
+            ← Back
+          </button>
+          <button style={btnDefaultStyle}>
+            💾 Save
+          </button>
+          <button style={btnSuccessStyle} onClick={() => onGenerate(allocationMode)}>
+            ✓ Submit
           </button>
         </div>
       </div>
 
       <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Basic Setting */}
-        <div style={{ backgroundColor: '#fff', padding: '20px 24px', borderRadius: 4 }}>
-          <div className="section-title">Basic Setting</div>
 
-          {/* Row 1: Is statement based on waybill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 13, color: '#ff4d4f', marginRight: 2 }}>*</span>
-            <span style={{ fontSize: 13, color: '#333' }}>Is statement based on waybill:</span>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-              <input
-                type="radio"
-                name="basedOnWaybill"
-                checked={basedOnWaybill === 'yes'}
-                onChange={() => setBasedOnWaybill('yes')}
-                style={{ accentColor: '#00b96b' }}
-              />
-              Yes
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-              <input
-                type="radio"
-                name="basedOnWaybill"
-                checked={basedOnWaybill === 'no'}
-                onChange={() => setBasedOnWaybill('no')}
-              />
-              No
-            </label>
+        {/* ══ Basic Information ══ */}
+        <div style={sectionStyle}>
+          <div style={sectionTitleStyle}>Basic Information</div>
+
+          {/* 4-column grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '18px 24px',
+            }}
+          >
+            {/* Statement Type */}
+            <div style={{ ...formGroupStyle, gridColumn: '1 / 2' }}>
+              <div style={labelStyle}>{requiredStar} Statement Type</div>
+              <div style={inlineGroupStyle}>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="statementType"
+                    value="standard"
+                    checked={statementType === 'standard'}
+                    onChange={() => setStatementType('standard')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Standard
+                </label>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="statementType"
+                    value="standalone"
+                    checked={statementType === 'standalone'}
+                    onChange={() => setStatementType('standalone')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Standalone
+                </label>
+              </div>
+              <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+                Standard uses Waybill-linked, Standalone uses Non-waybill.
+              </div>
+            </div>
+
+            {/* Customer */}
+            <div style={{ ...formGroupStyle, gridColumn: '2 / 3' }}>
+              <div style={labelStyle}>{requiredStar} Customer</div>
+              <select
+                style={selectStyle}
+                value={customer}
+                onChange={e => setCustomer(e.target.value)}
+              >
+                <option value="">Please select</option>
+                <option value="customerA">Customer A - ABC Logistics</option>
+                <option value="customerB">Customer B - XYZ Trading</option>
+                <option value="customerC">Customer C - Global Freight Co.</option>
+              </select>
+            </div>
+
+            {/* Reconciliation Period — spans 2 cols */}
+            <div style={{ ...formGroupStyle, gridColumn: '3 / 5' }}>
+              <div style={labelStyle}>{requiredStar} Reconciliation Period</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="date"
+                  style={dateInputStyle}
+                  value={reconciliationStart}
+                  onChange={e => setReconciliationStart(e.target.value)}
+                />
+                <span style={{ color: '#999', fontSize: 14 }}>~</span>
+                <input
+                  type="date"
+                  style={dateInputStyle}
+                  value={reconciliationEnd}
+                  onChange={e => setReconciliationEnd(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Items to be settled — spans all 4 cols */}
+            <div style={{ ...formGroupStyle, gridColumn: '1 / 5' }}>
+              <div style={labelStyle}>{requiredStar} Items to be settled</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="checkbox"
+                    checked={settlementItems.all}
+                    onChange={handleAllToggle}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  All
+                </label>
+                {SETTLEMENT_ITEM_KEYS.map(key => (
+                  <label key={key} style={radioLabelStyle}>
+                    <input
+                      type="checkbox"
+                      checked={settlementItems[key]}
+                      onChange={() => handleItemToggle(key)}
+                      style={{ accentColor: '#00b96b' }}
+                    />
+                    {SETTLEMENT_ITEM_LABELS[key]}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Tax Mark */}
+            <div style={{ ...formGroupStyle, gridColumn: '1 / 2' }}>
+              <div style={labelStyle}>Customer Tax Mark</div>
+              <div style={infoValueStyle}>{customerTaxMark}</div>
+            </div>
+
+            {/* Statement Tax Mark — spans 3 cols */}
+            <div style={{ ...formGroupStyle, gridColumn: '2 / 5' }}>
+              <div style={labelStyle}>{requiredStar} Statement Tax Mark</div>
+              <div style={inlineGroupStyle}>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="statementTaxMark"
+                    value="tax-inclusive"
+                    checked={statementTaxMark === 'tax-inclusive'}
+                    onChange={() => setStatementTaxMark('tax-inclusive')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Tax-inclusive
+                </label>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="statementTaxMark"
+                    value="tax-exclusive"
+                    checked={statementTaxMark === 'tax-exclusive'}
+                    onChange={() => setStatementTaxMark('tax-exclusive')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Tax-exclusive
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ══ Source Modules (tabs) ══ */}
+        <div style={sectionStyle}>
+          <div style={sectionTitleStyle}>Source Modules</div>
+
+          {/* Tab bar */}
+          <div style={tabBarStyle}>
+            <div style={getTabStyle(activeTab === 'waybill')} onClick={() => setActiveTab('waybill')}>
+              Select Waybill
+            </div>
+            <div style={getTabStyle(activeTab === 'claim')} onClick={() => setActiveTab('claim')}>
+              Select Claim Ticket
+            </div>
           </div>
 
-          {/* Row 2: Customer Name + Reconciliation Period */}
-          <div style={{ display: 'flex', gap: 24, marginBottom: 16, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, color: '#ff4d4f' }}>*</span>
-              <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>Customer Name:</span>
-              <div style={{ position: 'relative' }}>
-                <input
-                  className="filter-input"
-                  placeholder="Customer Name"
-                  style={{ paddingRight: 28, minWidth: 180 }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#999',
-                    fontSize: 13,
-                    pointerEvents: 'none',
-                  }}
+          {/* ── Waybill tab ── */}
+          {activeTab === 'waybill' && (
+            <div>
+              {/* Allocation Mode */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 20,
+                  marginBottom: 14,
+                  padding: '10px 14px',
+                  backgroundColor: '#fafafa',
+                  border: '1px solid #f0f0f0',
+                  borderRadius: 4,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ ...labelStyle, fontWeight: 600 }}>
+                  {requiredStar} Allocation Mode
+                </div>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="allocationMode"
+                    value="auto"
+                    checked={allocationMode === 'auto'}
+                    onChange={() => setAllocationMode('auto')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Auto allocate waybill amount to all invoices
+                </label>
+                <label style={radioLabelStyle}>
+                  <input
+                    type="radio"
+                    name="allocationMode"
+                    value="manual"
+                    checked={allocationMode === 'manual'}
+                    onChange={() => setAllocationMode('manual')}
+                    style={{ accentColor: '#00b96b' }}
+                  />
+                  Manually allocate waybill and amount to invoices
+                </label>
+              </div>
+
+              {/* Toolbar */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button
+                  style={{ ...btnPrimaryStyle, fontSize: 13, padding: '5px 12px' }}
+                  onClick={() => alert('TODO: Open Add Waybill modal')}
                 >
-                  🔍
+                  + Add Waybill
+                </button>
+                <button style={{ ...btnDangerStyle, fontSize: 13, padding: '5px 12px' }}>
+                  🗑 Remove Selected
+                </button>
+              </div>
+
+              {/* Waybill table */}
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: 36 }}>
+                      <input type="checkbox" />
+                    </th>
+                    <th style={thStyle}>Waybill No.</th>
+                    <th style={thStyle}>Customer Code</th>
+                    <th style={thStyle}>Billing Truck Type</th>
+                    <th style={thStyle}>Position Time</th>
+                    <th style={thStyle}>Unloading Time</th>
+                    <th style={thStyle}>Amount</th>
+                    <th style={thStyle}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan={8} style={emptyRowStyle}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '20px 0' }}>
+                        <span style={{ fontSize: 28, color: '#d9d9d9' }}>📭</span>
+                        <span>No data. Click "Add Waybill" to select.</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* ── Claim Ticket tab ── */}
+          {activeTab === 'claim' && (
+            <div>
+              {/* Toolbar */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button
+                  style={{ ...btnPrimaryStyle, fontSize: 13, padding: '5px 12px' }}
+                  onClick={() => alert('TODO: Open Add Claim Ticket modal')}
+                >
+                  + Add Claim Ticket
+                </button>
+                <button style={{ ...btnDangerStyle, fontSize: 13, padding: '5px 12px' }}>
+                  🗑 Remove Selected
+                </button>
+              </div>
+
+              {/* Claim Ticket table */}
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: 36 }}>
+                      <input type="checkbox" />
+                    </th>
+                    <th style={thStyle}>Ticket No.</th>
+                    <th style={thStyle}>Claim Type</th>
+                    <th style={thStyle}>Claim Amount</th>
+                    <th style={thStyle}>Currency</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Associate Invoice</th>
+                    <th style={thStyle}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan={8} style={emptyRowStyle}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '20px 0' }}>
+                        <span style={{ fontSize: 28, color: '#d9d9d9' }}>📭</span>
+                        <span>No data. Click "Add Claim Ticket" to select.</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ══ Amount Summary ══ */}
+        <div style={sectionStyle}>
+          <div style={sectionTitleStyle}>Amount Summary</div>
+
+          {/* Top row: total + tax mark */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px',
+              backgroundColor: '#f6ffed',
+              border: '1px solid #b7eb8f',
+              borderRadius: 6,
+              marginBottom: 16,
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>Total Amount Receivable</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#00b96b' }}>₱0.00</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+              <div style={{ fontSize: 13, color: '#666' }}>Statement Tax Mark</div>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <span style={{ fontSize: 13, color: taxInclusiveActive ? '#00b96b' : '#bbb' }}>
+                  <span style={dotStyle(taxInclusiveActive)} />
+                  Tax-inclusive
+                </span>
+                <span style={{ fontSize: 13, color: taxExclusiveActive ? '#00b96b' : '#bbb' }}>
+                  <span style={dotStyle(taxExclusiveActive)} />
+                  Tax-exclusive
                 </span>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, color: '#ff4d4f' }}>*</span>
-              <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>Reconciliation Period:</span>
-              <input
-                className="filter-input"
-                placeholder="Unloading Time Start"
-                style={{ minWidth: 160 }}
-              />
-              <span style={{ color: '#999', fontSize: 13 }}>→</span>
-              <input
-                className="filter-input"
-                placeholder="Unloading Time End"
-                style={{ minWidth: 160 }}
-              />
-            </div>
           </div>
 
-          {/* Row 3: Items To Be Settled */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: '#ff4d4f' }}>*</span>
-            <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>Items To Be Settled:</span>
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'basicAmount', label: 'Customer Basic Amount' },
-              { key: 'exceptionFee', label: 'Customer Exception Fee' },
-              { key: 'additionalCharge', label: 'Customer Additional Charge' },
-              { key: 'reimbursement', label: 'Reimbursement Expense' },
-            ].map(({ key, label }) => (
-              <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                <input
-                  type="checkbox"
-                  checked={settledItems[key as keyof typeof settledItems]}
-                  onChange={key === 'all' ? handleAllToggle : () =>
-                    setSettledItems(prev => ({ ...prev, [key]: !prev[key as keyof typeof settledItems] }))
-                  }
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-
-          {/* Row 4: Customer Tax Mark + Tax-inclusive + Manually allocate */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#333' }}>
-              <span>Customer Tax Mark:</span>
-              <span style={{ color: '#666' }}>-</span>
+          {/* 3-column grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {/* Waybill Contract Revenue */}
+            <div style={{ border: '1px solid #f0f0f0', borderRadius: 4, padding: '12px 16px' }}>
+              <div style={amountColHeadStyle}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>Waybill Contract Revenue</span>
+                <span style={{ fontWeight: 700, color: '#333' }}>₱0.00</span>
+              </div>
+              {checkedItems.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {checkedItems.map(key => (
+                    <div
+                      key={key}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}
+                    >
+                      <span>{SETTLEMENT_ITEM_LABELS[key]}</span>
+                      <span>₱0.00</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: '#bbb', paddingTop: 4 }}>
+                  No settlement items selected.
+                </div>
+              )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, color: '#ff4d4f' }}>*</span>
-              <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>Is the Settlement Tax-inclusive:</span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                <input
-                  type="radio"
-                  name="taxInclusive"
-                  checked={taxInclusive === 'yes'}
-                  onChange={() => setTaxInclusive('yes')}
-                />
-                Yes
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                <input
-                  type="radio"
-                  name="taxInclusive"
-                  checked={taxInclusive === 'no'}
-                  onChange={() => setTaxInclusive('no')}
-                />
-                No
-              </label>
+            {/* Claim */}
+            <div style={{ border: '1px solid #f0f0f0', borderRadius: 4, padding: '12px 16px' }}>
+              <div style={amountColHeadStyle}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>Claim</span>
+                <span style={{ fontWeight: 700, color: '#333' }}>₱0.00</span>
+              </div>
             </div>
 
-            {/* Manually allocate settlement amounts */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                border: '1px solid #d9d9d9',
-                borderRadius: 4,
-                padding: '6px 12px',
-                position: 'relative',
-              }}
-            >
-              <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>
-                Manually allocate settlement amounts?
-              </span>
-              {/* Help icon */}
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  border: '1px solid #999',
-                  fontSize: 11,
-                  color: '#666',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-              >
-                ?
-                {showTooltip && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '120%',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      backgroundColor: '#333',
-                      color: '#fff',
-                      padding: '8px 12px',
-                      borderRadius: 4,
-                      fontSize: 12,
-                      lineHeight: 1.6,
-                      whiteSpace: 'pre-line',
-                      width: 340,
-                      zIndex: 100,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                    }}
-                  >
-                    {TOOLTIP_TEXT}
-                  </div>
-                )}
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                <input
-                  type="radio"
-                  name="allocation"
-                  checked={allocationMode === 'auto'}
-                  onChange={() => setAllocationMode('auto')}
-                />
-                Automatic
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                <input
-                  type="radio"
-                  name="allocation"
-                  checked={allocationMode === 'manual'}
-                  onChange={() => setAllocationMode('manual')}
-                  style={{ accentColor: '#00b96b' }}
-                />
-                Manual
-              </label>
+            {/* Others */}
+            <div style={{ border: '1px solid #f0f0f0', borderRadius: 4, padding: '12px 16px' }}>
+              <div style={amountColHeadStyle}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>Others</span>
+                <span style={{ fontWeight: 700, color: '#333' }}>₱0.00</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}>
+                  <span>VAT</span>
+                  <span>₱0.00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#666' }}>
+                  <span>WHT</span>
+                  <span>₱0.00</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tab section: Select Waybill / Select Claim Ticket */}
-        <div style={{ backgroundColor: '#fff', padding: '20px 24px', borderRadius: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 0 }}>
-            <div className="tab-bar" style={{ marginBottom: 0, flex: 1 }}>
-              <div
-                className={`tab-item${activeTab === 'waybill' ? ' active' : ''}`}
-                onClick={() => setActiveTab('waybill')}
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                <span style={{ color: '#ff4d4f' }}>*</span>
-                Select Waybill
-              </div>
-              <div
-                className={`tab-item${activeTab === 'claim-ticket' ? ' active' : ''}`}
-                onClick={() => setActiveTab('claim-ticket')}
-              >
-                Select Claim Ticket
-              </div>
+        {/* ══ Selected Invoices ══ */}
+        <div style={sectionStyle}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 14,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#333' }}>Selected Invoices</span>
+              <span style={badgeStyle}>0 items</span>
+              <span style={{ fontSize: 13, color: '#999', marginLeft: 4 }}>
+                Total Invoice Amount: ₱0.00
+              </span>
             </div>
-            {/* Help icon next to tab bar */}
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                border: '1px solid #999',
-                fontSize: 11,
-                color: '#666',
-                cursor: 'pointer',
-                marginBottom: 2,
-                flexShrink: 0,
-              }}
-            >
-              ?
-            </span>
+            <button style={{ ...btnPrimaryStyle, fontSize: 13, padding: '5px 12px' }} onClick={onAddInvoice}>
+              + Add Invoice
+            </button>
           </div>
 
-          {/* Waybill tab content */}
-          {activeTab === 'waybill' && (
-            <div style={{ marginTop: 16 }}>
-              {/* Filters */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                <select className="filter-select">
-                  <option>Project Name</option>
-                </select>
-                <select className="filter-select">
-                  <option>Waybill Number</option>
-                </select>
-                <input className="filter-input" placeholder="Customer Code" />
-                <select className="filter-select">
-                  <option>Billing Truck Type</option>
-                </select>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                  <button className="btn-default">Reset</button>
-                  <button className="btn-primary">Search</button>
-                </div>
-              </div>
-
-              {/* Count */}
-              <div style={{ fontSize: 13, color: '#333', marginBottom: 10 }}>
-                {WAYBILL_DATA.length} waybills total, {selectedWaybills.size} waybills selected.
-              </div>
-
-              {/* Table */}
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 36 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedWaybills.size === WAYBILL_DATA.length}
-                        onChange={toggleAllWaybills}
-                      />
-                    </th>
-                    <th>Waybill Number</th>
-                    <th>Project Name</th>
-                    <th>Customer Code</th>
-                    <th>Billing Truck Type</th>
-                    <th>Position Time</th>
-                    <th>Unloading Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {WAYBILL_DATA.map(item => (
-                    <tr key={item.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedWaybills.has(item.id)}
-                          onChange={() => toggleWaybill(item.id)}
-                        />
-                      </td>
-                      <td><span className="link-blue">{item.waybillNumber}</span></td>
-                      <td>{item.projectName}</td>
-                      <td>{item.customerCode}</td>
-                      <td>{item.billingTruckType}</td>
-                      <td>{item.positionTime}</td>
-                      <td>{item.unloadingTime}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Claim Ticket tab content */}
-          {activeTab === 'claim-ticket' && (
-            <div style={{ marginTop: 16 }}>
-              {/* Filters */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                <input className="filter-input" placeholder="Ticket Number" />
-                <input className="filter-input" placeholder="Ticket Type" />
-                <input className="filter-input" placeholder="Claim Ticket Type" />
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                  <button className="btn-default">Reset</button>
-                  <button className="btn-primary">Search</button>
-                </div>
-              </div>
-
-              {/* Summary row */}
-              <div style={{ fontSize: 13, color: '#333', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>4 tickets total, 2 tickets selected.</span>
-                <span>Associate invoice now?</span>
-                <button className="btn-default" style={{ padding: '3px 12px' }}>Associate</button>
-              </div>
-
-              {/* Claim Ticket Table */}
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 36 }}>
-                      <input type="checkbox" />
-                    </th>
-                    <th>Claim Ticket Number</th>
-                    <th>Ticket Type</th>
-                    <th>Responsible Party</th>
-                    <th>Claim Type</th>
-                    <th>Amount</th>
-                    <th>Deduction for Customer</th>
-                    <th>Deduction for Vendor</th>
-                    <th>Creator</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {CLAIM_TICKETS.map(ticket => (
-                    <tr key={ticket.number}>
-                      <td>
-                        <input type="checkbox" defaultChecked={ticket.number !== 'CL2510003'} />
-                      </td>
-                      <td>
-                        <span className="link-blue">{ticket.number}</span>
-                      </td>
-                      <td>{ticket.type}</td>
-                      <td>{ticket.party}</td>
-                      <td>{ticket.claimType}</td>
-                      <td style={{ textAlign: 'right' }}>{ticket.amount}</td>
-                      <td>{ticket.customer}</td>
-                      <td>{ticket.vendor}</td>
-                      <td style={{ fontWeight: 600 }}>{ticket.creator}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Invoice section */}
-        <div style={{ backgroundColor: '#fff', padding: '20px 24px', borderRadius: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div className="section-title" style={{ marginBottom: 0 }}>Invoice</div>
-            <span className="link-blue" style={{ fontSize: 13, cursor: 'pointer' }} onClick={onAddInvoice}>
-              Add Invoice
-            </span>
-          </div>
-
-          <table className="data-table">
+          <table style={tableStyle}>
             <thead>
               <tr>
-                <th>Client Entity</th>
-                <th>Invoice Number</th>
-                <th>Invoice Date</th>
-                <th>Customer Credit Term (Days)</th>
-                <th>Proof</th>
+                <th style={thStyle}>Invoice No.</th>
+                <th style={thStyle}>Client Entity</th>
+                <th style={thStyle}>Invoice Date</th>
+                <th style={thStyle}>Invoice Amount</th>
+                <th style={thStyle}>Document</th>
+                <th style={thStyle}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {INVOICE_ROWS.map((row, i) => (
-                <tr key={i}>
-                  <td>{row.entity}</td>
-                  <td>{row.number}</td>
-                  <td>{row.date}</td>
-                  <td>{row.creditTerm}</td>
-                  <td>
-                    <span className="link-blue">{row.proof}</span>
-                  </td>
-                </tr>
-              ))}
+              <tr>
+                <td colSpan={6} style={emptyRowStyle}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '20px 0' }}>
+                    <span style={{ fontSize: 28, color: '#d9d9d9' }}>📭</span>
+                    <span>No invoices selected yet.</span>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
   );
