@@ -18,7 +18,7 @@ export interface DiffRow {
   status: 'Matched' | 'Discrepancy' | 'Missing on Vendor' | 'Missing on TMS';
 }
 
-const DIFF_ROWS: DiffRow[] = [
+export const DIFF_ROWS: DiffRow[] = [
   // WB2604001 — All matched
   { id: '1-1', waybill: 'WB2604001', item: 'Paid in Advance', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
   { id: '1-2', waybill: 'WB2604001', item: 'Basic (Remaining)', tmsAmount: 15000, vendorAmount: 15000, delta: 0, status: 'Matched' },

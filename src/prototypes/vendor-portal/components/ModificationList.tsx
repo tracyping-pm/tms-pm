@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface Props {
-  onBack: () => void;
+  onBack?: () => void;
   onOpenDetail: (apNo: string) => void;
 }
 
@@ -41,9 +41,11 @@ function ApplicationList({ onBack, onOpenDetail }: Props) {
 
   return (
     <>
-      <div className="vp-card" style={{ padding: 14, marginBottom: 16 }}>
-        <button className="btn-link" onClick={onBack}>← Back to Waybills</button>
-      </div>
+      {onBack && (
+        <div className="vp-card" style={{ padding: 14, marginBottom: 16 }}>
+          <button className="btn-link" onClick={onBack}>← Back to Waybills</button>
+        </div>
+      )}
 
       <div className="vp-kpi-row">
         <div className="vp-kpi"><div className="vp-kpi-label">Total Applications</div><div className="vp-kpi-value">{SAMPLE.length}</div></div>

@@ -42,9 +42,9 @@ index.tsx（顶层状态机：menu → 子视图）
   ├── VendorPortalShell（可点击切换 FINANCE 四个子菜单）
   │
   ├── [Price Reconciliation]
-  │     ├── WaybillReconciliationList（待核对运单；已发起结算运单置灰）
+  │     ├── WaybillReconciliationList（待核对运单；已发起结算运单置灰；支持展开查看逐项差异 + 勾选 + 批量操作）
   │     ├── ImportSheetDialog
-  │     ├── DiffView（差异视图 · 批量 Match / Raise Modification）
+  │     ├── DiffView（保留组件，不再作为列表页的默认下钻；差异已内联在 WaybillReconciliationList 中）
   │     ├── RaiseModificationDialog
   │     ├── ModificationList
   │     └── ModificationDetail
@@ -118,9 +118,34 @@ Modification List / Detail
 
 ---
 
-## 跨模块导航：从 Diff View 到 Settlement Create
+## Price Reconciliation 页面结构（带 Tab）
 
-Price Reconciliation → Diff View → 勾选若干 **Matched** 行 → 点击 **Create Settlement from Selected (N)**：
+页面顶部新增两段式 Tab：
+- **Waybills for Reconciliation**（默认）— 运单列表 + 内联差异展开
+- **My Modification Requests** — 我的价格修改申请列表
+
+Tab 外右侧保留 Import Sheet 按钮（属 Waybills Tab 内部操作）。进入 ModificationDetail 时占据全页（无 Tab）。
+
+### WaybillReconciliationList 内联差异视图
+
+列表页不再保留 `View Diff` 操作入口。每条运单默认合并，点击行头展开即看到逐项对账明细。运单汇总行显示 `N items · M diff` 及合计 TMS / Your / Delta，Reconciliation Status 标签直观表达 Match 状态。
+
+**展开面板**（单 `colSpan` 宽单元格，不影响外层表格列宽）：
+- 一个 CSS Grid：列数 = 该运单 Billing Item 数，自动撑满宽度；超出时内部横向滚动
+- 第 1 行（表头）：checkbox + Billing Item 名称（勾选后变蓝底，互斥禁用时为红底）
+- 第 2 行（金额）：`TMS {tmsAmount}` 与 `You {vendorAmount}` 上下两行（TMS 灰色删除线、You 蓝色）
+- 第 3 行（差异）：Delta 金额（正绿 / 负红）+ Status Tag（Matched / Discrepancy / Missing on TMS / Missing on Vendor）
+
+**交互**：
+- 运单行左侧 checkbox 可一次勾选该运单下所有差异明细；展开面板的每个表头格各自独立 checkbox
+- 工具条按钮：**Select All Matched** / **Select All Discrepancies** / **Create Settlement from Selected (N)** / **Raise Modification (N)** / **Clear selection**
+- Select All 动作会自动展开相关运单，便于用户确认勾选结果
+- 选择模式互斥：首行勾选后锁定 Settlement（仅 Matched）或 Modification（仅 Discrepancy / Missing）模式，跨模式明细以红底禁止勾选
+- 已加入结算的运单整体置灰（opacity 0.55 + `⊘` 禁止勾选）
+
+## 跨模块导航：从 Price Reconciliation 到 Settlement Create
+
+Price Reconciliation → 展开运单 → 勾选若干 **Matched** 明细 → 点击 **Create Settlement from Selected (N)**：
 
 1. `index.tsx` 将所选运单号写入 `settledWaybills`（映射到预生成的 `ApS...` 结算单号）
 2. 将运单号写入 `prefillWaybills` 并跳转 `menu = 'settlement'`、`settlementView = 'create'`
@@ -128,7 +153,7 @@ Price Reconciliation → Diff View → 勾选若干 **Matched** 行 → 点击 *
 4. 返回 Price Reconciliation 时，这些运单以 **Settlement Pending** tag 置灰展示（opacity 0.55 + 不可勾选）
 5. SettlementCreate 提交或取消时清空 `prefillWaybills`
 
-**模式互斥**：DiffView 中首行选中后锁定 Settlement / Modification 二选一模式，跨模式选择给出视觉警告（禁止同一申请混入 Matched 与 Discrepancy 行）。
+**模式互斥**：WaybillReconciliationList（及保留的 DiffView）中首行选中后锁定 Settlement / Modification 二选一模式，跨模式选择给出视觉警告（禁止同一申请混入 Matched 与 Discrepancy 行）。
 
 ---
 

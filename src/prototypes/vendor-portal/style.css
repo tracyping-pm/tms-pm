@@ -629,3 +629,109 @@
   color: #666;
   border: 1px solid #d9d9d9;
 }
+
+/* Price Reconciliation 顶部标签切换 */
+.recon-tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 16px;
+  background: #fff;
+  padding: 0 16px;
+  border-radius: 4px 4px 0 0;
+}
+.recon-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: -1px;
+}
+.recon-tab:hover { color: #00b96b; }
+.recon-tab.active {
+  color: #00b96b;
+  border-bottom-color: #00b96b;
+}
+
+/* Reconciliation 列表展开面板（三行：表头 / 金额 / 差异） */
+.recon-table { table-layout: auto; }
+.recon-expand-row > td { padding: 0 !important; }
+.recon-breakdown {
+  padding: 14px 16px 16px 64px;
+  border-left: 3px solid #1890ff;
+  background: #fafbff;
+}
+.recon-breakdown-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.recon-breakdown-grid {
+  display: grid;
+  grid-auto-rows: auto;
+  gap: 6px;
+  overflow-x: auto;
+  align-items: stretch;
+}
+.recon-cell {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 12px;
+  min-width: 0;
+}
+.recon-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f7fa;
+  font-weight: 500;
+  color: #333;
+  border-color: #e0e6ed;
+}
+.recon-cell-head.is-selected {
+  background: #e6f7ff;
+  border-color: #1890ff;
+  color: #0050b3;
+}
+.recon-cell-head.is-disabled {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #999;
+}
+.recon-cell-item {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recon-cell-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.recon-amount-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.recon-amount-label {
+  font-size: 10px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.recon-cell-delta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.recon-delta { font-weight: 600; }

@@ -1,5 +1,5 @@
 /**
- * @name Vendor Portal（VP）供应商自助结算
+ * @name Vendor Portal
  *
  * 合并三大 VP 菜单：Price Reconciliation / Claim Tickets / Settlement Application / My Statements
  * 于单一原型入口，通过左侧菜单切换。
@@ -130,41 +130,56 @@ const Component = function VendorPortal() {
   };
 
   const renderPriceReconciliation = () => {
-    switch (reconView) {
-      case 'waybills':
-        return (
+    if (reconView === 'diff') {
+      return (
+        <DiffView
+          onBack={() => { setFocusWaybill(undefined); setReconView('waybills'); }}
+          onRaiseModification={(rows) => { setSelectedDiffRows(rows); setDialog('raise'); }}
+          onCreateSettlement={handleCreateSettlementFromDiff}
+          focusWaybill={focusWaybill}
+          settledWaybills={settledWaybills}
+        />
+      );
+    }
+    if (reconView === 'application-detail') {
+      return (
+        <ModificationDetail
+          apNo={openedModApNo}
+          onBack={() => setReconView('applications')}
+        />
+      );
+    }
+    return (
+      <>
+        <div className="recon-tab-bar">
+          <button
+            className={`recon-tab ${reconView === 'waybills' ? 'active' : ''}`}
+            onClick={() => setReconView('waybills')}
+          >
+            Waybills for Reconciliation
+          </button>
+          <button
+            className={`recon-tab ${reconView === 'applications' ? 'active' : ''}`}
+            onClick={() => setReconView('applications')}
+          >
+            My Modification Requests
+          </button>
+        </div>
+        {reconView === 'waybills' && (
           <WaybillReconciliationList
             onImport={() => setDialog('import')}
-            onOpenDiff={(no) => { setFocusWaybill(no); setReconView('diff'); }}
-            onGoApplications={() => setReconView('applications')}
-            settledWaybills={settledWaybills}
-          />
-        );
-      case 'diff':
-        return (
-          <DiffView
-            onBack={() => { setFocusWaybill(undefined); setReconView('waybills'); }}
             onRaiseModification={(rows) => { setSelectedDiffRows(rows); setDialog('raise'); }}
             onCreateSettlement={handleCreateSettlementFromDiff}
-            focusWaybill={focusWaybill}
             settledWaybills={settledWaybills}
           />
-        );
-      case 'applications':
-        return (
+        )}
+        {reconView === 'applications' && (
           <ModificationList
-            onBack={() => setReconView('waybills')}
             onOpenDetail={(apNo) => { setOpenedModApNo(apNo); setReconView('application-detail'); }}
           />
-        );
-      case 'application-detail':
-        return (
-          <ModificationDetail
-            apNo={openedModApNo}
-            onBack={() => setReconView('applications')}
-          />
-        );
-    }
+        )}
+      </>
+    );
   };
 
   const renderClaimTickets = () => {
@@ -253,7 +268,6 @@ const Component = function VendorPortal() {
     const root = ['Finance', MENU_LABEL[menu]];
     if (menu === 'price-reconciliation') {
       if (reconView === 'diff') return [...root, focusWaybill ? `Diff · ${focusWaybill}` : 'Diff'];
-      if (reconView === 'applications') return [...root, 'My Modification Requests'];
       if (reconView === 'application-detail') return [...root, 'My Modification Requests', openedModApNo];
       return root;
     }
@@ -280,7 +294,7 @@ const Component = function VendorPortal() {
       {dialog === 'import' && (
         <ImportSheetDialog
           onClose={() => setDialog(null)}
-          onImported={() => { setDialog(null); setReconView('diff'); }}
+          onImported={() => { setDialog(null); setReconView('waybills'); }}
         />
       )}
 
