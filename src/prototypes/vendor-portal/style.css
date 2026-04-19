@@ -523,3 +523,109 @@
   border-bottom-color: #00b96b;
   font-weight: 500;
 }
+
+/* Detail grid (claim ticket / waybill info panels) */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 24px;
+  padding: 4px 12px 14px;
+}
+.detail-item { display: flex; flex-direction: column; gap: 4px; }
+.detail-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
+.detail-value { font-size: 13px; color: #333; }
+
+/* Step Timeline（装饰性，参考 ar-statement timeline） */
+.step-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 16px 8px;
+  background: #fafafa;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.step-timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.step-timeline-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 2px solid #d9d9d9;
+  background: #fff;
+  color: #999;
+}
+.step-timeline-dot.done { background: #00b96b; border-color: #00b96b; color: #fff; }
+.step-timeline-dot.current { background: #fff; border-color: #00b96b; color: #00b96b; box-shadow: 0 0 0 3px rgba(0, 185, 107, 0.15); }
+.step-timeline-dot.todo { background: #fff; border-color: #d9d9d9; color: #999; }
+.step-timeline-label {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+}
+.step-timeline-label.done { color: #00b96b; }
+.step-timeline-label.current { color: #333; font-weight: 500; }
+.step-timeline-line {
+  flex: 1;
+  height: 2px;
+  background: #d9d9d9;
+  margin: 0 8px;
+  margin-bottom: 18px;
+}
+.step-timeline-line.done { background: #00b96b; }
+
+/* Summary 三列 + Hero（SettlementCreate 底部统计栏） */
+.summary-hero-card {
+  background: linear-gradient(135deg, #e6f7ef 0%, #d4efdc 100%);
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.summary-hero-title { font-size: 13px; color: #389e0d; margin-bottom: 4px; }
+.summary-hero-value { font-size: 26px; font-weight: 700; color: #00b96b; }
+.summary-hero-note { font-size: 12px; color: #666; }
+
+.summary-grid-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.summary-col {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+.summary-col-title { font-size: 12px; color: #666; margin-bottom: 6px; font-weight: 500; }
+.summary-col-value { font-size: 18px; font-weight: 600; color: #333; }
+.summary-col-sub { font-size: 11px; color: #999; margin-top: 4px; line-height: 1.5; }
+
+/* Waybill 展开行 / Amount diff */
+.waybill-expand-row > td {
+  background: #f9fbff;
+  border-left: 3px solid #91d5ff;
+  padding: 12px 16px;
+}
+.amount-diff-row > td { background: #fffbe6; }
+.amount-diff { color: #d46b08; font-weight: 600; }
+
+/* Settlement Pending tag（Price Reconciliation 中已发起结算的行） */
+.tag-settlement-pending {
+  background: #f0f0f0;
+  color: #666;
+  border: 1px solid #d9d9d9;
+}

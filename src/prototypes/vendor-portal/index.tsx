@@ -76,6 +76,8 @@ const Component = function VendorPortal() {
   // Claim Tickets
   const [claimView, setClaimView] = useState<ClaimView>('list');
   const [openedClaimNo, setOpenedClaimNo] = useState<string>('PHCT26041501AB');
+  // 跨模块跳转到 Claim Detail 时记录返回目标，用于 Back 按钮返回原页
+  const [claimReturn, setClaimReturn] = useState<'statement-detail' | 'settlement-detail' | null>(null);
 
   // Settlement Application
   const [settlementView, setSettlementView] = useState<SettlementView>('list');
@@ -93,10 +95,27 @@ const Component = function VendorPortal() {
     const m = key as Menu;
     setMenu(m);
     setDialog(null);
+    setClaimReturn(null);
     if (m === 'price-reconciliation') setReconView('waybills');
     if (m === 'claim-tickets') setClaimView('list');
     if (m === 'settlement') setSettlementView('list');
     if (m === 'my-statements') setStatementView('list');
+  };
+
+  const backFromClaimDetail = () => {
+    if (claimReturn === 'statement-detail') {
+      setClaimReturn(null);
+      setMenu('my-statements');
+      setStatementView('detail');
+      return;
+    }
+    if (claimReturn === 'settlement-detail') {
+      setClaimReturn(null);
+      setMenu('settlement');
+      setSettlementView('detail');
+      return;
+    }
+    setClaimView('list');
   };
 
   const handleCreateSettlementFromDiff = (rows: DiffRow[]) => {
@@ -160,8 +179,13 @@ const Component = function VendorPortal() {
         return (
           <ClaimTicketDetail
             ticketNo={openedClaimNo}
-            onBack={() => setClaimView('list')}
+            onBack={backFromClaimDetail}
             onDispute={() => setDialog('claim-dispute')}
+            returnLabel={
+              claimReturn === 'statement-detail' ? `← Back to Statement ${openedStmtNo}`
+              : claimReturn === 'settlement-detail' ? `← Back to Application ${openedSetApNo}`
+              : '← Back to Claim Tickets'
+            }
           />
         );
     }
@@ -189,7 +213,7 @@ const Component = function VendorPortal() {
           <SettlementDetail
             apNo={openedSetApNo}
             onBack={() => setSettlementView('list')}
-            onOpenClaimTicket={(no) => { setOpenedClaimNo(no); setMenu('claim-tickets'); setClaimView('detail'); }}
+            onOpenClaimTicket={(no) => { setOpenedClaimNo(no); setClaimReturn('settlement-detail'); setMenu('claim-tickets'); setClaimView('detail'); }}
           />
         );
     }
@@ -211,7 +235,7 @@ const Component = function VendorPortal() {
             onBack={() => setStatementView('list')}
             onConfirm={() => setDialog('confirm')}
             onReject={() => setDialog('reject')}
-            onOpenClaimTicket={(no) => { setOpenedClaimNo(no); setMenu('claim-tickets'); setClaimView('detail'); }}
+            onOpenClaimTicket={(no) => { setOpenedClaimNo(no); setClaimReturn('statement-detail'); setMenu('claim-tickets'); setClaimView('detail'); }}
           />
         );
     }
