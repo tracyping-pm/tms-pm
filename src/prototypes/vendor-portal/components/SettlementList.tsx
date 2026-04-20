@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EmptyState, formatAmount } from './UIComponents';
 
 interface Props {
   onCreate: () => void;
@@ -71,51 +72,65 @@ function ApplicationList({ onCreate, onOpenDetail }: Props) {
           <button className="btn-primary">Search</button>
         </div>
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Application No.</th>
-              <th>Created At</th>
-              <th>Reconciliation Period</th>
-              <th className="num">Waybills</th>
-              <th className="num">Total Amount</th>
-              <th>Invoice No.</th>
-              <th>Status</th>
-              <th>Linked Statement</th>
-              <th>Operate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr key={r.apNo}>
-                <td><button className="btn-link" onClick={() => onOpenDetail(r.apNo)}>{r.apNo}</button></td>
-                <td>{r.createdAt}</td>
-                <td>{r.period}</td>
-                <td className="num">{r.waybillCount}</td>
-                <td className="num">{r.totalAmount.toLocaleString()}</td>
-                <td>{r.invoiceNo || <span style={{ color: '#bbb' }}>—</span>}</td>
-                <td><StatusTag s={r.status} /></td>
-                <td>{r.statementNo ? <span style={{ color: '#1890ff' }}>{r.statementNo}</span> : <span style={{ color: '#bbb' }}>—</span>}</td>
-                <td>
-                  <button className="btn-link" onClick={() => onOpenDetail(r.apNo)}>Details</button>
-                  {r.status === 'Draft' && <>
-                    <button className="btn-link" style={{ marginLeft: 8 }}>Edit</button>
-                    <button className="btn-link" style={{ marginLeft: 8, color: '#ff4d4f' }}>Delete</button>
-                  </>}
-                  {r.status === 'Under Review' && <button className="btn-link" style={{ marginLeft: 8 }}>Withdraw</button>}
-                </td>
+        <div className="table-container">
+          <table className="data-table sticky-header">
+            <thead>
+              <tr>
+                <th>Application No.</th>
+                <th>Created At</th>
+                <th>Reconciliation Period</th>
+                <th className="num">Waybills</th>
+                <th className="num">Total Amount</th>
+                <th>Invoice No.</th>
+                <th>Status</th>
+                <th>Linked Statement</th>
+                <th>Operate</th>
               </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={9} className="empty">No applications match the current filter.</td></tr>}
-          </tbody>
-        </table>
-
-        <div className="pagination">
-          <button className="page-btn">&lt;</button>
-          <button className="page-btn active">1</button>
-          <button className="page-btn">&gt;</button>
-          <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>Total {filtered.length} · 20/page</span>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState
+                      icon="📋"
+                      title="No settlement applications"
+                      description="Create your first settlement application to get started."
+                      action={<button className="btn-primary" onClick={onCreate}>+ New Application</button>}
+                    />
+                  </td>
+                </tr>
+              ) : filtered.map((r) => (
+                <tr key={r.apNo}>
+                  <td><button className="btn-link" onClick={() => onOpenDetail(r.apNo)}>{r.apNo}</button></td>
+                  <td>{r.createdAt}</td>
+                  <td>{r.period}</td>
+                  <td className="num">{r.waybillCount}</td>
+                  <td className="num amount">{formatAmount(r.totalAmount)}</td>
+                  <td>{r.invoiceNo || <span style={{ color: '#bbb' }}>—</span>}</td>
+                  <td><StatusTag s={r.status} /></td>
+                  <td>{r.statementNo ? <span style={{ color: '#1890ff' }}>{r.statementNo}</span> : <span style={{ color: '#bbb' }}>—</span>}</td>
+                  <td>
+                    <button className="btn-link" onClick={() => onOpenDetail(r.apNo)}>Details</button>
+                    {r.status === 'Draft' && <>
+                      <button className="btn-link" style={{ marginLeft: 8 }}>Edit</button>
+                      <button className="btn-link" style={{ marginLeft: 8, color: '#ff4d4f' }}>Delete</button>
+                    </>}
+                    {r.status === 'Under Review' && <button className="btn-link" style={{ marginLeft: 8 }}>Withdraw</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
+        {filtered.length > 0 && (
+          <div className="pagination">
+            <button className="page-btn">&lt;</button>
+            <button className="page-btn active">1</button>
+            <button className="page-btn">&gt;</button>
+            <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>Total {filtered.length} · 20/page</span>
+          </div>
+        )}
       </div>
     </>
   );
