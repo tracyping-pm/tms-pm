@@ -18,26 +18,36 @@ export interface DiffRow {
   status: 'Matched' | 'Discrepancy' | 'Missing on Vendor' | 'Missing on TMS';
 }
 
+function computeStatus(tmsAmount: number, vendorAmount: number, originalStatus: DiffRow['status']): DiffRow['status'] {
+  if (originalStatus === 'Missing on TMS' || originalStatus === 'Missing on Vendor') {
+    return originalStatus;
+  }
+  if (vendorAmount <= tmsAmount) {
+    return 'Matched';
+  }
+  return 'Discrepancy';
+}
+
 export const DIFF_ROWS: DiffRow[] = [
-  // WB2604001 — All matched
+  // WB2604001 — All matched (vendorAmount <= tmsAmount)
   { id: '1-1', waybill: 'WB2604001', item: 'Paid in Advance', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
   { id: '1-2', waybill: 'WB2604001', item: 'Basic (Remaining)', tmsAmount: 15000, vendorAmount: 15000, delta: 0, status: 'Matched' },
   { id: '1-3', waybill: 'WB2604001', item: 'Additional Charge', tmsAmount: 500, vendorAmount: 500, delta: 0, status: 'Matched' },
   { id: '1-4', waybill: 'WB2604001', item: 'Fuel Surcharge', tmsAmount: 800, vendorAmount: 800, delta: 0, status: 'Matched' },
   { id: '1-5', waybill: 'WB2604001', item: 'Toll Fee', tmsAmount: 200, vendorAmount: 200, delta: 0, status: 'Matched' },
 
-  // WB2604002 — Multiple discrepancies
+  // WB2604002 — vendorAmount <= tmsAmount becomes Matched
   { id: '2-1', waybill: 'WB2604002', item: 'Paid in Advance', tmsAmount: 2000, vendorAmount: 2000, delta: 0, status: 'Matched' },
-  { id: '2-2', waybill: 'WB2604002', item: 'Basic (Remaining)', tmsAmount: 9500, vendorAmount: 10000, delta: 500, status: 'Discrepancy' },
-  { id: '2-3', waybill: 'WB2604002', item: 'Vendor Exception Fee', tmsAmount: 800, vendorAmount: 1200, delta: 400, status: 'Discrepancy' },
-  { id: '2-4', waybill: 'WB2604002', item: 'Waiting Fee', tmsAmount: 0, vendorAmount: 600, delta: 600, status: 'Missing on TMS' },
+  { id: '2-2', waybill: 'WB2604002', item: 'Basic (Remaining)', tmsAmount: 10000, vendorAmount: 9500, delta: -500, status: computeStatus(10000, 9500, 'Discrepancy') },
+  { id: '2-3', waybill: 'WB2604002', item: 'Vendor Exception Fee', tmsAmount: 1200, vendorAmount: 800, delta: -400, status: computeStatus(1200, 800, 'Discrepancy') },
+  { id: '2-4', waybill: 'WB2604002', item: 'Waiting Fee', tmsAmount: 600, vendorAmount: 0, delta: -600, status: computeStatus(600, 0, 'Missing on TMS') },
   { id: '2-5', waybill: 'WB2604002', item: 'Toll Fee', tmsAmount: 150, vendorAmount: 150, delta: 0, status: 'Matched' },
 
-  // WB2604003 — Mostly discrepancy
-  { id: '3-1', waybill: 'WB2604003', item: 'Basic (Remaining)', tmsAmount: 16800, vendorAmount: 17500, delta: 700, status: 'Discrepancy' },
-  { id: '3-2', waybill: 'WB2604003', item: 'Additional Charge', tmsAmount: 1200, vendorAmount: 1500, delta: 300, status: 'Discrepancy' },
+  // WB2604003 — vendorAmount <= tmsAmount becomes Matched
+  { id: '3-1', waybill: 'WB2604003', item: 'Basic (Remaining)', tmsAmount: 17500, vendorAmount: 16800, delta: -700, status: computeStatus(17500, 16800, 'Discrepancy') },
+  { id: '3-2', waybill: 'WB2604003', item: 'Additional Charge', tmsAmount: 1500, vendorAmount: 1200, delta: -300, status: computeStatus(1500, 1200, 'Discrepancy') },
   { id: '3-3', waybill: 'WB2604003', item: 'Fuel Surcharge', tmsAmount: 900, vendorAmount: 900, delta: 0, status: 'Matched' },
-  { id: '3-4', waybill: 'WB2604003', item: 'Night Shift Fee', tmsAmount: 500, vendorAmount: 0, delta: -500, status: 'Missing on Vendor' },
+  { id: '3-4', waybill: 'WB2604003', item: 'Night Shift Fee', tmsAmount: 0, vendorAmount: 500, delta: 500, status: computeStatus(0, 500, 'Missing on Vendor') },
 
   // WB2604004 — All matched
   { id: '4-1', waybill: 'WB2604004', item: 'Basic (Remaining)', tmsAmount: 7800, vendorAmount: 7800, delta: 0, status: 'Matched' },

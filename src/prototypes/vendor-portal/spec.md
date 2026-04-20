@@ -136,6 +136,12 @@ Tab 外右侧保留 Import Sheet 按钮（属 Waybills Tab 内部操作）。进
 - 第 2 行（金额）：`TMS {tmsAmount}` 与 `You {vendorAmount}` 上下两行（TMS 灰色删除线、You 蓝色）
 - 第 3 行（差异）：Delta 金额（正绿 / 负红）+ Status Tag（Matched / Discrepancy / Missing on TMS / Missing on Vendor）
 
+**Status 计算规则**：
+- `vendorAmount <= tmsAmount` → **Matched**（供应商提交金额不大于TMS金额，视为接受TMS定价）
+- `vendorAmount > tmsAmount` → **Discrepancy**（供应商提交金额大于TMS金额，存在差异）
+- `vendorAmount > 0 && tmsAmount === 0` → **Missing on TMS**（TMS缺失该项）
+- `tmsAmount > 0 && vendorAmount === 0` → **Missing on Vendor**（供应商缺失该项）
+
 **交互**：
 - 运单行左侧 checkbox 可一次勾选该运单下所有差异明细；展开面板的每个表头格各自独立 checkbox
 - 工具条按钮：**Select All Matched** / **Select All Discrepancies** / **Create Settlement from Selected (N)** / **Raise Modification (N)** / **Clear selection**
