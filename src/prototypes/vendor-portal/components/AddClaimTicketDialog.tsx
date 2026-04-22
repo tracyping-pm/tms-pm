@@ -42,7 +42,7 @@ function AddClaimTicketDialog({ excludedTicketNos, onClose, onConfirm }: Props) 
         <div className="modal-body">
           <div className="alert alert-info">
             <span>ⓘ</span>
-            选择纳入本次结算申请的 Claim Ticket。已关联其他申请或已关闭的工单不在此列表中。
+            Select Claim Tickets to include in this settlement application. Tickets already linked to another application or closed are not shown.
           </div>
 
           <div className="filter-row">
@@ -53,7 +53,7 @@ function AddClaimTicketDialog({ excludedTicketNos, onClose, onConfirm }: Props) 
               onChange={(e) => setKw(e.target.value)}
               style={{ flex: 1 }}
             />
-            <span style={{ fontSize: 12, color: '#999' }}>已选 {selected.size}</span>
+            <span style={{ fontSize: 12, color: '#999' }}>Selected: {selected.size}</span>
           </div>
 
           <table className="data-table">

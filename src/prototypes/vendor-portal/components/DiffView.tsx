@@ -79,12 +79,12 @@ function DiffView({ onBack, onRaiseModification, onCreateSettlement, focusWaybil
   const [showOnlyDiff, setShowOnlyDiff] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(() => {
-    // 默认展开存在差异的 waybill
+    // Expand waybills with discrepancies by default
     const diffWbs = Array.from(new Set(DIFF_ROWS.filter(r => r.status !== 'Matched').map(r => r.waybill)));
     return new Set(focusWaybill ? [focusWaybill] : diffWbs);
   });
 
-  // 按 waybill 分组
+  // Group by waybill
   const groups = useMemo(() => {
     const rowsBase = focusWaybill ? DIFF_ROWS.filter(r => r.waybill === focusWaybill) : DIFF_ROWS;
     const byWb = new Map<string, DiffRow[]>();
@@ -210,19 +210,19 @@ function DiffView({ onBack, onRaiseModification, onCreateSettlement, focusWaybil
         {mode === 'idle' && selected.size === 0 && (
           <div className="alert alert-info">
             <span>ⓘ</span>
-            按运单分组展示每项 Billing Item 差值。点击行头可展开/折叠。勾选 <strong>Matched</strong> 行直接发起结算，勾选 <strong>Discrepancy / Missing</strong> 行发起价格修改，两类不可混选。
+            Shows each Billing Item delta grouped by waybill. Click row header to expand/collapse. Check <strong>Matched</strong> rows to create settlement, check <strong>Discrepancy / Missing</strong> rows to raise modification. Cannot mix the two types.
           </div>
         )}
         {mode === 'settlement' && (
           <div className="alert alert-success" style={{ background: '#f6ffed' }}>
             <span>✓</span>
-            <strong>Settlement Mode</strong> — 已选 {selected.size} 行 Matched 明细。点击右上角「Create Settlement from Selected」进入新建结算申请。
+            <strong>Settlement Mode</strong> — {selected.size} Matched rows selected. Click "Create Settlement from Selected" to proceed.
           </div>
         )}
         {mode === 'modification' && (
           <div className="alert alert-warn">
             <span>⚠</span>
-            <strong>Modification Mode</strong> — 已选 {selected.size} 行 Discrepancy / Missing 明细。点击右上角「Raise Modification」发起价格修改。
+            <strong>Modification Mode</strong> — {selected.size} Discrepancy / Missing rows selected. Click "Raise Modification" to proceed.
           </div>
         )}
 
@@ -267,7 +267,7 @@ function DiffView({ onBack, onRaiseModification, onCreateSettlement, focusWaybil
                     >
                       <td onClick={(e) => e.stopPropagation()}>
                         {settled ? (
-                          <span style={{ color: '#ccc' }} title={`已加入 ${settledWaybills[wb]}`}>⊘</span>
+                          <span style={{ color: '#ccc' }} title={`Already in ${settledWaybills[wb]}`}>⊘</span>
                         ) : (
                           <input
                             type="checkbox"
