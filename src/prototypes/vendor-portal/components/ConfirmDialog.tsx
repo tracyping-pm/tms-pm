@@ -35,13 +35,13 @@ function ConfirmDialog({ statementNo, onClose, onConfirm }: Props) {
             <div className="form-row">
               <div className="form-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <label className="form-label req" style={{ margin: 0 }}>Invoices（至少 1 张，可添加多张）</label>
+                  <label className="form-label req" style={{ margin: 0 }}>Invoices (At least 1, multiple allowed)</label>
                   <button className="btn-default" onClick={() => setShowAdd(true)}>+ Add Invoice</button>
                 </div>
 
                 {invoices.length === 0 ? (
                   <div style={{ padding: 16, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 4, textAlign: 'center', color: '#999', fontSize: 12 }}>
-                    尚未添加发票。点击 <strong>+ Add Invoice</strong> 录入。
+                    No invoices added yet. Click <strong>+ Add Invoice</strong> to add.
                   </div>
                 ) : (
                   <table className="data-table" style={{ marginTop: 0 }}>

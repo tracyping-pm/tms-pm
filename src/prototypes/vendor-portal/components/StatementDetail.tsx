@@ -13,7 +13,7 @@ interface Props {
   onOpenClaimTicket?: (ticketNo: string) => void;
 }
 
-type Tab = 'waybills' | 'claims' | 'invoices' | 'payments';
+type Tab = 'waybills' | 'claims';
 
 const WAYBILLS = [
   { no: 'WB2604001' },
@@ -131,19 +131,13 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
           <button className={`sub-tab ${tab === 'claims' ? 'active' : ''}`} onClick={() => setTab('claims')}>
             Claim Tickets ({linkedClaims.length})
           </button>
-          <button className={`sub-tab ${tab === 'invoices' ? 'active' : ''}`} onClick={() => setTab('invoices')}>
-            Invoice ({linkedInvoices.length})
-          </button>
-          <button className={`sub-tab ${tab === 'payments' ? 'active' : ''}`} onClick={() => setTab('payments')}>
-            Payment History
-          </button>
         </div>
 
         {tab === 'waybills' && (
           <>
             <div className="alert alert-info">
               <span>ⓘ</span>
-              点击行可展开运单详情与 Billing Breakdown。金额若被 TMS 运营编辑过，会以 <strong>Original → Current</strong> 黄底对比展示。
+              Click row to expand waybill details and Billing Breakdown. Amounts edited by TMS Ops are highlighted in <strong>Original → Current</strong> yellow background.
             </div>
             <table className="data-table">
               <thead>
@@ -267,7 +261,7 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
         {tab === 'claims' && (
           <>
             {linkedClaims.length === 0 ? (
-              <div className="empty">本对账单未关联 Claim Ticket。</div>
+              <div className="empty">No claim tickets linked to this statement.</div>
             ) : (
               <table className="data-table">
                 <thead>
@@ -304,71 +298,71 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
             )}
           </>
         )}
+      </div>
 
-        {tab === 'invoices' && (
-          <>
-            {linkedInvoices.length === 0 ? (
-              <div className="empty">
-                {isAwaiting
-                  ? <>本对账单暂无发票。请在 <strong>Vendor Confirm</strong> 时补录发票。</>
-                  : '本对账单暂无发票。'}
-              </div>
-            ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Invoice No.</th>
-                    <th>Invoice Date</th>
-                    <th className="num">Amount</th>
-                    <th>Document</th>
-                    <th>Remark</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {linkedInvoices.map(inv => (
-                    <tr key={inv.id}>
-                      <td>{inv.invoiceNo}</td>
-                      <td>{inv.invoiceDate}</td>
-                      <td className="num">{inv.amount.toLocaleString()} {inv.currency}</td>
-                      <td>{inv.documentFileName ? <span style={{ color: '#1677ff', fontSize: 12 }}>📎 {inv.documentFileName}</span> : <span style={{ color: '#999' }}>—</span>}</td>
-                      <td style={{ fontSize: 12, color: '#666' }}>{inv.remark || '—'}</td>
-                    </tr>
-                  ))}
-                  <tr style={{ background: '#fafafa', fontWeight: 600 }}>
-                    <td colSpan={2} style={{ textAlign: 'right' }}>Invoice Total</td>
-                    <td className="num">
-                      {linkedInvoices.reduce((a, i) => a + i.amount, 0).toLocaleString()} PHP
-                    </td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-          </>
-        )}
-
-        {tab === 'payments' && (
+      <div className="vp-card">
+        <div className="section-title">Invoice ({linkedInvoices.length})</div>
+        {linkedInvoices.length === 0 ? (
+          <div className="empty">
+            {isAwaiting
+              ? <>No invoices attached yet. Please add invoices when <strong>Vendor Confirm</strong>.</>
+              : 'No invoices attached.'}
+          </div>
+        ) : (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Payment Date</th>
+                <th>Invoice No.</th>
+                <th>Invoice Date</th>
                 <th className="num">Amount</th>
-                <th>Ref No.</th>
-                <th>Note</th>
+                <th>Document</th>
+                <th>Remark</th>
               </tr>
             </thead>
             <tbody>
-              {PAYMENTS.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.date}</td>
-                  <td className="num">{p.amount.toLocaleString()}</td>
-                  <td>{p.refNo}</td>
-                  <td style={{ color: '#999' }}>{p.note}</td>
+              {linkedInvoices.map(inv => (
+                <tr key={inv.id}>
+                  <td>{inv.invoiceNo}</td>
+                  <td>{inv.invoiceDate}</td>
+                  <td className="num">{inv.amount.toLocaleString()} {inv.currency}</td>
+                  <td>{inv.documentFileName ? <span style={{ color: '#1677ff', fontSize: 12 }}>📎 {inv.documentFileName}</span> : <span style={{ color: '#999' }}>—</span>}</td>
+                  <td style={{ fontSize: 12, color: '#666' }}>{inv.remark || '—'}</td>
                 </tr>
               ))}
+              <tr style={{ background: '#fafafa', fontWeight: 600 }}>
+                <td colSpan={2} style={{ textAlign: 'right' }}>Invoice Total</td>
+                <td className="num">
+                  {linkedInvoices.reduce((a, i) => a + i.amount, 0).toLocaleString()} PHP
+                </td>
+                <td colSpan={2}></td>
+              </tr>
             </tbody>
           </table>
         )}
+      </div>
+
+      <div className="vp-card">
+        <div className="section-title">Payment History</div>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Payment Date</th>
+              <th className="num">Amount</th>
+              <th>Ref No.</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {PAYMENTS.map((p, i) => (
+              <tr key={i}>
+                <td>{p.date}</td>
+                <td className="num">{p.amount.toLocaleString()}</td>
+                <td>{p.refNo}</td>
+                <td style={{ color: '#999' }}>{p.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {isFinal && (

@@ -173,7 +173,7 @@ function ApplicationDetail({ apNo, onBack }: Props) {
         <div style={{ marginTop: 16 }}>
           <div className="vp-kpi-label">Reason</div>
           <div style={{ fontSize: 13, marginTop: 4, background: '#fafafa', padding: 10, borderRadius: 4, border: '1px solid #f0f0f0' }}>
-            客户在实际卸货时要求加装一次装卸辅助，产生额外费用；另对相关运单补收一段偏远里程差价。相关凭证见附件。
+            Customer required an additional loading/unloading assistance at actual unloading, incurring extra fees; plus a remote mileage difference for related waybills. See attachment for supporting documents.
           </div>
         </div>
 

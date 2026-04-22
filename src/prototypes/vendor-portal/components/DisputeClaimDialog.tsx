@@ -33,7 +33,7 @@ function DisputeClaimDialog({ ticketNo, onClose, onSubmitted }: Props) {
         <div className="modal-body">
           <div className="alert alert-info" style={{ borderLeftColor: '#fa8c16', background: '#fff7e6' }}>
             <span>⚠</span>
-            提交 Dispute 后该工单状态将变为 <strong>Vendor Disputed</strong>，由 TMS Claim 团队重新核查。请提供具体异议理由与证据材料。
+            After submitting a Dispute, the ticket status will change to <strong>Vendor Disputed</strong> and be re-reviewed by the TMS Claim team. Please provide specific reasons and evidence.
           </div>
 
           <div className="form-row">
@@ -43,7 +43,7 @@ function DisputeClaimDialog({ ticketNo, onClose, onSubmitted }: Props) {
                 className="form-input"
                 rows={5}
                 maxLength={2000}
-                placeholder="请说明异议理由，例如：装车前已双方核对数量无误、签收单已盖章确认……"
+                placeholder="Please describe your objection reason, e.g.: Both parties verified the quantity before loading, the signed receipt has been stamped..."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
@@ -55,7 +55,7 @@ function DisputeClaimDialog({ ticketNo, onClose, onSubmitted }: Props) {
 
           <div className="form-row">
             <div className="form-field">
-              <label className="form-label req">Discrepancy Proof（至少 1 份）</label>
+              <label className="form-label req">Discrepancy Proof (At least 1 file required)</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                 {files.map((f, i) => (
                   <span key={i} style={{ background: '#f0faf5', border: '1px solid #b7eb8f', borderRadius: 4, padding: '4px 8px', fontSize: 12 }}>
@@ -66,7 +66,7 @@ function DisputeClaimDialog({ ticketNo, onClose, onSubmitted }: Props) {
               </div>
               <button className="btn-default" onClick={addFile}>+ Upload Proof (PDF / Image)</button>
               <div style={{ fontSize: 11, color: '#999', marginTop: 6 }}>
-                支持运输签收单、装车记录、GPS 轨迹、沟通记录等。
+                Supported: transport receipt, loading records, GPS tracks, communication records, etc.
               </div>
             </div>
           </div>

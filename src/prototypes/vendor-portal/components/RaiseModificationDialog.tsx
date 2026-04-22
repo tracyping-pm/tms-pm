@@ -30,7 +30,7 @@ function RaiseModificationDialog({ rows, onClose, onSubmitted }: Props) {
           <div className="modal-title">
             Raise Price Modification Request
             <span style={{ marginLeft: 10, fontSize: 12, color: '#999', fontWeight: 400 }}>
-              Ap + M + YYMMDD + 3 位随机码
+              Ap + M + YYMMDD + 3 random digits
             </span>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>

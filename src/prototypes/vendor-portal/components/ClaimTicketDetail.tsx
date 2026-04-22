@@ -46,7 +46,7 @@ function ClaimTicketDetail({ ticketNo, onBack, onDispute, returnLabel = '← Bac
         {canAct && (
           <div className="alert alert-info" style={{ borderLeftColor: '#fa8c16', background: '#fff7e6' }}>
             <span>⚠</span>
-            该 Claim Ticket 等待您确认。请仔细核对索赔金额与凭证，可选择 <strong>Confirm</strong>（同意纳入扣款）或 <strong>Dispute</strong>（提交异议，需附证据）。
+            This Claim Ticket is awaiting your confirmation. Please verify the claim amount and evidence. You may choose <strong>Confirm</strong> (agree to deduct) or <strong>Dispute</strong> (submit objection with evidence).
           </div>
         )}
 
@@ -83,7 +83,7 @@ function ClaimTicketDetail({ ticketNo, onBack, onDispute, returnLabel = '← Bac
           </div>
           <div className="detail-item">
             <div className="detail-label">Linked Settlement</div>
-            <div className="detail-value">{ticket.linkedSettlementApNo || <span style={{ color: '#999' }}>尚未关联</span>}</div>
+            <div className="detail-value">{ticket.linkedSettlementApNo || <span style={{ color: '#999' }}>Not Linked</span>}</div>
           </div>
         </div>
       </div>

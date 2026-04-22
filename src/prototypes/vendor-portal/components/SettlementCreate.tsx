@@ -233,7 +233,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
           <>
             <div className="alert alert-info">
               <span>ⓘ</span>
-              将 Claim Ticket 纳入本次申请后，其金额将在底部统计栏的 Claim 列汇总。Claim 默认抵扣应付金额。
+              Adding Claim Tickets to this application will deduct their amounts from the Claim column in the bottom summary. Claims are deducted from the payable amount by default.
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
               <button className="btn-primary" onClick={() => setDialog('add-claim')}>+ Add Claim Ticket</button>
@@ -266,7 +266,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
                   </tr>
                 ))}
                 {selectedClaims.length === 0 && (
-                  <tr><td colSpan={7} className="empty">尚未加入任何 Claim Ticket。</td></tr>
+                  <tr><td colSpan={7} className="empty">No claim tickets added yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -280,7 +280,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
           <button className="btn-primary" onClick={() => setDialog('add-invoice')}>+ Add Invoice</button>
         </div>
         <div className="form-help" style={{ marginBottom: 10 }}>
-          可选：发票支持多张（不同税率拆单 / 分批开票）。未在此处填写的，可在对账单 Vendor Confirm 时补录。
+          Optional: Multiple invoices are supported (split by tax rate or partial billing). If not added here, you can supplement them when confirming the Vendor Statement.
         </div>
         <table className="data-table">
           <thead>
@@ -307,7 +307,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
               </tr>
             ))}
             {invoices.length === 0 && (
-              <tr><td colSpan={7} className="empty">尚未添加发票。</td></tr>
+              <tr><td colSpan={7} className="empty">No invoices added yet.</td></tr>
             )}
           </tbody>
         </table>
