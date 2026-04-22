@@ -70,7 +70,6 @@ function SettlementReviewDetail({ apNo, onBack }: Props) {
           <thead>
             <tr>
               <th>Waybill No.</th>
-              <th className="num">Paid in Advance</th>
               <th className="num">Basic</th>
               <th className="num">Additional</th>
               <th className="num">Exception</th>
@@ -85,7 +84,6 @@ function SettlementReviewDetail({ apNo, onBack }: Props) {
               return (
                 <tr key={w.no}>
                   <td>{w.no}</td>
-                  <td className="num">{w.paidAdvance.toLocaleString()}</td>
                   <td className="num">{w.basic.toLocaleString()}</td>
                   <td className="num">{w.additional.toLocaleString()}</td>
                   <td className="num">{w.exception.toLocaleString()}</td>

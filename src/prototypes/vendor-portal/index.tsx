@@ -87,7 +87,7 @@ const Component = function VendorPortal() {
   // My Statements
   const [statementView, setStatementView] = useState<StatementView>('list');
   const [openedStmtNo, setOpenedStmtNo] = useState('PHVS26041602');
-  const [openedStmtStatus, setOpenedStmtStatus] = useState<StatementStatus>('Awaiting Confirmation');
+  const [openedStmtStatus, setOpenedStmtStatus] = useState<StatementStatus>('Pending Payment');
 
   const [dialog, setDialog] = useState<Dialog>(null);
 
@@ -118,8 +118,8 @@ const Component = function VendorPortal() {
     setClaimView('list');
   };
 
-  const handleCreateSettlementFromDiff = (rows: DiffRow[]) => {
-    const waybills = Array.from(new Set(rows.map(r => r.waybill)));
+  const handleCreateSettlementFromDiff = (rows: DiffRow[], notReconciledWaybills?: string[]) => {
+    const waybills = Array.from(new Set([...rows.map(r => r.waybill), ...(notReconciledWaybills || [])]));
     const pseudoApNo = 'ApS260418' + String(Math.floor(Math.random() * 900) + 100);
     const newMap = { ...settledWaybills };
     waybills.forEach(wb => { newMap[wb] = pseudoApNo; });

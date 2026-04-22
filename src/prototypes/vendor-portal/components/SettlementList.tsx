@@ -4,6 +4,7 @@ import { EmptyState, formatAmount } from './UIComponents';
 interface Props {
   onCreate: () => void;
   onOpenDetail: (apNo: string) => void;
+  onEdit?: (apNo: string) => void;
 }
 
 interface Row {
@@ -34,7 +35,7 @@ function StatusTag({ s }: { s: Row['status'] }) {
   return <span className={`tag ${map[s]}`}>{s}</span>;
 }
 
-function ApplicationList({ onCreate, onOpenDetail }: Props) {
+function ApplicationList({ onCreate, onOpenDetail, onEdit }: Props) {
   const [status, setStatus] = useState('all');
   const filtered = SAMPLE.filter(r => status === 'all' || r.status === status);
 
@@ -116,6 +117,7 @@ function ApplicationList({ onCreate, onOpenDetail }: Props) {
                       <button className="btn-link" style={{ marginLeft: 8, color: '#ff4d4f' }}>Delete</button>
                     </>}
                     {r.status === 'Under Review' && <button className="btn-link" style={{ marginLeft: 8 }}>Withdraw</button>}
+                    {r.status === 'Rejected' && <button className="btn-link" style={{ marginLeft: 8 }} onClick={() => onEdit?.(r.apNo)}>Edit</button>}
                   </td>
                 </tr>
               ))}

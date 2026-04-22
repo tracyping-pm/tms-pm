@@ -13,7 +13,7 @@ export type ClaimStatus =
   | 'Pending Vendor Confirm'
   | 'Vendor Disputed'
   | 'For Deduction'
-  | 'Closed'
+  | 'Completed'
   | 'Canceled';
 
 export type DeductionState = 'Deducted' | 'For Deduction' | 'Not Linked AP' | 'Written Off';
@@ -67,7 +67,7 @@ export const CLAIM_TICKETS: ClaimTicket[] = [
     relatedWaybill: 'WB2604004',
     claimDetails: 'Delivery SLA 超时 6 小时，按合同条款扣款。',
     deductionForVendor: 'Deducted',
-    status: 'Closed',
+    status: 'Completed',
     creationTime: '2026-04-10 09:15',
     creator: 'TMS Claim Team',
     linkedSettlementApNo: 'ApS260416002',

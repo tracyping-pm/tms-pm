@@ -5,27 +5,22 @@ interface Props {
   onOpenDetail: (ticketNo: string) => void;
 }
 
-const STATUS_OPTIONS: ClaimStatus[] = [
-  'Ongoing Validation',
-  'Claim team review',
+const VP_STATUSES: ClaimStatus[] = [
   'Pending Vendor Confirm',
   'Vendor Disputed',
   'For Deduction',
-  'Closed',
-  'Canceled',
+  'Completed',
 ];
 
-const DEDUCTION_OPTIONS: (DeductionState | 'all')[] = ['all', 'For Deduction', 'Deducted', 'Not Linked AP', 'Written Off'];
+const DEDUCTION_OPTIONS: (DeductionState | 'all')[] = ['all', 'Pending Vendor Confirm', 'Vendor Disputed', 'For deduction', 'Completed'];
 
 function statusTagClass(s: ClaimStatus): string {
   switch (s) {
     case 'Pending Vendor Confirm': return 'tag-discrepancy-pending';
     case 'Vendor Disputed': return 'tag-rejected';
     case 'For Deduction': return 'tag-under-review';
-    case 'Claim team review': return 'tag-under-review';
-    case 'Ongoing Validation': return 'tag-draft';
-    case 'Closed': return 'tag-matched';
-    case 'Canceled': return 'tag-draft';
+    case 'Completed': return 'tag-matched';
+    default: return 'tag-draft';
   }
 }
 
@@ -34,11 +29,12 @@ function ClaimTicketList({ onOpenDetail }: Props) {
   const [claimType, setClaimType] = useState<string>('all');
   const [statusSel, setStatusSel] = useState<Set<ClaimStatus>>(new Set());
   const [deduction, setDeduction] = useState<string>('all');
-  const [showTerminal, setShowTerminal] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const filtered = useMemo(() => {
     return CLAIM_TICKETS.filter(t => {
-      if (!showTerminal && (t.status === 'Closed' || t.status === 'Canceled')) return false;
+      if (!VP_STATUSES.includes(t.status)) return false;
+      if (!showCompleted && t.status === 'Completed') return false;
       if (kw && !t.ticketNo.toUpperCase().includes(kw.toUpperCase())
           && !t.claimTypeL2.toLowerCase().includes(kw.toLowerCase())) return false;
       if (claimType !== 'all' && t.claimTypeL1 !== claimType) return false;
@@ -46,7 +42,7 @@ function ClaimTicketList({ onOpenDetail }: Props) {
       if (deduction !== 'all' && t.deductionForVendor !== deduction) return false;
       return true;
     });
-  }, [kw, claimType, statusSel, deduction, showTerminal]);
+  }, [kw, claimType, statusSel, deduction, showCompleted]);
 
   const toggleStatus = (s: ClaimStatus) => {
     const n = new Set(statusSel);
@@ -59,14 +55,15 @@ function ClaimTicketList({ onOpenDetail }: Props) {
     setClaimType('all');
     setStatusSel(new Set());
     setDeduction('all');
-    setShowTerminal(false);
+    setShowCompleted(false);
   };
 
+  const visibleTickets = CLAIM_TICKETS.filter(t => VP_STATUSES.includes(t.status));
   const counts = {
-    total: CLAIM_TICKETS.length,
-    pending: CLAIM_TICKETS.filter(t => t.status === 'Pending Vendor Confirm').length,
-    disputed: CLAIM_TICKETS.filter(t => t.status === 'Vendor Disputed').length,
-    forDeduction: CLAIM_TICKETS.filter(t => t.deductionForVendor === 'For Deduction').length,
+    total: visibleTickets.length,
+    pending: visibleTickets.filter(t => t.status === 'Pending Vendor Confirm').length,
+    disputed: visibleTickets.filter(t => t.status === 'Vendor Disputed').length,
+    forDeduction: visibleTickets.filter(t => t.deductionForVendor === 'For Deduction').length,
   };
 
   return (
@@ -82,16 +79,16 @@ function ClaimTicketList({ onOpenDetail }: Props) {
         <div className="vp-card-title">
           <div className="section-title">My Claim Tickets</div>
           <div style={{ fontSize: 12, color: '#999' }}>
-            默认隐藏 Closed / Canceled，
-            <button className="btn-link" style={{ padding: 0 }} onClick={() => setShowTerminal(v => !v)}>
-              {showTerminal ? '隐藏终态' : '查看全部'}
+            Completed tickets hidden by default ·{' '}
+            <button className="btn-link" style={{ padding: 0 }} onClick={() => setShowCompleted(v => !v)}>
+              {showCompleted ? 'Hide Completed' : 'Show Completed'}
             </button>
           </div>
         </div>
 
         <div className="alert alert-info">
           <span>ⓘ</span>
-          Claim Ticket 由 TMS Claim 团队或 Inteluck 内部发起。处于 <strong>Pending Vendor Confirm</strong> 状态时，您可以选择 Confirm 或 Dispute。
+          Claim Tickets are raised by the TMS Claim Team or Inteluck. When status is <strong>Pending Vendor Confirm</strong>, you may Confirm or Dispute.
         </div>
 
         <div className="filter-row">
@@ -104,12 +101,16 @@ function ClaimTicketList({ onOpenDetail }: Props) {
           />
           <select className="filter-select" value={claimType} onChange={(e) => setClaimType(e.target.value)}>
             <option value="all">All Claim Type</option>
-            <option value="External">External</option>
-            <option value="Internal">Internal</option>
+            <option value="External">Delivery Claims</option>
+            <option value="Internal">Damaged Goods</option>
+            <option value="Internal">Theft</option>
+            <option value="Internal">DDC</option>
+            <option value="Internal">GPS</option>
+            <option value="Internal">Others</option>
           </select>
           <select className="filter-select" value={deduction} onChange={(e) => setDeduction(e.target.value)}>
             {DEDUCTION_OPTIONS.map(d => (
-              <option key={d} value={d}>{d === 'all' ? 'All Deduction' : d}</option>
+              <option key={d} value={d}>{d === 'all' ? 'Status' : d}</option>
             ))}
           </select>
           <input className="filter-input" placeholder="Creation Time: YYYY-MM-DD" />
@@ -119,7 +120,7 @@ function ClaimTicketList({ onOpenDetail }: Props) {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           <span style={{ fontSize: 12, color: '#666', marginRight: 4, alignSelf: 'center' }}>Status:</span>
-          {STATUS_OPTIONS.map(s => (
+          {VP_STATUSES.map(s => (
             <button
               key={s}
               className={`tag ${statusSel.has(s) ? statusTagClass(s) : 'tag-draft'}`}

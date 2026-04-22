@@ -50,8 +50,8 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
   const linkedInvoices: Invoice[] = INVOICES.filter(i => i.linkedStatementNo === no);
   const total = waybillSubtotal - claimSubtotal;
 
-  const isAwaiting = status === 'Awaiting Confirmation';
-  const isFinal = ['Paid', 'Written Off', 'Canceled'].includes(status);
+  const isAwaiting = false;
+  const isFinal = status === 'Paid';
 
   return (
     <>
@@ -65,7 +65,7 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
       {isAwaiting && (
         <div className="alert alert-warn">
           <span>⚠</span>
-          This statement is awaiting your confirmation. Confirm to move it to Pending Payable, or Reject with reason to return it for correction.
+          This statement is awaiting your confirmation. Confirm to proceed to payment, or Reject with reason to return it for correction.
         </div>
       )}
 
@@ -73,7 +73,7 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
         <div className="vp-card-title">
           <div className="section-title">Statement Summary</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span className="tag tag-discrepancy-pending">{status}</span>
+            <span className={`tag ${status === 'Paid' ? 'tag-approved' : status === 'Partially Paid' ? 'tag-partial' : 'tag-under-review'}`}>{status}</span>
             {isAwaiting && (
               <>
                 <button className="btn-danger" onClick={onReject}>Reject</button>
@@ -109,9 +109,7 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
             <div style={{ fontSize: 13 }}>
               {linkedInvoices.length > 0
                 ? `${linkedInvoices.length} attached`
-                : <span style={{ color: isAwaiting ? '#ff4d4f' : '#999' }}>
-                    {isAwaiting ? 'Required on confirm' : 'None'}
-                  </span>}
+                : <span style={{ color: '#999' }}>None</span>}
             </div>
           </div>
           <div>

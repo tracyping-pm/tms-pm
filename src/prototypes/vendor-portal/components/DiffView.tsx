@@ -29,37 +29,35 @@ function computeStatus(tmsAmount: number, vendorAmount: number, originalStatus: 
 }
 
 export const DIFF_ROWS: DiffRow[] = [
-  // WB2604001 — All matched (vendorAmount <= tmsAmount)
-  { id: '1-1', waybill: 'WB2604001', item: 'Paid in Advance', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
-  { id: '1-2', waybill: 'WB2604001', item: 'Basic (Remaining)', tmsAmount: 15000, vendorAmount: 15000, delta: 0, status: 'Matched' },
-  { id: '1-3', waybill: 'WB2604001', item: 'Additional Charge', tmsAmount: 500, vendorAmount: 500, delta: 0, status: 'Matched' },
-  { id: '1-4', waybill: 'WB2604001', item: 'Fuel Surcharge', tmsAmount: 800, vendorAmount: 800, delta: 0, status: 'Matched' },
-  { id: '1-5', waybill: 'WB2604001', item: 'Toll Fee', tmsAmount: 200, vendorAmount: 200, delta: 0, status: 'Matched' },
+  // WB2604001 — All matched
+  { id: '1-1', waybill: 'WB2604001', item: 'Basic', tmsAmount: 15000, vendorAmount: 15000, delta: 0, status: 'Matched' },
+  { id: '1-2', waybill: 'WB2604001', item: 'Additional Charge', tmsAmount: 500, vendorAmount: 500, delta: 0, status: 'Matched' },
+  { id: '1-3', waybill: 'WB2604001', item: 'Exception Fee', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
 
-  // WB2604002 — vendorAmount <= tmsAmount becomes Matched
-  { id: '2-1', waybill: 'WB2604002', item: 'Paid in Advance', tmsAmount: 2000, vendorAmount: 2000, delta: 0, status: 'Matched' },
-  { id: '2-2', waybill: 'WB2604002', item: 'Basic (Remaining)', tmsAmount: 10000, vendorAmount: 9500, delta: -500, status: computeStatus(10000, 9500, 'Discrepancy') },
-  { id: '2-3', waybill: 'WB2604002', item: 'Vendor Exception Fee', tmsAmount: 1200, vendorAmount: 800, delta: -400, status: computeStatus(1200, 800, 'Discrepancy') },
-  { id: '2-4', waybill: 'WB2604002', item: 'Waiting Fee', tmsAmount: 600, vendorAmount: 0, delta: -600, status: computeStatus(600, 0, 'Missing on TMS') },
-  { id: '2-5', waybill: 'WB2604002', item: 'Toll Fee', tmsAmount: 150, vendorAmount: 150, delta: 0, status: 'Matched' },
+  // WB2604002 — Discrepancy on Basic & Exception Fee
+  { id: '2-1', waybill: 'WB2604002', item: 'Basic', tmsAmount: 9500, vendorAmount: 11200, delta: 1700, status: computeStatus(9500, 11200, 'Discrepancy') },
+  { id: '2-2', waybill: 'WB2604002', item: 'Additional Charge', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
+  { id: '2-3', waybill: 'WB2604002', item: 'Exception Fee', tmsAmount: 800, vendorAmount: 800, delta: 0, status: 'Matched' },
 
-  // WB2604003 — vendorAmount <= tmsAmount becomes Matched
-  { id: '3-1', waybill: 'WB2604003', item: 'Basic (Remaining)', tmsAmount: 17500, vendorAmount: 16800, delta: -700, status: computeStatus(17500, 16800, 'Discrepancy') },
-  { id: '3-2', waybill: 'WB2604003', item: 'Additional Charge', tmsAmount: 1500, vendorAmount: 1200, delta: -300, status: computeStatus(1500, 1200, 'Discrepancy') },
-  { id: '3-3', waybill: 'WB2604003', item: 'Fuel Surcharge', tmsAmount: 900, vendorAmount: 900, delta: 0, status: 'Matched' },
-  { id: '3-4', waybill: 'WB2604003', item: 'Night Shift Fee', tmsAmount: 0, vendorAmount: 500, delta: 500, status: computeStatus(0, 500, 'Missing on Vendor') },
+  // WB2604003 — Discrepancy on Basic & Additional Charge
+  { id: '3-1', waybill: 'WB2604003', item: 'Basic', tmsAmount: 16800, vendorAmount: 18500, delta: 1700, status: computeStatus(16800, 18500, 'Discrepancy') },
+  { id: '3-2', waybill: 'WB2604003', item: 'Additional Charge', tmsAmount: 1200, vendorAmount: 1800, delta: 600, status: computeStatus(1200, 1800, 'Discrepancy') },
+  { id: '3-3', waybill: 'WB2604003', item: 'Exception Fee', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
 
   // WB2604004 — All matched
-  { id: '4-1', waybill: 'WB2604004', item: 'Basic (Remaining)', tmsAmount: 7800, vendorAmount: 7800, delta: 0, status: 'Matched' },
+  { id: '4-1', waybill: 'WB2604004', item: 'Basic', tmsAmount: 7800, vendorAmount: 7800, delta: 0, status: 'Matched' },
   { id: '4-2', waybill: 'WB2604004', item: 'Additional Charge', tmsAmount: 300, vendorAmount: 300, delta: 0, status: 'Matched' },
-  { id: '4-3', waybill: 'WB2604004', item: 'Vendor Claim', tmsAmount: 500, vendorAmount: 500, delta: 0, status: 'Matched' },
-  { id: '4-4', waybill: 'WB2604004', item: 'POD Fee', tmsAmount: 100, vendorAmount: 100, delta: 0, status: 'Matched' },
+  { id: '4-3', waybill: 'WB2604004', item: 'Exception Fee', tmsAmount: 500, vendorAmount: 500, delta: 0, status: 'Matched' },
+
+  // WB2604005 — All matched
+  { id: '5-1', waybill: 'WB2604005', item: 'Basic', tmsAmount: 14200, vendorAmount: 14200, delta: 0, status: 'Matched' },
+  { id: '5-2', waybill: 'WB2604005', item: 'Additional Charge', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
+  { id: '5-3', waybill: 'WB2604005', item: 'Exception Fee', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
 
   // WB2604006 — All matched
-  { id: '6-1', waybill: 'WB2604006', item: 'Basic (Remaining)', tmsAmount: 15500, vendorAmount: 15500, delta: 0, status: 'Matched' },
+  { id: '6-1', waybill: 'WB2604006', item: 'Basic', tmsAmount: 15500, vendorAmount: 15500, delta: 0, status: 'Matched' },
   { id: '6-2', waybill: 'WB2604006', item: 'Additional Charge', tmsAmount: 800, vendorAmount: 800, delta: 0, status: 'Matched' },
-  { id: '6-3', waybill: 'WB2604006', item: 'Fuel Surcharge', tmsAmount: 1100, vendorAmount: 1100, delta: 0, status: 'Matched' },
-  { id: '6-4', waybill: 'WB2604006', item: 'Toll Fee', tmsAmount: 250, vendorAmount: 250, delta: 0, status: 'Matched' },
+  { id: '6-3', waybill: 'WB2604006', item: 'Exception Fee', tmsAmount: 0, vendorAmount: 0, delta: 0, status: 'Matched' },
 ];
 
 function StatusTag({ s }: { s: DiffRow['status'] }) {
@@ -172,15 +170,15 @@ function DiffView({ onBack, onRaiseModification, onCreateSettlement, focusWaybil
       </div>
 
       <div className="vp-kpi-row">
-        <div className="vp-kpi"><div className="vp-kpi-label">Total Waybills in Diff</div><div className="vp-kpi-value">{new Set(DIFF_ROWS.map(r => r.waybill)).size}</div></div>
+        <div className="vp-kpi"><div className="vp-kpi-label">Total Waybills</div><div className="vp-kpi-value">{new Set(DIFF_ROWS.map(r => r.waybill)).size}</div></div>
         <div className="vp-kpi"><div className="vp-kpi-label">Matched Items</div><div className="vp-kpi-value green">{DIFF_ROWS.filter(r => r.status === 'Matched').length}</div></div>
-        <div className="vp-kpi"><div className="vp-kpi-label">Discrepancies</div><div className="vp-kpi-value red">{discrepancyCount}</div></div>
-        <div className="vp-kpi"><div className="vp-kpi-label">Total Delta</div><div className="vp-kpi-value orange">{totalDelta >= 0 ? '+' : ''}{totalDelta.toLocaleString()}</div></div>
+        <div className="vp-kpi"><div className="vp-kpi-label">Discrepancy Items</div><div className="vp-kpi-value red">{discrepancyCount}</div></div>
+        <div className="vp-kpi"><div className="vp-kpi-label">Total Discrepancy</div><div className="vp-kpi-value orange">{totalDelta >= 0 ? '+' : ''}{totalDelta.toLocaleString()}</div></div>
       </div>
 
       <div className="vp-card">
         <div className="vp-card-title">
-          <div className="section-title">Reconciliation Diff {focusWaybill ? `· ${focusWaybill}` : ''}</div>
+          <div className="section-title">Price Reconciliation {focusWaybill ? `· ${focusWaybill}` : ''}</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
               <input type="checkbox" checked={showOnlyDiff} onChange={(e) => setShowOnlyDiff(e.target.checked)} /> Show discrepancies only
@@ -237,8 +235,8 @@ function DiffView({ onBack, onRaiseModification, onCreateSettlement, focusWaybil
                 <th>Waybill / Settlement Item</th>
                 <th className="num">TMS Amount</th>
                 <th className="num">Your Amount</th>
-                <th className="num">Delta</th>
-                <th className="num">Delta %</th>
+                <th className="num">Discrepancy</th>
+                <th className="num">Discrepancy %</th>
                 <th>Status</th>
               </tr>
             </thead>

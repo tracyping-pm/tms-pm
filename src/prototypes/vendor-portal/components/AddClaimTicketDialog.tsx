@@ -15,8 +15,7 @@ function AddClaimTicketDialog({ excludedTicketNos, onClose, onConfirm }: Props) 
     return CLAIM_TICKETS.filter(t =>
       !excludedTicketNos.includes(t.ticketNo)
       && !t.linkedSettlementApNo
-      && t.status !== 'Closed'
-      && t.status !== 'Canceled'
+      && t.status === 'For Deduction'
       && (!kw || t.ticketNo.includes(kw.toUpperCase()) || t.claimTypeL2.toLowerCase().includes(kw.toLowerCase()))
     );
   }, [excludedTicketNos, kw]);

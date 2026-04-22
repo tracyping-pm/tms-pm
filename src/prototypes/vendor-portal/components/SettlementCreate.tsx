@@ -155,7 +155,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
           <div className="form-field">
             <label className="form-label req">Items To Be Settled</label>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '4px 0' }}>
-              {['Paid in Advance', 'Basic', 'Additional', 'Exception', 'Claim'].map(item => (
+              {['Basic', 'Additional', 'Exception'].map(item => (
                 <label key={item} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                   <input type="checkbox" checked={items.has(item)} onChange={() => toggleItem(item)} />
                   {item}
@@ -196,11 +196,9 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
                   <th>Position Time</th>
                   <th>Delivery Time</th>
                   <th>Origin → Destination</th>
-                  <th className="num">Paid in Advance</th>
                   <th className="num">Basic</th>
                   <th className="num">Additional</th>
                   <th className="num">Exception</th>
-                  <th className="num">Claim</th>
                   <th className="num">Subtotal</th>
                 </tr>
               </thead>
@@ -219,11 +217,9 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
                       <td>{w.positionTime}</td>
                       <td>{w.delivery}</td>
                       <td style={{ fontSize: 12 }}>{w.origin}<br/>→ {w.destination}</td>
-                      <td className="num">{w.paidAdvance.toLocaleString()}</td>
                       <td className="num">{w.basic.toLocaleString()}</td>
                       <td className="num">{w.additional.toLocaleString()}</td>
                       <td className="num">{w.exception.toLocaleString()}</td>
-                      <td className="num">{w.claim.toLocaleString()}</td>
                       <td className="num" style={{ fontWeight: 600, color: '#00b96b' }}>{subtotal.toLocaleString()}</td>
                     </tr>
                   );
@@ -335,7 +331,6 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
         <div className="summary-grid-3col">
           <div className="summary-col">
             <div className="summary-col-title">Waybill Contract Revenue</div>
-            <div className="summary-col-line"><span>Paid in Advance</span><span>{waybillSubtotals.paidAdvance.toLocaleString()}</span></div>
             <div className="summary-col-line"><span>Basic (Remaining)</span><span>{waybillSubtotals.basic.toLocaleString()}</span></div>
             <div className="summary-col-line"><span>Additional</span><span>{waybillSubtotals.additional.toLocaleString()}</span></div>
             <div className="summary-col-line"><span>Exception</span><span>{waybillSubtotals.exception.toLocaleString()}</span></div>

@@ -37,7 +37,7 @@ function ClaimTicketDetail({ ticketNo, onBack, onDispute, returnLabel = '← Bac
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span className={`tag ${ticket.status === 'Pending Vendor Confirm' ? 'tag-discrepancy-pending' : ticket.status === 'Vendor Disputed' ? 'tag-rejected' : ticket.status === 'Closed' ? 'tag-matched' : 'tag-under-review'}`}>
+            <span className={`tag ${ticket.status === 'Pending Vendor Confirm' ? 'tag-discrepancy-pending' : ticket.status === 'Vendor Disputed' ? 'tag-rejected' : ticket.status === 'Completed' ? 'tag-matched' : 'tag-under-review'}`}>
               {ticket.status}
             </span>
           </div>

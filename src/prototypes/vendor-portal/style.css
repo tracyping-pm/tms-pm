@@ -324,6 +324,14 @@
   z-index: 1000;
 }
 
+.modal-content {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  min-width: 480px;
+  max-width: 640px;
+}
+
 .modal-box {
   background: #fff;
   border-radius: 6px;
