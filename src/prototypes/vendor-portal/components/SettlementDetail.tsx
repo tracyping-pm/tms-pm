@@ -22,12 +22,12 @@ const WAYBILL_LINES = [
 
 const LINKED_CLAIM_TICKETS = ['PHCT26041002CD'];
 
-const ITEM_ORDER = ['Basic (Remaining)', 'Additional Fee', 'Exceptional Fee'];
+const ITEM_ORDER = ['Basic (Remaining)', 'Additional Charge', 'Exceptional Fee'];
 
 function getItemKey(item: string): string {
   if (item === 'Paid in Advance') return 'Exceptional Fee';
   if (item === 'Vendor Exception Fee') return 'Exceptional Fee';
-  if (item === 'Additional Charge') return 'Additional Fee';
+  if (item === 'Additional Charge') return 'Additional Charge';
   return item;
 }
 
@@ -39,8 +39,8 @@ function computeWaybillSubtotal(no: string): number {
 
 function getWaybillItemsByCategory(no: string): Record<string, number> {
   const d = WAYBILL_DETAILS[no];
-  if (!d) return { 'Basic (Remaining)': 0, 'Additional Fee': 0, 'Exceptional Fee': 0 };
-  const result: Record<string, number> = { 'Basic (Remaining)': 0, 'Additional Fee': 0, 'Exceptional Fee': 0 };
+  if (!d) return { 'Basic (Remaining)': 0, 'Additional Charge': 0, 'Exceptional Fee': 0 };
+  const result: Record<string, number> = { 'Basic (Remaining)': 0, 'Additional Charge': 0, 'Exceptional Fee': 0 };
   d.billingLines.forEach(l => {
     const key = getItemKey(l.item);
     if (key in result) result[key] += l.currentAmount;
@@ -138,7 +138,7 @@ function ApplicationDetail({ apNo, status = 'Under Review', onBack, onOpenClaimT
                 <th>Truck / Driver</th>
                 <th>Unloading Time</th>
                 <th className="num">Basic (Remaining)</th>
-                <th className="num">Additional Fee</th>
+                <th className="num">Additional Charge</th>
                 <th className="num">Exceptional Fee</th>
                 <th className="num">Total</th>
               </tr>
@@ -164,7 +164,7 @@ function ApplicationDetail({ apNo, status = 'Under Review', onBack, onOpenClaimT
                       {d?.unloadingTime || <span style={{ color: '#999' }}>—</span>}
                     </td>
                     <td className="num">{items['Basic (Remaining)'].toLocaleString()}</td>
-                    <td className="num">{items['Additional Fee'].toLocaleString()}</td>
+                    <td className="num">{items['Additional Charge'].toLocaleString()}</td>
                     <td className="num">{items['Exceptional Fee'].toLocaleString()}</td>
                     <td className="num" style={{ fontWeight: 600, color: '#00b96b' }}>{sub.toLocaleString()}</td>
                   </tr>
@@ -173,7 +173,7 @@ function ApplicationDetail({ apNo, status = 'Under Review', onBack, onOpenClaimT
               <tr style={{ background: '#f0faf5', borderTop: '2px solid #b7eb8f' }}>
                 <td colSpan={4} style={{ textAlign: 'right', fontWeight: 700 }}>Waybill Subtotal</td>
                 <td className="num" style={{ fontWeight: 600 }}>{WAYBILL_LINES.reduce((a, w) => a + getWaybillItemsByCategory(w.no)['Basic (Remaining)'], 0).toLocaleString()}</td>
-                <td className="num" style={{ fontWeight: 600 }}>{WAYBILL_LINES.reduce((a, w) => a + getWaybillItemsByCategory(w.no)['Additional Fee'], 0).toLocaleString()}</td>
+                <td className="num" style={{ fontWeight: 600 }}>{WAYBILL_LINES.reduce((a, w) => a + getWaybillItemsByCategory(w.no)['Additional Charge'], 0).toLocaleString()}</td>
                 <td className="num" style={{ fontWeight: 600 }}>{WAYBILL_LINES.reduce((a, w) => a + getWaybillItemsByCategory(w.no)['Exceptional Fee'], 0).toLocaleString()}</td>
                 <td className="num" style={{ fontWeight: 700, color: '#00b96b' }}>{waybillSubtotal.toLocaleString()}</td>
               </tr>

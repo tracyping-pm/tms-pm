@@ -43,7 +43,7 @@ function ImportSheetDialog({ onClose, onImported }: Props) {
               <div className="import-step-num">2</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 500 }}>Fill in your own amounts per settlement item</div>
-                <div style={{ fontSize: 12, color: '#999' }}>Columns: Waybill No. · Paid in Advance · Basic (Remaining) · Additional · Exception · Claim · Remark</div>
+                <div style={{ fontSize: 12, color: '#999' }}>Columns: Waybill No. · Basic (Remaining) · Additional · Exception · Remark</div>
               </div>
             </div>
 
