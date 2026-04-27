@@ -1008,3 +1008,141 @@ tr:hover .row-actions {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
+
+/* ==================== VP Billing V2 新增样式 ==================== */
+
+/* 浮动操作栏（Unbilled Waybills 多选后出现） */
+.floating-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 200;
+  min-width: 380px;
+}
+
+.floating-action-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00b96b;
+}
+
+/* Awaiting Re-bill 行红色高亮 */
+.rebill-row > td {
+  background: #fff1f0 !important;
+  border-bottom-color: #ffa39e !important;
+}
+.rebill-row:hover > td {
+  background: #ffe7e6 !important;
+}
+
+/* 表格内金额输入框 */
+.table-amount-input {
+  width: 100%;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.2s;
+}
+.table-amount-input:focus {
+  outline: none;
+  border-color: #00b96b;
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.12);
+}
+.table-amount-input::-webkit-inner-spin-button,
+.table-amount-input::-webkit-outer-spin-button {
+  opacity: 0;
+}
+
+/* 发票证明上传区域 */
+.upload-zone {
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.upload-zone:hover,
+.upload-zone.dragging {
+  border-color: #00b96b;
+  background: #f6ffed;
+}
+
+/* 确认弹窗 */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+}
+.dialog {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  min-width: 360px;
+  overflow: hidden;
+}
+.dialog-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+.dialog-body {
+  padding: 18px;
+}
+.dialog-footer {
+  padding: 12px 18px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 红色警告 alert */
+.alert-danger {
+  background: #fff1f0;
+  border: 1px solid #ffa39e;
+  color: #a8071a;
+}
+
+/* Create Statement Hero 底部统计条 */
+.summary-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.summary-hero-label {
+  font-size: 13px;
+  color: #389e0d;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.summary-hero-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #00b96b;
+  line-height: 1.2;
+}
+.summary-hero-sub {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}

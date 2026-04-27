@@ -2,73 +2,159 @@ import React, { useState } from 'react';
 
 interface Props {
   onOpenDetail: (no: string, status: Status) => void;
+  onEdit: (no: string, status: Status) => void;
 }
 
-type Status = 'Pending Payment' | 'Partially Paid' | 'Paid';
+export type Status = 'Awaiting Comparison' | 'Awaiting Re-bill' | 'Pending Payment' | 'Paid';
 
 interface Row {
   no: string;
-  period: string;
-  totalPayable: number;
-  amountPaid: number;
-  source: 'Vendor Request' | 'Manual';
+  totalSubmittedAmount: number;
+  waybillCount: number;
+  invoiceNo: string;
   status: Status;
   createdAt: string;
+  rejectReason?: string;
 }
 
 const SAMPLE: Row[] = [
-  { no: 'PHVS26041502', period: '2026-03-16 ~ 2026-03-31', totalPayable: 68800, amountPaid: 0, source: 'Vendor Request', status: 'Pending Payment', createdAt: '2026-04-13 11:45' },
-  { no: 'PHVS26040901', period: '2026-03-01 ~ 2026-03-15', totalPayable: 55200, amountPaid: 30000, source: 'Manual', status: 'Partially Paid', createdAt: '2026-04-09 09:30' },
-  { no: 'PHVS26032801', period: '2026-02-16 ~ 2026-02-29', totalPayable: 48000, amountPaid: 48000, source: 'Manual', status: 'Paid', createdAt: '2026-03-28 14:10' },
+  {
+    no: 'VS2604001',
+    totalSubmittedAmount: 52800,
+    waybillCount: 3,
+    invoiceNo: 'INV-2026-00201',
+    status: 'Awaiting Comparison',
+    createdAt: '2026-04-20 10:15',
+  },
+  {
+    no: 'VS2604002',
+    totalSubmittedAmount: 38500,
+    waybillCount: 2,
+    invoiceNo: 'INV-2026-00198',
+    status: 'Awaiting Re-bill',
+    createdAt: '2026-04-18 14:30',
+    rejectReason:
+      'Basic Amount for WB2604011 exceeds contracted rate. Additional Charge for WB2604012 has no supporting proof. Please correct and resubmit.',
+  },
+  {
+    no: 'VS2604003',
+    totalSubmittedAmount: 68800,
+    waybillCount: 4,
+    invoiceNo: 'INV-2026-00185',
+    status: 'Pending Payment',
+    createdAt: '2026-04-13 11:45',
+  },
+  {
+    no: 'VS2603001',
+    totalSubmittedAmount: 48000,
+    waybillCount: 3,
+    invoiceNo: 'INV-2026-00157',
+    status: 'Paid',
+    createdAt: '2026-03-28 14:10',
+  },
 ];
 
+const STATUS_TAG: Record<Status, { cls: string; label: string }> = {
+  'Awaiting Comparison': {
+    cls: 'tag-under-review',
+    label: 'Awaiting Comparison',
+  },
+  'Awaiting Re-bill': {
+    cls: 'tag-rejected',
+    label: 'Awaiting Re-bill',
+  },
+  'Pending Payment': {
+    cls: 'tag-partial',
+    label: 'Pending Payment',
+  },
+  Paid: {
+    cls: 'tag-approved',
+    label: 'Paid',
+  },
+};
+
 function StatusTag({ s }: { s: Status }) {
-  const map: Record<Status, string> = {
-    'Pending Payment': 'tag-under-review',
-    'Partially Paid': 'tag-partial',
-    'Paid': 'tag-approved',
-  };
-  return <span className={`tag ${map[s]}`}>{s}</span>;
+  const { cls, label } = STATUS_TAG[s];
+  return <span className={`tag ${cls}`}>{label}</span>;
 }
 
-function StatementList({ onOpenDetail }: Props) {
-  const [status, setStatus] = useState('all');
-  const filtered = SAMPLE.filter(r => status === 'all' || r.status === status);
+function StatementList({ onOpenDetail, onEdit }: Props) {
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [keyword, setKeyword] = useState('');
 
-  const totalOutstanding = SAMPLE.filter(r => r.status !== 'Paid')
-    .reduce((a, r) => a + (r.totalPayable - r.amountPaid), 0);
-  const totalPaid = SAMPLE.filter(r => r.status === 'Paid').reduce((a, r) => a + r.amountPaid, 0);
+  const filtered = SAMPLE.filter(r => {
+    const matchStatus = statusFilter === 'all' || r.status === statusFilter;
+    const matchKeyword = !keyword || r.no.includes(keyword) || r.invoiceNo.includes(keyword);
+    return matchStatus && matchKeyword;
+  });
+
+  const awaitingCount = SAMPLE.filter(r => r.status === 'Awaiting Comparison').length;
+  const rebillCount = SAMPLE.filter(r => r.status === 'Awaiting Re-bill').length;
+  const pendingCount = SAMPLE.filter(r => r.status === 'Pending Payment').length;
+  const paidCount = SAMPLE.filter(r => r.status === 'Paid').length;
 
   return (
     <>
       <div className="vp-kpi-row">
-        <div className="vp-kpi"><div className="vp-kpi-label">Total Statements</div><div className="vp-kpi-value">{SAMPLE.length}</div></div>
-        <div className="vp-kpi"><div className="vp-kpi-label">Pending Payment</div><div className="vp-kpi-value orange">{SAMPLE.filter(r => r.status === 'Pending Payment').length}</div></div>
-        <div className="vp-kpi"><div className="vp-kpi-label">Outstanding Amount</div><div className="vp-kpi-value red">{totalOutstanding.toLocaleString()}</div></div>
-        <div className="vp-kpi"><div className="vp-kpi-label">Total Paid</div><div className="vp-kpi-value green">{totalPaid.toLocaleString()}</div></div>
+        <div className="vp-kpi">
+          <div className="vp-kpi-label">Total Statements</div>
+          <div className="vp-kpi-value">{SAMPLE.length}</div>
+        </div>
+        <div className="vp-kpi">
+          <div className="vp-kpi-label">Awaiting Comparison</div>
+          <div className="vp-kpi-value" style={{ color: '#1677ff' }}>{awaitingCount}</div>
+        </div>
+        <div className="vp-kpi">
+          <div className="vp-kpi-label">Awaiting Re-bill</div>
+          <div className="vp-kpi-value red">{rebillCount}</div>
+        </div>
+        <div className="vp-kpi">
+          <div className="vp-kpi-label">Pending Payment</div>
+          <div className="vp-kpi-value orange">{pendingCount}</div>
+        </div>
+        <div className="vp-kpi">
+          <div className="vp-kpi-label">Paid</div>
+          <div className="vp-kpi-value green">{paidCount}</div>
+        </div>
       </div>
+
+      {rebillCount > 0 && (
+        <div className="alert alert-danger" style={{ marginBottom: 12 }}>
+          <span>⚠</span>
+          <span>
+            You have <strong>{rebillCount}</strong> statement{rebillCount > 1 ? 's' : ''} rejected by TMS.
+            Please review the rejection reason and resubmit.
+          </span>
+        </div>
+      )}
 
       <div className="vp-card">
         <div className="vp-card-title">
           <div className="section-title">My Statements</div>
-          <div style={{ fontSize: 12, color: '#999' }}>Statements generated from your settlement applications or created by Procurement.</div>
+          <div style={{ fontSize: 12, color: '#999' }}>
+            Statements submitted to TMS. Once submitted, TMS will compare amounts and notify you of the result.
+          </div>
         </div>
 
         <div className="filter-row">
-          <input className="filter-input" placeholder="Statement No." />
-          <select className="filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <input
+            className="filter-input"
+            placeholder="Statement No. / Invoice No."
+            value={keyword}
+            onChange={e => setKeyword(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
             <option value="all">All Status</option>
+            <option value="Awaiting Comparison">Awaiting Comparison</option>
+            <option value="Awaiting Re-bill">Awaiting Re-bill</option>
             <option value="Pending Payment">Pending Payment</option>
-            <option value="Partially Paid">Partially Paid</option>
             <option value="Paid">Paid</option>
           </select>
-          <select className="filter-select">
-            <option>Source: All</option>
-            <option>Vendor Request</option>
-            <option>Manual</option>
-          </select>
-          <input className="filter-input" placeholder="Period: YYYY-MM-DD" />
-          <button className="btn-default">Reset</button>
+          <button className="btn-default" onClick={() => { setKeyword(''); setStatusFilter('all'); }}>Reset</button>
           <button className="btn-primary">Search</button>
         </div>
 
@@ -76,39 +162,76 @@ function StatementList({ onOpenDetail }: Props) {
           <thead>
             <tr>
               <th>Statement No.</th>
-              <th>Reconciliation Period</th>
-              <th>Source</th>
-              <th className="num">Total Payable</th>
-              <th className="num">Amount Paid</th>
-              <th className="num">Remaining</th>
+              <th className="num">Total Submitted Amount</th>
+              <th>Waybills</th>
+              <th>Invoice No.</th>
               <th>Status</th>
               <th>Created At</th>
-              <th>Operate</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r) => (
-              <tr key={r.no}>
-                <td><button className="btn-link" onClick={() => onOpenDetail(r.no, r.status)}>{r.no}</button></td>
-                <td>{r.period}</td>
-                <td>
-                  {r.source === 'Vendor Request'
-                    ? <span className="tag tag-matched">Vendor Request</span>
-                    : <span className="tag tag-draft">Manual</span>}
-                </td>
-                <td className="num">{r.totalPayable.toLocaleString()}</td>
-                <td className="num">{r.amountPaid.toLocaleString()}</td>
-                <td className="num" style={{ color: r.totalPayable - r.amountPaid > 0 ? '#ff4d4f' : '#999' }}>
-                  {(r.totalPayable - r.amountPaid).toLocaleString()}
-                </td>
-                <td><StatusTag s={r.status} /></td>
-                <td>{r.createdAt}</td>
-                <td>
-                  <button className="btn-link" onClick={() => onOpenDetail(r.no, r.status)}>Details</button>
+            {filtered.map(r => {
+              const isRebill = r.status === 'Awaiting Re-bill';
+              return (
+                <tr key={r.no} className={isRebill ? 'rebill-row' : undefined}>
+                  <td>
+                    <button
+                      className="btn-link"
+                      onClick={() => onOpenDetail(r.no, r.status)}
+                    >
+                      {r.no}
+                    </button>
+                  </td>
+                  <td className="num" style={{ fontWeight: 600 }}>
+                    {r.totalSubmittedAmount.toLocaleString()} PHP
+                  </td>
+                  <td style={{ fontSize: 12, color: '#666' }}>{r.waybillCount} waybills</td>
+                  <td style={{ fontSize: 12 }}>{r.invoiceNo}</td>
+                  <td>
+                    <StatusTag s={r.status} />
+                    {isRebill && (
+                      <div
+                        style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 200 }}
+                        title={r.rejectReason}
+                      >
+                        {r.rejectReason && r.rejectReason.length > 60
+                          ? r.rejectReason.slice(0, 60) + '…'
+                          : r.rejectReason}
+                      </div>
+                    )}
+                  </td>
+                  <td>{r.createdAt}</td>
+                  <td>
+                    <button
+                      className="btn-link"
+                      onClick={() => onOpenDetail(r.no, r.status)}
+                    >
+                      View
+                    </button>
+                    {isRebill && (
+                      <>
+                        {' '}·{' '}
+                        <button
+                          className="btn-link"
+                          style={{ color: '#d46b08' }}
+                          onClick={() => onEdit(r.no, r.status)}
+                        >
+                          Edit & Resubmit
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={7} className="empty">
+                  No statements match the current filter.
                 </td>
               </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={9} className="empty">No statements match the current filter.</td></tr>}
+            )}
           </tbody>
         </table>
 
@@ -116,7 +239,9 @@ function StatementList({ onOpenDetail }: Props) {
           <button className="page-btn">&lt;</button>
           <button className="page-btn active">1</button>
           <button className="page-btn">&gt;</button>
-          <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>Total {filtered.length} · 20/page</span>
+          <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>
+            Total {filtered.length} · 20/page
+          </span>
         </div>
       </div>
     </>
@@ -124,4 +249,4 @@ function StatementList({ onOpenDetail }: Props) {
 }
 
 export default StatementList;
-export type { Status };
+export type { Row as StatementRow };

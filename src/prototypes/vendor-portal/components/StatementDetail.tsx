@@ -1,84 +1,142 @@
 import React, { useState } from 'react';
 import type { Status } from './StatementList';
-import { WAYBILL_DETAILS } from '../data/waybillDetails';
-import { CLAIM_TICKETS } from '../data/claimTickets';
-import { INVOICES, type Invoice } from '../data/invoices';
 
 interface Props {
   no: string;
   status: Status;
   onBack: () => void;
-  onConfirm: () => void;
-  onReject: () => void;
-  onOpenClaimTicket?: (ticketNo: string) => void;
+  onEdit?: () => void;
 }
 
-type Tab = 'waybills' | 'claims';
-
-const WAYBILLS = [
-  { no: 'WB2604001' },
-  { no: 'WB2604002' },
-  { no: 'WB2604004' },
-  { no: 'WB2604006' },
-];
-
-const LINKED_CLAIM_TICKETS = ['PHCT26041002CD'];
-
-const PAYMENTS = [
-  { date: '—', amount: 0, refNo: '—', note: 'Pending finance processing' },
-];
-
-function computeWaybillSubtotal(no: string): number {
-  const d = WAYBILL_DETAILS[no];
-  if (!d) return 0;
-  return d.billingLines.reduce((a, l) => a + l.currentAmount, 0);
+interface WaybillRow {
+  no: string;
+  unloadingTime: string;
+  truckType: string;
+  origin: string;
+  destination: string;
+  basicAmount: number;
+  additionalCharge: number;
+  exceptionFee: number;
 }
 
-function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimTicket }: Props) {
-  const [tab, setTab] = useState<Tab>('waybills');
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+// Mock statement details per statement no
+const STATEMENT_DATA: Record<
+  string,
+  {
+    waybills: WaybillRow[];
+    invoiceNo: string;
+    invoiceProof: string;
+    rejectReason?: string;
+    submittedAt: string;
+  }
+> = {
+  VS2604001: {
+    waybills: [
+      { no: 'WB2604010', unloadingTime: '2026-04-10 15:30', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC', basicAmount: 18000, additionalCharge: 800, exceptionFee: 0 },
+      { no: 'WB2604011', unloadingTime: '2026-04-11 09:00', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig', basicAmount: 12000, additionalCharge: 0, exceptionFee: 500 },
+      { no: 'WB2604012', unloadingTime: '2026-04-12 17:00', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila / Port Area', basicAmount: 18500, additionalCharge: 2000, exceptionFee: 1000 },
+    ],
+    invoiceNo: 'INV-2026-00201',
+    invoiceProof: 'Invoice_Proof_Apr20.pdf',
+    submittedAt: '2026-04-20 10:15',
+  },
+  VS2604002: {
+    waybills: [
+      { no: 'WB2604013', unloadingTime: '2026-04-13 11:15', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba / Plant 2', basicAmount: 20000, additionalCharge: 1500, exceptionFee: 0 },
+      { no: 'WB2604016', unloadingTime: '2026-04-16 10:45', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC', basicAmount: 16000, additionalCharge: 0, exceptionFee: 1000 },
+    ],
+    invoiceNo: 'INV-2026-00198',
+    invoiceProof: 'Invoice_Proof_Apr18.pdf',
+    rejectReason:
+      'Basic Amount for WB2604013 exceeds contracted rate. Additional Charge for WB2604013 has no supporting proof. Please correct and resubmit.',
+    submittedAt: '2026-04-18 14:30',
+  },
+  VS2604003: {
+    waybills: [
+      { no: 'WB2604014', unloadingTime: '2026-04-14 08:30', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area', basicAmount: 17500, additionalCharge: 1200, exceptionFee: 0 },
+      { no: 'WB2604015', unloadingTime: '2026-04-15 14:00', truckType: '6-Wheeler', origin: 'PH-NCR-Quezon City', destination: 'PH-Bulacan-Meycauayan', basicAmount: 11000, additionalCharge: 600, exceptionFee: 300 },
+      { no: 'WB2604010', unloadingTime: '2026-04-10 15:30', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC', basicAmount: 18500, additionalCharge: 700, exceptionFee: 0 },
+      { no: 'WB2604011', unloadingTime: '2026-04-11 09:00', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig', basicAmount: 12000, additionalCharge: 0, exceptionFee: 0 },
+    ],
+    invoiceNo: 'INV-2026-00185',
+    invoiceProof: 'Invoice_Proof_Apr13.pdf',
+    submittedAt: '2026-04-13 11:45',
+  },
+  VS2603001: {
+    waybills: [
+      { no: 'WB2603028', unloadingTime: '2026-03-28 09:00', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus / DC', basicAmount: 15000, additionalCharge: 500, exceptionFee: 0 },
+      { no: 'WB2603029', unloadingTime: '2026-03-29 14:00', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-Laguna-Calamba', basicAmount: 11000, additionalCharge: 0, exceptionFee: 0 },
+      { no: 'WB2603030', unloadingTime: '2026-03-30 11:00', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila', basicAmount: 17000, additionalCharge: 800, exceptionFee: 700 },
+    ],
+    invoiceNo: 'INV-2026-00157',
+    invoiceProof: 'Invoice_Proof_Mar28.pdf',
+    submittedAt: '2026-03-28 14:10',
+  },
+};
 
-  const toggle = (wb: string) => {
-    const n = new Set(expanded);
-    if (n.has(wb)) n.delete(wb); else n.add(wb);
-    setExpanded(n);
-  };
+const STATUS_LABEL: Record<Status, { cls: string; label: string }> = {
+  'Awaiting Comparison': { cls: 'tag-under-review', label: 'Awaiting Comparison' },
+  'Awaiting Re-bill': { cls: 'tag-rejected', label: 'Awaiting Re-bill' },
+  'Pending Payment': { cls: 'tag-partial', label: 'Pending Payment' },
+  Paid: { cls: 'tag-approved', label: 'Paid' },
+};
 
-  const waybillSubtotal = WAYBILLS.reduce((a, w) => a + computeWaybillSubtotal(w.no), 0);
-  const linkedClaims = CLAIM_TICKETS.filter(t => LINKED_CLAIM_TICKETS.includes(t.ticketNo));
-  const claimSubtotal = linkedClaims.reduce((a, t) => a + t.claimAmount, 0);
-  const linkedInvoices: Invoice[] = INVOICES.filter(i => i.linkedStatementNo === no);
-  const total = waybillSubtotal - claimSubtotal;
+function StatementDetail({ no, status, onBack, onEdit }: Props) {
+  const data = STATEMENT_DATA[no];
+  const [expandedRows] = useState(new Set<string>());
 
-  const isAwaiting = false;
-  const isFinal = status === 'Paid';
+  if (!data) {
+    return (
+      <div className="vp-card">
+        <button className="btn-link" onClick={onBack}>← Back to My Statements</button>
+        <div className="empty" style={{ marginTop: 16 }}>Statement data not found.</div>
+      </div>
+    );
+  }
+
+  const rowSubtotal = (r: WaybillRow) => r.basicAmount + r.additionalCharge + r.exceptionFee;
+  const grandTotal = data.waybills.reduce((a, r) => a + rowSubtotal(r), 0);
+  const isRebill = status === 'Awaiting Re-bill';
+  const isViewOnly = status !== 'Awaiting Re-bill' || !onEdit;
+
+  const { cls, label } = STATUS_LABEL[status];
 
   return (
     <>
+      {/* Back / Breadcrumb */}
       <div className="vp-card" style={{ padding: 14, marginBottom: 16 }}>
-        <button className="btn-link" onClick={onBack}>← Back to Statements</button>
+        <button className="btn-link" onClick={onBack}>← Back to My Statements</button>
         <span style={{ marginLeft: 10, fontSize: 13, color: '#666' }}>
-          {no} · <strong>Vendor Statement</strong>
+          {no} · <strong>Statement Detail</strong>
         </span>
       </div>
 
-      {isAwaiting && (
-        <div className="alert alert-warn">
-          <span>⚠</span>
-          This statement is awaiting your confirmation. Confirm to proceed to payment, or Reject with reason to return it for correction.
+      {/* Rejection Reason Banner */}
+      {isRebill && data.rejectReason && (
+        <div className="alert alert-danger" style={{ marginBottom: 16, borderLeft: '4px solid #ff4d4f' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <span style={{ fontSize: 16, marginTop: 1 }}>✕</span>
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>TMS Rejection Reason</div>
+              <div style={{ fontSize: 13 }}>{data.rejectReason}</div>
+              <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                Please click <strong>Edit & Resubmit</strong> to correct the amounts and submit again.
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Summary Card */}
       <div className="vp-card">
         <div className="vp-card-title">
           <div className="section-title">Statement Summary</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span className={`tag ${status === 'Paid' ? 'tag-approved' : status === 'Partially Paid' ? 'tag-partial' : 'tag-under-review'}`}>{status}</span>
-            {isAwaiting && (
-              <>
-                <button className="btn-danger" onClick={onReject}>Reject</button>
-                <button className="btn-primary" onClick={onConfirm}>Vendor Confirm</button>
-              </>
+            <span className={`tag ${cls}`}>{label}</span>
+            {isRebill && onEdit && (
+              <button className="btn-primary" style={{ background: '#d46b08', border: 'none' }} onClick={onEdit}>
+                Edit & Resubmit
+              </button>
             )}
           </div>
         </div>
@@ -89,286 +147,107 @@ function StatementDetail({ no, status, onBack, onConfirm, onReject, onOpenClaimT
             <div style={{ fontSize: 13, fontWeight: 500 }}>{no}</div>
           </div>
           <div>
-            <div className="vp-kpi-label">Source</div>
-            <div style={{ fontSize: 13 }}>Vendor Request · from ApS260416002</div>
+            <div className="vp-kpi-label">Submitted At</div>
+            <div style={{ fontSize: 13 }}>{data.submittedAt}</div>
           </div>
           <div>
-            <div className="vp-kpi-label">Reconciliation Period</div>
-            <div style={{ fontSize: 13 }}>2026-04-01 ~ 2026-04-15</div>
+            <div className="vp-kpi-label">Invoice No.</div>
+            <div style={{ fontSize: 13 }}>{data.invoiceNo}</div>
           </div>
           <div>
-            <div className="vp-kpi-label">Total Payable</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#00b96b' }}>{total.toLocaleString()}</div>
-          </div>
-          <div>
-            <div className="vp-kpi-label">Tax Mark</div>
-            <div style={{ fontSize: 13 }}>VAT-ex</div>
-          </div>
-          <div>
-            <div className="vp-kpi-label">Invoices</div>
+            <div className="vp-kpi-label">Invoice Proof</div>
             <div style={{ fontSize: 13 }}>
-              {linkedInvoices.length > 0
-                ? `${linkedInvoices.length} attached`
-                : <span style={{ color: '#999' }}>None</span>}
+              <span style={{ color: '#1677ff' }}>📎 {data.invoiceProof}</span>
             </div>
           </div>
           <div>
-            <div className="vp-kpi-label">Amount Paid</div>
-            <div style={{ fontSize: 13 }}>0</div>
+            <div className="vp-kpi-label">Waybills</div>
+            <div style={{ fontSize: 13 }}>{data.waybills.length}</div>
           </div>
           <div>
-            <div className="vp-kpi-label">Remaining</div>
-            <div style={{ fontSize: 13, color: '#ff4d4f', fontWeight: 500 }}>{total.toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="vp-card">
-        <div className="sub-tabs">
-          <button className={`sub-tab ${tab === 'waybills' ? 'active' : ''}`} onClick={() => setTab('waybills')}>
-            Waybill Breakdown ({WAYBILLS.length})
-          </button>
-          <button className={`sub-tab ${tab === 'claims' ? 'active' : ''}`} onClick={() => setTab('claims')}>
-            Claim Tickets ({linkedClaims.length})
-          </button>
-        </div>
-
-        {tab === 'waybills' && (
-          <>
-            <div className="alert alert-info">
-              <span>ⓘ</span>
-              Click row to expand waybill details and Billing Breakdown. Amounts edited by TMS Ops are highlighted in <strong>Original → Current</strong> yellow background.
+            <div className="vp-kpi-label">Total Submitted Amount</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#00b96b' }}>
+              {grandTotal.toLocaleString()} PHP
             </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 28 }}>&nbsp;</th>
-                  <th>Waybill No.</th>
-                  <th>Route</th>
-                  <th>Truck / Driver</th>
-                  <th>Claim Linked</th>
-                  <th className="num">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {WAYBILLS.map((w) => {
-                  const d = WAYBILL_DETAILS[w.no];
-                  const isOpen = expanded.has(w.no);
-                  const sub = computeWaybillSubtotal(w.no);
-                  const hasEdit = d?.billingLines.some(l => l.editedBy === 'TMS Ops');
-                  return (
-                    <React.Fragment key={w.no}>
-                      <tr style={{ cursor: 'pointer' }} onClick={() => toggle(w.no)}>
-                        <td style={{ color: '#999' }}>{isOpen ? '▾' : '▸'}</td>
-                        <td>
-                          <strong>{w.no}</strong>
-                          {hasEdit && (
-                            <span className="tag" style={{ marginLeft: 6, background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' }}>
-                              TMS Edited
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ fontSize: 12 }}>
-                          {d ? (<>{d.origin}<br/>→ {d.destination}</>) : '—'}
-                        </td>
-                        <td style={{ fontSize: 12 }}>
-                          {d?.truckType || '—'}
-                          <br/>
-                          <span style={{ color: '#999' }}>{d?.driver || '—'} · {d?.truckPlate || '—'}</span>
-                        </td>
-                        <td style={{ fontSize: 12 }}>
-                          {d?.relatedClaimTickets?.length
-                            ? d.relatedClaimTickets.map(t => (
-                                <button
-                                  key={t}
-                                  className="btn-link"
-                                  style={{ fontSize: 12, padding: 0, marginRight: 6 }}
-                                  onClick={(e) => { e.stopPropagation(); onOpenClaimTicket?.(t); }}
-                                >{t}</button>
-                              ))
-                            : <span style={{ color: '#999' }}>—</span>}
-                        </td>
-                        <td className="num" style={{ fontWeight: 600 }}>{sub.toLocaleString()}</td>
-                      </tr>
-                      {isOpen && d && (
-                        <tr className="waybill-expand-row">
-                          <td></td>
-                          <td colSpan={5}>
-                            <div style={{ padding: '8px 0' }}>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-                                <div><div className="vp-kpi-label">Position Time</div><div style={{ fontSize: 13 }}>{d.positionTime}</div></div>
-                                <div><div className="vp-kpi-label">Delivery Time</div><div style={{ fontSize: 13 }}>{d.deliveryTime}</div></div>
-                                <div><div className="vp-kpi-label">Unloading Time</div><div style={{ fontSize: 13 }}>{d.unloadingTime || '—'}</div></div>
-                                <div><div className="vp-kpi-label">POD</div><div style={{ fontSize: 13 }}>{d.pod ? <span style={{ color: '#1677ff' }}>📎 {d.pod}</span> : '—'}</div></div>
-                              </div>
-
-                              <div style={{ fontSize: 12, color: '#666', marginBottom: 6, fontWeight: 500 }}>Billing Breakdown</div>
-                              <table className="data-table" style={{ marginTop: 0 }}>
-                                <thead>
-                                  <tr>
-                                    <th>Billing Item</th>
-                                    <th className="num">Original</th>
-                                    <th className="num">Current</th>
-                                    <th>Edited</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {d.billingLines.map((l, i) => (
-                                    <tr key={i} className={l.editedBy ? 'amount-diff-row' : ''}>
-                                      <td>{l.item}</td>
-                                      <td className="num">{l.originalAmount.toLocaleString()}</td>
-                                      <td className="num" style={l.editedBy ? { color: '#d46b08', fontWeight: 600 } : {}}>
-                                        {l.currentAmount.toLocaleString()}
-                                        {l.editedBy && l.currentAmount !== l.originalAmount && (
-                                          <span style={{ fontSize: 11, marginLeft: 6, color: l.currentAmount > l.originalAmount ? '#00b96b' : '#cf1322' }}>
-                                            ({l.currentAmount > l.originalAmount ? '+' : ''}{(l.currentAmount - l.originalAmount).toLocaleString()})
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td style={{ fontSize: 12 }}>
-                                        {l.editedBy ? (
-                                          <>
-                                            <div style={{ color: '#d46b08' }}>{l.editedBy} · {l.editedAt}</div>
-                                            <div style={{ color: '#999' }}>{l.reason}</div>
-                                          </>
-                                        ) : <span style={{ color: '#999' }}>—</span>}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                              {d.notes && (
-                                <div style={{ fontSize: 12, color: '#666', marginTop: 8, padding: 8, background: '#fffbe6', borderLeft: '3px solid #ffd666' }}>
-                                  ℹ {d.notes}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-                <tr style={{ background: '#fafafa', fontWeight: 600 }}>
-                  <td colSpan={5} style={{ textAlign: 'right' }}>Waybill Subtotal</td>
-                  <td className="num">{waybillSubtotal.toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </>
-        )}
-
-        {tab === 'claims' && (
-          <>
-            {linkedClaims.length === 0 ? (
-              <div className="empty">No claim tickets linked to this statement.</div>
-            ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Ticket No.</th>
-                    <th>Claim Type</th>
-                    <th>Related Waybill</th>
-                    <th className="num">Claim Amount</th>
-                    <th>Deduction</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {linkedClaims.map(t => (
-                    <tr key={t.ticketNo}>
-                      <td><button className="btn-link" onClick={() => onOpenClaimTicket?.(t.ticketNo)}>{t.ticketNo}</button></td>
-                      <td style={{ fontSize: 12 }}>
-                        <div>{t.claimTypeL1}</div>
-                        <div style={{ color: '#666' }}>{t.claimTypeL2}</div>
-                      </td>
-                      <td>{t.relatedWaybill || '—'}</td>
-                      <td className="num" style={{ color: '#cf1322' }}>-{t.claimAmount.toLocaleString()}</td>
-                      <td style={{ fontSize: 12 }}>{t.deductionForVendor}</td>
-                      <td><span className="tag tag-matched">{t.status}</span></td>
-                    </tr>
-                  ))}
-                  <tr style={{ background: '#fafafa', fontWeight: 600 }}>
-                    <td colSpan={3} style={{ textAlign: 'right' }}>Claim Deduction Subtotal</td>
-                    <td className="num" style={{ color: '#cf1322' }}>-{claimSubtotal.toLocaleString()}</td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className="vp-card">
-        <div className="section-title">Invoice ({linkedInvoices.length})</div>
-        {linkedInvoices.length === 0 ? (
-          <div className="empty">
-            {isAwaiting
-              ? <>No invoices attached yet. Please add invoices when <strong>Vendor Confirm</strong>.</>
-              : 'No invoices attached.'}
           </div>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Invoice No.</th>
-                <th>Invoice Date</th>
-                <th className="num">Amount</th>
-                <th>Document</th>
-                <th>Remark</th>
-              </tr>
-            </thead>
-            <tbody>
-              {linkedInvoices.map(inv => (
-                <tr key={inv.id}>
-                  <td>{inv.invoiceNo}</td>
-                  <td>{inv.invoiceDate}</td>
-                  <td className="num">{inv.amount.toLocaleString()} {inv.currency}</td>
-                  <td>{inv.documentFileName ? <span style={{ color: '#1677ff', fontSize: 12 }}>📎 {inv.documentFileName}</span> : <span style={{ color: '#999' }}>—</span>}</td>
-                  <td style={{ fontSize: 12, color: '#666' }}>{inv.remark || '—'}</td>
-                </tr>
-              ))}
-              <tr style={{ background: '#fafafa', fontWeight: 600 }}>
-                <td colSpan={2} style={{ textAlign: 'right' }}>Invoice Total</td>
-                <td className="num">
-                  {linkedInvoices.reduce((a, i) => a + i.amount, 0).toLocaleString()} PHP
-                </td>
-                <td colSpan={2}></td>
-              </tr>
-            </tbody>
-          </table>
-        )}
+          {status === 'Paid' && (
+            <>
+              <div>
+                <div className="vp-kpi-label">Payment Status</div>
+                <div style={{ fontSize: 13, color: '#00b96b', fontWeight: 500 }}>Paid in Full</div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Awaiting Comparison info */}
+      {status === 'Awaiting Comparison' && (
+        <div className="alert alert-info">
+          <span>ⓘ</span>
+          <span>
+            Your statement has been submitted and is currently being reviewed by TMS.
+            You will be notified once the comparison is complete.
+          </span>
+        </div>
+      )}
+
+      {/* Waybill Amount Details */}
       <div className="vp-card">
-        <div className="section-title">Payment History</div>
+        <div className="section-title" style={{ marginBottom: 12 }}>
+          Waybill Amount Details
+        </div>
+
         <table className="data-table">
           <thead>
             <tr>
-              <th>Payment Date</th>
-              <th className="num">Amount</th>
-              <th>Ref No.</th>
-              <th>Note</th>
+              <th>Waybill No.</th>
+              <th>Unloading Time</th>
+              <th>Truck Type</th>
+              <th>Origin → Destination</th>
+              <th className="num">Basic Amount</th>
+              <th className="num">Additional Charge</th>
+              <th className="num">Exception Fee</th>
+              <th className="num">Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            {PAYMENTS.map((p, i) => (
-              <tr key={i}>
-                <td>{p.date}</td>
-                <td className="num">{p.amount.toLocaleString()}</td>
-                <td>{p.refNo}</td>
-                <td style={{ color: '#999' }}>{p.note}</td>
-              </tr>
-            ))}
+            {data.waybills.map(r => {
+              const sub = rowSubtotal(r);
+              return (
+                <tr key={r.no}>
+                  <td><strong>{r.no}</strong></td>
+                  <td style={{ fontSize: 12 }}>{r.unloadingTime}</td>
+                  <td style={{ fontSize: 12 }}>{r.truckType}</td>
+                  <td style={{ fontSize: 11 }}>
+                    {r.origin}<br />→ {r.destination}
+                  </td>
+                  <td className="num">{r.basicAmount.toLocaleString()}</td>
+                  <td className="num">{r.additionalCharge.toLocaleString()}</td>
+                  <td className="num">{r.exceptionFee.toLocaleString()}</td>
+                  <td className="num" style={{ fontWeight: 600, color: '#00b96b' }}>
+                    {sub.toLocaleString()}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr style={{ background: '#fafafa', fontWeight: 600 }}>
+              <td colSpan={7} style={{ textAlign: 'right', paddingRight: 8 }}>
+                Total Submitted Amount
+              </td>
+              <td className="num" style={{ fontSize: 15, color: '#00b96b' }}>
+                {grandTotal.toLocaleString()} PHP
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      {isFinal && (
+      {/* Final state */}
+      {status === 'Paid' && (
         <div className="alert alert-success">
           <span>✓</span>
-          This statement is in a final state ({status}). No further action required.
+          This statement has been fully paid. No further action required.
         </div>
       )}
     </>
