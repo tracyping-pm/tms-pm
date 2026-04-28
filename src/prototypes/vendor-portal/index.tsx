@@ -21,7 +21,7 @@ import React, { useState } from 'react';
 import VendorPortalShell from './components/VendorPortalShell';
 
 // Unbilled Waybills
-import UnbilledWaybillsList from './components/UnbilledWaybillsList';
+import UnbilledWaybillsList, { type CreateMode } from './components/UnbilledWaybillsList';
 
 // Create Statement Form (V2)
 import CreateStatementForm from './components/CreateStatementForm';
@@ -55,6 +55,7 @@ const Component = function VendorPortal() {
   // Unbilled Waybills
   const [unbilledView, setUnbilledView] = useState<UnbilledView>('list');
   const [selectedWaybills, setSelectedWaybills] = useState<string[]>([]);
+  const [createMode, setCreateMode] = useState<CreateMode>('system-price');
   // waybills that have been submitted (show as Statement Pending in list)
   const [pendingWaybills, setPendingWaybills] = useState<string[]>([]);
 
@@ -89,8 +90,9 @@ const Component = function VendorPortal() {
   };
 
   // --- Unbilled Waybills handlers ---
-  const handleGenerateStatement = (waybillNos: string[]) => {
+  const handleGenerateStatement = (waybillNos: string[], mode: CreateMode) => {
     setSelectedWaybills(waybillNos);
+    setCreateMode(mode);
     setUnbilledView('create');
   };
 
@@ -140,6 +142,7 @@ const Component = function VendorPortal() {
       return (
         <CreateStatementForm
           prefillWaybills={selectedWaybills}
+          mode={createMode}
           onBack={() => { setSelectedWaybills([]); setUnbilledView('list'); }}
           onSubmit={handleStatementSubmit}
         />
@@ -203,6 +206,7 @@ const Component = function VendorPortal() {
         return (
           <CreateStatementForm
             prefillWaybills={[]}
+            mode="edit"
             onBack={() => setStatementView(editingStmtNo ? 'detail' : 'list')}
             onSubmit={handleResubmit}
             editStatementNo={editingStmtNo}

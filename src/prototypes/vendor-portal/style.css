@@ -1009,6 +1009,121 @@ tr:hover .row-actions {
   transform: translateY(-1px);
 }
 
+/* ==================== VP Billing V3 新增样式 ==================== */
+
+/* 双轨制入口 Banner */
+.dual-path-banner {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.dual-path-card {
+  flex: 1;
+  padding: 16px 20px;
+}
+
+.dual-path-card.path-a {
+  background: #f0f9ff;
+  border-right: none;
+}
+
+.dual-path-card.path-b {
+  background: #f6ffed;
+}
+
+.dual-path-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dual-path-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #1677ff;
+  color: #fff;
+}
+
+.dual-path-badge.path-b-badge {
+  background: #00b96b;
+}
+
+.dual-path-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.dual-path-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  width: 40px;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+
+.dual-path-divider-line {
+  flex: 1;
+  width: 1px;
+  background: #e0e0e0;
+}
+
+.dual-path-divider-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #bbb;
+  padding: 6px 0;
+}
+
+/* OCR spinner animation */
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+.ocr-spinner {
+  display: inline-block;
+  animation: rotate 1s linear infinite;
+}
+
+/* Summary breakdown rows */
+.summary-breakdown {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.summary-bd-row {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  padding: 2px 0;
+}
+
+.summary-bd-subtotal {
+  border-top: 1px solid rgba(0,0,0,0.1);
+  margin-top: 4px;
+  padding-top: 6px;
+  font-weight: 600;
+  color: #333;
+}
+
 /* ==================== VP Billing V2 新增样式 ==================== */
 
 /* 浮动操作栏（Unbilled Waybills 多选后出现） */
