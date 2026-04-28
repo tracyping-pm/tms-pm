@@ -41,6 +41,12 @@ interface InvoiceEntry {
   ocrState: OcrState;
 }
 
+interface ProofEntry {
+  id: string;
+  description: string;
+  attachmentName: string;
+}
+
 interface SelectedClaim {
   ticketNo: string;
   claimTypeL1: string;
@@ -120,6 +126,9 @@ const WHT_OPTIONS = [{ label: 'No WHT (0%)', value: 0 }, { label: 'WHT 1%', valu
 let invoiceCounter = 100;
 function makeInvoiceId() { return `inv-${++invoiceCounter}`; }
 
+let proofCounter = 100;
+function makeProofId() { return `proof-${++proofCounter}`; }
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStatementNo, rejectReason }: Props) {
@@ -139,6 +148,10 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
   const [invoices, setInvoices] = useState<InvoiceEntry[]>([]);
   const [invoiceCurrency, setInvoiceCurrency] = useState('PHP');
   const [showAddInvoice, setShowAddInvoice] = useState(false);
+
+  // Proof entries
+  const [proofs, setProofs] = useState<ProofEntry[]>([]);
+  const [showAddProof, setShowAddProof] = useState(false);
 
   // Claim tickets
   const [selectedClaims, setSelectedClaims] = useState<SelectedClaim[]>([]);
@@ -216,6 +229,19 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
 
   const updateInvoiceField = (id: string, field: keyof Pick<InvoiceEntry, 'invoiceNo' | 'invoiceAmount' | 'invoiceDate'>, val: string) => {
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, [field]: val } : i));
+  };
+
+  // ─── Proof handlers ───────────────────────────────────────────────────────────
+
+  const addProof = (entry: Omit<ProofEntry, 'id'>) => {
+    setProofs([...proofs, { ...entry, id: makeProofId() }]);
+    setShowAddProof(false);
+  };
+
+  const removeProof = (id: string) => setProofs(proofs.filter(p => p.id !== id));
+
+  const updateProofField = (id: string, field: keyof Pick<ProofEntry, 'description' | 'attachmentName'>, val: string) => {
+    setProofs(prev => prev.map(p => p.id === id ? { ...p, [field]: val } : p));
   };
 
   // ─── Claim handlers ───────────────────────────────────────────────────────────
@@ -417,6 +443,71 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
                   </td>
                   <td>
                     <button className="btn-link" style={{ color: '#ff4d4f' }} onClick={() => removeInvoice(inv.id)}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ── Section 1b: Proof (Supporting Documents) ─────────────────────────── */}
+      <div className="vp-card">
+        <div className="vp-card-title">
+          <div>
+            <div className="section-title">Proof (Supporting Documents)</div>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+              Attach proof or justification for additional charges, exceptions, or any items requiring special explanation.
+            </div>
+          </div>
+          <button className="btn-primary" onClick={() => setShowAddProof(true)}>+ Add Proof</button>
+        </div>
+
+        {proofs.length === 0 ? (
+          <div className="empty" style={{ padding: '20px', border: '1px dashed #e0e0e0', borderRadius: 4, textAlign: 'center' }}>
+            <div style={{ color: '#bbb', fontSize: 24, marginBottom: 6 }}>📎</div>
+            <div style={{ color: '#999', fontSize: 13 }}>No supporting documents added yet. Click <strong>+ Add Proof</strong> to attach.</div>
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: 32 }}>#</th>
+                <th>Description</th>
+                <th>Attachment</th>
+                <th style={{ width: 80 }}>Operate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {proofs.map((p, i) => (
+                <tr key={p.id}>
+                  <td style={{ color: '#999', fontSize: 12 }}>{i + 1}</td>
+                  <td>
+                    <input
+                      className="table-amount-input"
+                      style={{ textAlign: 'left', width: '100%' }}
+                      placeholder="e.g. Parking fee receipt for WB2604010"
+                      value={p.description}
+                      onChange={e => updateProofField(p.id, 'description', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    {p.attachmentName ? (
+                      <span style={{ color: '#1677ff', fontSize: 12 }}>📎 {p.attachmentName}</span>
+                    ) : (
+                      <button
+                        className="btn-default"
+                        style={{ fontSize: 12 }}
+                        onClick={() => updateProofField(p.id, 'attachmentName', `Proof_${p.id}_Attachment.pdf`)}
+                      >
+                        Upload
+                      </button>
+                    )}
+                  </td>
+                  <td>
+                    <button className="btn-link" style={{ color: '#ff4d4f' }} onClick={() => removeProof(p.id)}>
                       Remove
                     </button>
                   </td>
@@ -716,6 +807,14 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
         />
       )}
 
+      {/* ── Add Proof Dialog ────────────────────────────────────────────────── */}
+      {showAddProof && (
+        <AddProofDialog
+          onClose={() => setShowAddProof(false)}
+          onAdd={addProof}
+        />
+      )}
+
       {/* ── Add Claim Dialog ──────────────────────────────────────────────────── */}
       {showClaimDialog && (
         <div className="dialog-overlay">
@@ -917,6 +1016,87 @@ function AddInvoiceDialog({ onClose, onAdd, waybillSubtotal, currency }: AddInvo
             onClick={() => onAdd({ invoiceNo, invoiceAmount, invoiceDate, attachmentName })}
           >
             Add Invoice
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Add Proof Dialog ─────────────────────────────────────────────────────────
+
+interface AddProofDialogProps {
+  onClose: () => void;
+  onAdd: (entry: Omit<ProofEntry, 'id'>) => void;
+}
+
+function AddProofDialog({ onClose, onAdd }: AddProofDialogProps) {
+  const [description, setDescription] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
+  const [dragging, setDragging] = useState(false);
+
+  const handleFakeUpload = () => {
+    const fileName = `Proof_Attachment_${Date.now()}.pdf`;
+    setAttachmentName(fileName);
+  };
+
+  const canAdd = description.trim() && attachmentName.trim();
+
+  return (
+    <div className="dialog-overlay">
+      <div className="dialog" style={{ maxWidth: 480 }}>
+        <div className="dialog-header">Add Supporting Document</div>
+        <div className="dialog-body">
+          <div className="form-field">
+            <label className="form-label req">Description <span style={{ color: '#ff4d4f' }}>*</span></label>
+            <input
+              className="form-input"
+              placeholder="e.g. Parking fee receipt for WB2604010"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+            <div className="form-help">Briefly describe what this proof is for.</div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <div className="form-label req" style={{ marginBottom: 6 }}>
+              Attachment <span style={{ color: '#ff4d4f' }}>*</span>
+            </div>
+            <div
+              className={`upload-zone${dragging ? ' dragging' : ''}`}
+              style={{ padding: 16 }}
+              onDragOver={e => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={e => { e.preventDefault(); setDragging(false); handleFakeUpload(); }}
+              onClick={handleFakeUpload}
+            >
+              {attachmentName ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#1677ff', fontSize: 13 }}>📎 {attachmentName}</span>
+                  <button
+                    style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: 12 }}
+                    onClick={e => { e.stopPropagation(); setAttachmentName(''); }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 22, color: '#ccc', marginBottom: 6 }}>⬆</div>
+                  <div style={{ fontSize: 13, color: '#666' }}>Click or drag to upload · PDF, JPG, PNG · Max 10 MB</div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="dialog-footer">
+          <button className="btn-default" onClick={onClose}>Cancel</button>
+          <button
+            className="btn-primary"
+            disabled={!canAdd}
+            onClick={() => onAdd({ description, attachmentName })}
+          >
+            Add Proof
           </button>
         </div>
       </div>
