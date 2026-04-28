@@ -13,6 +13,26 @@ interface Props {
 
 // ─── Data types ───────────────────────────────────────────────────────────────
 
+// V4 §2.1 — Additional Charge 细化子项枚举（与 TMS 系统配置保持一致）
+type AdditionalChargeType =
+  | 'Parking Fee'
+  | 'Toll Fee'
+  | 'Detention Fee'
+  | 'Loading Fee'
+  | 'Unloading Fee'
+  | 'Standby Fee'
+  | 'Others';
+
+const ADDITIONAL_CHARGE_TYPES: AdditionalChargeType[] = [
+  'Parking Fee', 'Toll Fee', 'Detention Fee', 'Loading Fee', 'Unloading Fee', 'Standby Fee', 'Others',
+];
+
+interface AdditionalChargeItem {
+  id: string;
+  type: AdditionalChargeType;
+  amount: string;
+}
+
 interface WaybillRow {
   no: string;
   unloadingTime: string;
@@ -21,14 +41,26 @@ interface WaybillRow {
   destination: string;
   // Vendor-entered amounts
   basicAmount: string;
-  additionalCharge: string;
+  additionalChargeItems: AdditionalChargeItem[]; // V4 — 子项化
   exceptionFee: string;
   reimbursement: string;
+  // UI state — 是否展开 Additional Charge 子项编辑区
+  additionalExpanded: boolean;
   // TMS system prices (shown as reference in system-price mode)
   tmsBasic: number;
   tmsAdditional: number;
   tmsException: number;
 }
+
+// V4 §2.1 — 结算项过滤
+type SettlementItemKey = 'basic' | 'additional' | 'exception' | 'reimbursement' | 'claim';
+const SETTLEMENT_ITEM_LABELS: Record<SettlementItemKey, string> = {
+  basic:         'Basic Amount',
+  additional:    'Additional Charge',
+  exception:     'Exception Fee',
+  reimbursement: 'Reimbursement',
+  claim:         'Claim Deduction',
+};
 
 type OcrState = 'idle' | 'scanning' | 'done' | 'failed';
 
@@ -73,8 +105,11 @@ const UPLOAD_PRICES: Record<string, { basic: number; additional: number; excepti
   WB2604012: { basic: 18500, additional: 2000, exception: 1000, reimbursement: 0   },
 };
 
+let chargeItemCounter = 100;
+function makeChargeItemId() { return `ac-${++chargeItemCounter}`; }
+
 function buildWaybillRow(no: string, mode: CreateMode | 'edit'): WaybillRow {
-  const META: Record<string, Omit<WaybillRow, 'no' | 'basicAmount' | 'additionalCharge' | 'exceptionFee' | 'reimbursement' | 'tmsBasic' | 'tmsAdditional' | 'tmsException'>> = {
+  const META: Record<string, Omit<WaybillRow, 'no' | 'basicAmount' | 'additionalChargeItems' | 'exceptionFee' | 'reimbursement' | 'additionalExpanded' | 'tmsBasic' | 'tmsAdditional' | 'tmsException'>> = {
     WB2604010: { unloadingTime: '2026-04-10 15:30', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC' },
     WB2604011: { unloadingTime: '2026-04-11 09:00', truckType: '6-Wheeler',  origin: 'PH-Cavite-Imus',            destination: 'PH-NCR-Taguig' },
     WB2604012: { unloadingTime: '2026-04-12 17:00', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima',        destination: 'PH-NCR-Manila / Port Area' },
@@ -86,17 +121,24 @@ function buildWaybillRow(no: string, mode: CreateMode | 'edit'): WaybillRow {
   const upload = UPLOAD_PRICES[no];
 
   let basicAmount = '';
-  let additionalCharge = '';
+  let additionalChargeItems: AdditionalChargeItem[] = [];
   let exceptionFee = '';
   let reimbursement = '';
 
+  // V4 — 预填的 Additional Charge 折成单个 "Others" 子项，用户可拆分细化或改类型。
+  const seedAdditional = (amount: number) => {
+    if (amount > 0) {
+      additionalChargeItems = [{ id: makeChargeItemId(), type: 'Others', amount: String(amount) }];
+    }
+  };
+
   if (mode === 'system-price') {
     basicAmount = String(tms.basic);
-    additionalCharge = String(tms.additional);
+    seedAdditional(tms.additional);
     exceptionFee = String(tms.exception);
   } else if (mode === 'upload' && upload) {
     basicAmount = String(upload.basic);
-    additionalCharge = String(upload.additional);
+    seedAdditional(upload.additional);
     exceptionFee = String(upload.exception);
     reimbursement = String(upload.reimbursement);
   }
@@ -105,19 +147,41 @@ function buildWaybillRow(no: string, mode: CreateMode | 'edit'): WaybillRow {
     no,
     ...(META[no] || { unloadingTime: '—', truckType: '—', origin: '—', destination: '—' }),
     basicAmount,
-    additionalCharge,
+    additionalChargeItems,
     exceptionFee,
     reimbursement,
+    additionalExpanded: false,
     tmsBasic: tms.basic,
     tmsAdditional: tms.additional,
     tmsException: tms.exception,
   };
 }
 
+// 行级 Additional Charge 合计
+function rowAdditionalCharge(r: WaybillRow): number {
+  return r.additionalChargeItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
+}
+
 // "For Deduction" claim tickets available for selection
 const AVAILABLE_CLAIMS = CLAIM_TICKETS.filter(
   t => t.deductionForVendor === 'For Deduction' && t.responsibleParty === 'Vendor'
 );
+
+// V4 — 列/单元格的"未勾选置灰"样式
+function greyCell(disabled: boolean): React.CSSProperties {
+  return disabled
+    ? { background: '#f5f5f5', opacity: 0.55 }
+    : {};
+}
+function greyHeader(disabled: boolean): React.CSSProperties {
+  return disabled
+    ? { color: '#bbb', textDecoration: 'line-through', background: '#f5f5f5' }
+    : {};
+}
+const greyText: React.CSSProperties = {
+  color: '#bbb',
+  textDecoration: 'line-through',
+};
 
 const CURRENCIES = ['PHP', 'USD', 'THB'];
 const VAT_OPTIONS = [{ label: 'No VAT (0%)', value: 0 }, { label: 'VAT 7%', value: 7 }, { label: 'VAT 12%', value: 12 }];
@@ -161,26 +225,47 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
   const [vatRate, setVatRate] = useState(0);
   const [whtRate, setWhtRate] = useState(0);
 
+  // V4 §2.1 — 结算项过滤（默认全选）
+  const [includedItems, setIncludedItems] = useState<Set<SettlementItemKey>>(
+    new Set(['basic', 'additional', 'exception', 'reimbursement', 'claim']),
+  );
+  const isIncluded = (k: SettlementItemKey) => includedItems.has(k);
+  const toggleItem = (k: SettlementItemKey) => {
+    setIncludedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
+
   // Submit confirm
   const [showConfirm, setShowConfirm] = useState(false);
 
   // ─── Calculations ────────────────────────────────────────────────────────────
 
+  // 行小计（仅展示用，按行展示所有结算项的合计；结算项过滤在后续聚合层应用）
   const rowSubtotal = (r: WaybillRow) =>
     (parseFloat(r.basicAmount) || 0) +
-    (parseFloat(r.additionalCharge) || 0) +
+    rowAdditionalCharge(r) +
     (parseFloat(r.exceptionFee) || 0) +
     (parseFloat(r.reimbursement) || 0);
 
   const itemTotals = useMemo(() => ({
-    basic:       rows.reduce((a, r) => a + (parseFloat(r.basicAmount) || 0), 0),
-    additional:  rows.reduce((a, r) => a + (parseFloat(r.additionalCharge) || 0), 0),
-    exception:   rows.reduce((a, r) => a + (parseFloat(r.exceptionFee) || 0), 0),
+    basic:         rows.reduce((a, r) => a + (parseFloat(r.basicAmount) || 0), 0),
+    additional:    rows.reduce((a, r) => a + rowAdditionalCharge(r), 0),
+    exception:     rows.reduce((a, r) => a + (parseFloat(r.exceptionFee) || 0), 0),
     reimbursement: rows.reduce((a, r) => a + (parseFloat(r.reimbursement) || 0), 0),
   }), [rows]);
 
-  const waybillSubtotal = itemTotals.basic + itemTotals.additional + itemTotals.exception + itemTotals.reimbursement;
-  const claimDeduction = selectedClaims.reduce((a, c) => a + c.claimAmount, 0);
+  // V4 — 仅勾选项参与计算
+  const waybillSubtotal =
+    (isIncluded('basic')         ? itemTotals.basic         : 0) +
+    (isIncluded('additional')    ? itemTotals.additional    : 0) +
+    (isIncluded('exception')     ? itemTotals.exception     : 0) +
+    (isIncluded('reimbursement') ? itemTotals.reimbursement : 0);
+  const claimDeductionRaw = selectedClaims.reduce((a, c) => a + c.claimAmount, 0);
+  const claimDeduction   = isIncluded('claim') ? claimDeductionRaw : 0;
   const vatAmount = Math.round(waybillSubtotal * vatRate / 100);
   const whtAmount = Math.round(waybillSubtotal * whtRate / 100);
   const totalAmountPayable = waybillSubtotal - claimDeduction + vatAmount - whtAmount;
@@ -192,8 +277,39 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
 
   // ─── Waybill row handlers ─────────────────────────────────────────────────────
 
-  const updateRow = (no: string, field: keyof Pick<WaybillRow, 'basicAmount' | 'additionalCharge' | 'exceptionFee' | 'reimbursement'>, value: string) => {
+  const updateRow = (no: string, field: keyof Pick<WaybillRow, 'basicAmount' | 'exceptionFee' | 'reimbursement'>, value: string) => {
     setRows(rows.map(r => r.no === no ? { ...r, [field]: value } : r));
+  };
+
+  // V4 — Additional Charge 子项编辑
+  const toggleAdditionalExpanded = (no: string) => {
+    setRows(rows.map(r => r.no === no ? { ...r, additionalExpanded: !r.additionalExpanded } : r));
+  };
+  const addAdditionalChargeItem = (no: string) => {
+    setRows(rows.map(r =>
+      r.no === no
+        ? { ...r, additionalChargeItems: [...r.additionalChargeItems, { id: makeChargeItemId(), type: 'Parking Fee', amount: '' }], additionalExpanded: true }
+        : r,
+    ));
+  };
+  const updateAdditionalChargeItem = (no: string, itemId: string, field: 'type' | 'amount', value: string) => {
+    setRows(rows.map(r =>
+      r.no === no
+        ? {
+            ...r,
+            additionalChargeItems: r.additionalChargeItems.map(it =>
+              it.id === itemId ? { ...it, [field]: value } : it,
+            ),
+          }
+        : r,
+    ));
+  };
+  const removeAdditionalChargeItem = (no: string, itemId: string) => {
+    setRows(rows.map(r =>
+      r.no === no
+        ? { ...r, additionalChargeItems: r.additionalChargeItems.filter(it => it.id !== itemId) }
+        : r,
+    ));
   };
 
   // ─── Invoice handlers ─────────────────────────────────────────────────────────
@@ -566,63 +682,126 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
                   <th>Unloading Time</th>
                   <th>Truck Type</th>
                   <th>Origin → Destination</th>
-                  <th className="num" style={{ width: 115 }}>Basic Amount</th>
-                  <th className="num" style={{ width: 125 }}>Additional Charge</th>
-                  <th className="num" style={{ width: 105 }}>Exception Fee</th>
-                  <th className="num" style={{ width: 110 }}>Reimbursement</th>
+                  <th className="num" style={greyHeader(!isIncluded('basic'))}        title={!isIncluded('basic')        ? 'Excluded from this statement' : undefined}>Basic Amount</th>
+                  <th className="num" style={{ width: 165, ...greyHeader(!isIncluded('additional')) }} title={!isIncluded('additional')   ? 'Excluded from this statement' : undefined}>Additional Charge</th>
+                  <th className="num" style={greyHeader(!isIncluded('exception'))}    title={!isIncluded('exception')    ? 'Excluded from this statement' : undefined}>Exception Fee</th>
+                  <th className="num" style={greyHeader(!isIncluded('reimbursement'))} title={!isIncluded('reimbursement') ? 'Excluded from this statement' : undefined}>Reimbursement</th>
                   <th className="num" style={{ width: 100 }}>Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(r => {
                   const sub = rowSubtotal(r);
+                  const acTotal = rowAdditionalCharge(r);
                   return (
-                    <tr key={r.no}>
-                      <td><strong>{r.no}</strong></td>
-                      <td style={{ fontSize: 12 }}>{r.unloadingTime}</td>
-                      <td style={{ fontSize: 12 }}>{r.truckType}</td>
-                      <td style={{ fontSize: 11 }}>{r.origin}<br />→ {r.destination}</td>
-                      <td>
-                        <input
-                          className="table-amount-input"
-                          type="number" min="0" placeholder="0"
-                          value={r.basicAmount}
-                          onChange={e => updateRow(r.no, 'basicAmount', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="table-amount-input"
-                          type="number" min="0" placeholder="0"
-                          value={r.additionalCharge}
-                          onChange={e => updateRow(r.no, 'additionalCharge', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="table-amount-input"
-                          type="number" min="0" placeholder="0"
-                          value={r.exceptionFee}
-                          onChange={e => updateRow(r.no, 'exceptionFee', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="table-amount-input"
-                          type="number" min="0" placeholder="0"
-                          value={r.reimbursement}
-                          onChange={e => updateRow(r.no, 'reimbursement', e.target.value)}
-                        />
-                      </td>
-                      <td className="num" style={{ fontWeight: 600, color: sub > 0 ? '#00b96b' : '#999' }}>
-                        {sub.toLocaleString()}
-                      </td>
-                    </tr>
+                    <React.Fragment key={r.no}>
+                      <tr>
+                        <td><strong>{r.no}</strong></td>
+                        <td style={{ fontSize: 12 }}>{r.unloadingTime}</td>
+                        <td style={{ fontSize: 12 }}>{r.truckType}</td>
+                        <td style={{ fontSize: 11 }}>{r.origin}<br />→ {r.destination}</td>
+                        <td style={greyCell(!isIncluded('basic'))}>
+                          <input
+                            className="table-amount-input"
+                            type="number" min="0" placeholder="0"
+                            value={r.basicAmount}
+                            disabled={!isIncluded('basic')}
+                            onChange={e => updateRow(r.no, 'basicAmount', e.target.value)}
+                          />
+                        </td>
+                        <td style={greyCell(!isIncluded('additional'))}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                            <span className="num" style={{ fontWeight: 500 }}>
+                              {acTotal.toLocaleString()}
+                            </span>
+                            <button
+                              className="btn-link"
+                              style={{ fontSize: 11, padding: 0 }}
+                              onClick={() => toggleAdditionalExpanded(r.no)}
+                              disabled={!isIncluded('additional')}
+                            >
+                              {r.additionalExpanded ? '▴ Hide' : `▾ Details (${r.additionalChargeItems.length})`}
+                            </button>
+                          </div>
+                        </td>
+                        <td style={greyCell(!isIncluded('exception'))}>
+                          <input
+                            className="table-amount-input"
+                            type="number" min="0" placeholder="0"
+                            value={r.exceptionFee}
+                            disabled={!isIncluded('exception')}
+                            onChange={e => updateRow(r.no, 'exceptionFee', e.target.value)}
+                          />
+                        </td>
+                        <td style={greyCell(!isIncluded('reimbursement'))}>
+                          <input
+                            className="table-amount-input"
+                            type="number" min="0" placeholder="0"
+                            value={r.reimbursement}
+                            disabled={!isIncluded('reimbursement')}
+                            onChange={e => updateRow(r.no, 'reimbursement', e.target.value)}
+                          />
+                        </td>
+                        <td className="num" style={{ fontWeight: 600, color: sub > 0 ? '#00b96b' : '#999' }}>
+                          {sub.toLocaleString()}
+                        </td>
+                      </tr>
+                      {r.additionalExpanded && isIncluded('additional') && (
+                        <tr>
+                          <td colSpan={9} style={{ background: '#fafbff', padding: '10px 14px' }}>
+                            <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+                              <strong>Additional Charge details for {r.no}</strong>{' '}
+                              · 拆分为预定义类型，方便 TMS 端按类目核对（与系统枚举保持一致）
+                            </div>
+                            {r.additionalChargeItems.length === 0 ? (
+                              <div style={{ fontSize: 12, color: '#999', padding: 4 }}>No sub-items yet.</div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {r.additionalChargeItems.map(it => (
+                                  <div key={it.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <select
+                                      className="filter-select"
+                                      style={{ minWidth: 150, fontSize: 12 }}
+                                      value={it.type}
+                                      onChange={e => updateAdditionalChargeItem(r.no, it.id, 'type', e.target.value)}
+                                    >
+                                      {ADDITIONAL_CHARGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <input
+                                      className="table-amount-input"
+                                      type="number" min="0" placeholder="0"
+                                      style={{ width: 130 }}
+                                      value={it.amount}
+                                      onChange={e => updateAdditionalChargeItem(r.no, it.id, 'amount', e.target.value)}
+                                    />
+                                    <span style={{ fontSize: 11, color: '#999' }}>PHP</span>
+                                    <button
+                                      className="btn-link"
+                                      style={{ color: '#ff4d4f', fontSize: 12 }}
+                                      onClick={() => removeAdditionalChargeItem(r.no, it.id)}
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <button
+                              className="btn-default"
+                              style={{ fontSize: 12, marginTop: 8 }}
+                              onClick={() => addAdditionalChargeItem(r.no)}
+                            >
+                              + Add Sub-item
+                            </button>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
                 <tr style={{ background: '#fafafa', fontWeight: 600 }}>
                   <td colSpan={8} style={{ textAlign: 'right', paddingRight: 8, fontSize: 12, color: '#666' }}>
-                    Waybill Subtotal
+                    Waybill Subtotal (included items only)
                   </td>
                   <td className="num" style={{ color: '#00b96b' }}>{waybillSubtotal.toLocaleString()}</td>
                 </tr>
@@ -687,9 +866,49 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
         )}
       </div>
 
-      {/* ── Section 3: Tax ────────────────────────────────────────────────────── */}
+      {/* ── Section 3: Tax Settings & Settlement Items (V4 §2.1) ───────────────── */}
       <div className="vp-card">
-        <div className="section-title" style={{ marginBottom: 14 }}>Tax Settings</div>
+        <div className="section-title" style={{ marginBottom: 6 }}>Tax Settings &amp; Settlement Items</div>
+        <div style={{ fontSize: 12, color: '#999', marginBottom: 14 }}>
+          勾选本次需要结算的项目；未勾选的项目仍会在下方汇总区占位展示，但不参与 Total Amount Payable 计算。
+        </div>
+
+        {/* 结算项过滤 */}
+        <div style={{ marginBottom: 16 }}>
+          <div className="form-label" style={{ marginBottom: 8 }}>Settlement Items in This Statement</div>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            {(Object.keys(SETTLEMENT_ITEM_LABELS) as SettlementItemKey[]).map(key => {
+              const checked = isIncluded(key);
+              return (
+                <label
+                  key={key}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 12px',
+                    border: '1px solid',
+                    borderColor: checked ? '#00b96b' : '#e0e0e0',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    background: checked ? '#f6fcfa' : '#fafafa',
+                    fontSize: 13,
+                    color: checked ? '#1c5b3c' : '#999',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleItem(key)}
+                  />
+                  {SETTLEMENT_ITEM_LABELS[key]}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 税率 */}
         <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
           <div className="form-field">
             <label className="form-label">VAT Rate</label>
@@ -731,32 +950,34 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
             <div className="summary-hero-value">{totalAmountPayable.toLocaleString()} PHP</div>
 
             <div className="summary-breakdown">
-              <div className="summary-bd-row">
-                <span>Basic Amount</span>
+              {/* V4 — 始终展示 4 个运单结算项；未勾选项置灰 + 删除线，且不参与 Subtotal */}
+              <div className="summary-bd-row" style={isIncluded('basic') ? {} : greyText}>
+                <span>Basic Amount {isIncluded('basic') ? '' : '(excluded)'}</span>
                 <span>{itemTotals.basic.toLocaleString()}</span>
               </div>
-              <div className="summary-bd-row">
-                <span>Additional Charge</span>
+              <div className="summary-bd-row" style={isIncluded('additional') ? {} : greyText}>
+                <span>Additional Charge {isIncluded('additional') ? '' : '(excluded)'}</span>
                 <span>{itemTotals.additional.toLocaleString()}</span>
               </div>
-              <div className="summary-bd-row">
-                <span>Exception Fee</span>
+              <div className="summary-bd-row" style={isIncluded('exception') ? {} : greyText}>
+                <span>Exception Fee {isIncluded('exception') ? '' : '(excluded)'}</span>
                 <span>{itemTotals.exception.toLocaleString()}</span>
               </div>
-              {itemTotals.reimbursement > 0 && (
-                <div className="summary-bd-row">
-                  <span>Reimbursement</span>
-                  <span>{itemTotals.reimbursement.toLocaleString()}</span>
-                </div>
-              )}
+              <div className="summary-bd-row" style={isIncluded('reimbursement') ? {} : greyText}>
+                <span>Reimbursement {isIncluded('reimbursement') ? '' : '(excluded)'}</span>
+                <span>{itemTotals.reimbursement.toLocaleString()}</span>
+              </div>
               <div className="summary-bd-row summary-bd-subtotal">
                 <span>Waybill Subtotal</span>
                 <span>{waybillSubtotal.toLocaleString()}</span>
               </div>
-              {claimDeduction > 0 && (
-                <div className="summary-bd-row" style={{ color: '#cf1322' }}>
-                  <span>Claim Deductions</span>
-                  <span>−{claimDeduction.toLocaleString()}</span>
+              {claimDeductionRaw > 0 && (
+                <div
+                  className="summary-bd-row"
+                  style={isIncluded('claim') ? { color: '#cf1322' } : greyText}
+                >
+                  <span>Claim Deductions {isIncluded('claim') ? '' : '(excluded)'}</span>
+                  <span>−{claimDeductionRaw.toLocaleString()}</span>
                 </div>
               )}
               {vatRate > 0 && (
