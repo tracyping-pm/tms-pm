@@ -17,10 +17,22 @@ interface InvoiceRow {
   status: string;
 }
 
+// V4 §3.1 — 状态机统一为五态
+type StatementStatus =
+  | 'Awaiting Comparison'
+  | 'Pending Payment'
+  | 'Partially Payment'
+  | 'Paid'
+  | 'Awaiting Rebill';
+
+// V4 §3.1 — 数据源融合：TMS 自建 vs 供应商提交
+type StatementSource = 'Internal' | 'Vendor Portal';
+
 interface StatementRow {
   id: string;
   statementType: 'Standard' | 'Standalone';
-  status: string;
+  status: StatementStatus;
+  source: StatementSource;
   customer: string;
   settlementItems: string[];
   allocationMode: 'auto' | 'manual' | '-';
@@ -32,13 +44,16 @@ interface StatementRow {
   createdDate: string;
   createdBy: string;
   invoices: InvoiceRow[];
+  /** V4 §3.1 — 是否含 Mismatch / Miss 项（列表中徽标提示 FA 优先处理） */
+  hasMismatch?: boolean;
 }
 
 const SAMPLE_DATA: StatementRow[] = [
   {
     id: 'AR2024010001',
     statementType: 'Standard',
-    status: 'Under Billing Preparation',
+    status: 'Pending Payment',
+    source: 'Internal',
     customer: 'Customer A - ABC Logistics',
     settlementItems: ['Customer Basic Amount', 'Customer Additional Charge'],
     allocationMode: 'manual',
@@ -46,7 +61,7 @@ const SAMPLE_DATA: StatementRow[] = [
     currency: 'USD',
     totalAmountReceivable: 44500.00,
     totalInvoiceAmount: 47170.00,
-    collectedAmount: 44500.00,
+    collectedAmount: 0,
     createdDate: '2024-01-15',
     createdBy: 'Admin',
     invoices: [
@@ -57,7 +72,8 @@ const SAMPLE_DATA: StatementRow[] = [
   {
     id: 'AR2024010002',
     statementType: 'Standalone',
-    status: 'Full Collected',
+    status: 'Paid',
+    source: 'Internal',
     customer: 'Customer B - XYZ Trading',
     settlementItems: ['Customer Exception Fee', 'Reimbursement Expense'],
     allocationMode: 'auto',
@@ -76,56 +92,83 @@ const SAMPLE_DATA: StatementRow[] = [
   {
     id: 'AR2024010003',
     statementType: 'Standard',
-    status: 'Awaiting Customer Confirmation',
-    customer: 'Customer C - Global Freight Co.',
-    settlementItems: ['Customer Basic Amount', 'Customer Exception Fee', 'Reimbursement Expense'],
+    status: 'Awaiting Comparison',
+    source: 'Vendor Portal',
+    customer: 'Bangkok Express Logistics',
+    settlementItems: ['Vendor Basic Amount', 'Vendor Additional Charge'],
     allocationMode: '-',
     statementTaxMark: 'Tax-exclusive',
-    currency: 'CNY',
+    currency: 'THB',
     totalAmountReceivable: 156000.00,
-    totalInvoiceAmount: 0.00,
+    totalInvoiceAmount: 156000.00,
     collectedAmount: 0.00,
     createdDate: '2024-01-18',
-    createdBy: 'Operator',
-    invoices: [],
+    createdBy: 'Bangkok Express (VP)',
+    invoices: [
+      { no: 'INV-2026-00201', type: 'Vendor Invoice', date: '2024-01-18', amount: 156000.00, currency: 'THB', taxAmount: 0, totalAmount: 156000.00, status: 'Issued' },
+    ],
+    hasMismatch: false,
   },
   {
     id: 'AR2024010004',
     statementType: 'Standard',
-    status: 'Pending Collection',
-    customer: 'Customer A - ABC Logistics',
-    settlementItems: ['Customer Basic Amount', 'Customer Additional Charge', 'Customer Exception Fee'],
+    status: 'Awaiting Rebill',
+    source: 'Vendor Portal',
+    customer: 'Manila Freight Co.',
+    settlementItems: ['Vendor Basic Amount', 'Vendor Additional Charge', 'Vendor Exception Fee'],
     allocationMode: '-',
     statementTaxMark: 'Tax-inclusive',
-    currency: 'EUR',
+    currency: 'PHP',
     totalAmountReceivable: 20020.00,
     totalInvoiceAmount: 21221.20,
-    collectedAmount: 18200.00,
+    collectedAmount: 0,
     createdDate: '2024-01-20',
-    createdBy: 'Admin',
+    createdBy: 'Manila Freight (VP)',
     invoices: [
-      { no: 'INV2024014001', type: 'Freight Invoice', date: '2024-01-18', amount: 18200.00, currency: 'EUR', taxAmount: 1092.00, totalAmount: 19292.00, status: 'Issued' },
-      { no: 'INV2024014002', type: 'Freight Invoice', date: '2024-01-20', amount: 1820.00, currency: 'EUR', taxAmount: 109.20, totalAmount: 1929.20, status: 'Draft' },
+      { no: 'INV2024014001', type: 'Vendor Invoice', date: '2024-01-18', amount: 18200.00, currency: 'PHP', taxAmount: 1092.00, totalAmount: 19292.00, status: 'Issued' },
+      { no: 'INV2024014002', type: 'Vendor Invoice', date: '2024-01-20', amount: 1820.00, currency: 'PHP', taxAmount: 109.20, totalAmount: 1929.20, status: 'Draft' },
     ],
+    hasMismatch: true,
   },
   {
     id: 'AR2024010005',
     statementType: 'Standard',
-    status: 'Under Billing Preparation',
+    status: 'Partially Payment',
+    source: 'Internal',
     customer: 'Customer D - Pacific Shipping',
     settlementItems: ['Customer Additional Charge', 'Reimbursement Expense'],
     allocationMode: 'auto',
     statementTaxMark: 'Tax-exclusive',
     currency: 'USD',
     totalAmountReceivable: 89000.00,
-    totalInvoiceAmount: 2000.00,
+    totalInvoiceAmount: 89000.00,
     collectedAmount: 45000.00,
     createdDate: '2024-01-22',
     createdBy: 'Manager',
     invoices: [
-      { no: 'INV2024015001', type: 'Freight Invoice', date: '2024-01-20', amount: 1000.00, currency: 'USD', taxAmount: 60.00, totalAmount: 1060.00, status: 'Voided' },
-      { no: 'INV2024015002', type: 'Freight Invoice', date: '2024-01-21', amount: 2000.00, currency: 'USD', taxAmount: 120.00, totalAmount: 2120.00, status: 'Draft' },
+      { no: 'INV2024015001', type: 'Freight Invoice', date: '2024-01-20', amount: 44000.00, currency: 'USD', taxAmount: 0, totalAmount: 44000.00, status: 'Collected' },
+      { no: 'INV2024015002', type: 'Freight Invoice', date: '2024-01-21', amount: 45000.00, currency: 'USD', taxAmount: 0, totalAmount: 45000.00, status: 'Issued' },
     ],
+  },
+  {
+    id: 'AR2024010006',
+    statementType: 'Standard',
+    status: 'Awaiting Comparison',
+    source: 'Vendor Portal',
+    customer: 'Cebu Trans Lines',
+    settlementItems: ['Vendor Basic Amount'],
+    allocationMode: '-',
+    statementTaxMark: 'Tax-exclusive',
+    currency: 'PHP',
+    totalAmountReceivable: 38500.00,
+    totalInvoiceAmount: 38500.00,
+    collectedAmount: 0,
+    createdDate: '2024-01-23',
+    createdBy: 'Cebu Trans (VP)',
+    invoices: [
+      { no: 'INV-2026-00203', type: 'Vendor Invoice', date: '2024-01-23', amount: 38500.00, currency: 'PHP', taxAmount: 0, totalAmount: 38500.00, status: 'Issued' },
+    ],
+    hasMismatch: true,
   },
 ];
 
@@ -140,22 +183,34 @@ function formatAmount(amount: number, currency: string): string {
   return `${currency} ${formatted}`;
 }
 
-function getStatusBadgeStyle(status: string): React.CSSProperties {
+// V4 §3.1 — 五态徽标样式
+function getStatusBadgeStyle(status: StatementStatus): React.CSSProperties {
+  const base: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
   switch (status) {
-    case 'Full Collected':
-      return { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
-    case 'Awaiting Customer Confirmation':
-      return { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
-    case 'Pending Collection':
-      return { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
-    case 'Under Billing Preparation':
-      return { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
-    case 'Partially Collected':
-      return { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
-    default:
-      return { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
+    case 'Awaiting Comparison':
+      return { ...base, background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' };
+    case 'Pending Payment':
+      return { ...base, background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' };
+    case 'Partially Payment':
+      return { ...base, background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' };
+    case 'Paid':
+      return { ...base, background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' };
+    case 'Awaiting Rebill':
+      return { ...base, background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' };
   }
 }
+
+// V4 §3.1 — 数据源徽标
+function getSourceBadgeStyle(source: StatementSource): React.CSSProperties {
+  const base: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
+  if (source === 'Vendor Portal') {
+    return { ...base, background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3' };
+  }
+  return { ...base, background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' };
+}
+
+const STATUS_OPTIONS: StatementStatus[] = ['Awaiting Comparison', 'Pending Payment', 'Partially Payment', 'Paid', 'Awaiting Rebill'];
+const SOURCE_OPTIONS: StatementSource[] = ['Internal', 'Vendor Portal'];
 
 function getInvoiceStatusBadgeStyle(status: string): React.CSSProperties {
   switch (status) {
@@ -180,7 +235,8 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
   // Filter state
   const [filterStatementNo, setFilterStatementNo] = useState('');
   const [filterStatementType, setFilterStatementType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStatus, setFilterStatus] = useState<StatementStatus | ''>('');
+  const [filterSource, setFilterSource] = useState<StatementSource | ''>(''); // V4 §3.1
   const [filterCustomerName, setFilterCustomerName] = useState('');
   const [filterSettlementItems, setFilterSettlementItems] = useState('');
   const [filterAllocationMode, setFilterAllocationMode] = useState('');
@@ -189,7 +245,16 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
   const [filterWaybillNumber, setFilterWaybillNumber] = useState('');
   const [filterCreationDate, setFilterCreationDate] = useState('');
 
-  const totalItems = SAMPLE_DATA.length;
+  // 应用过滤
+  const filteredData = SAMPLE_DATA.filter(row => {
+    if (filterStatementNo && !row.id.toLowerCase().includes(filterStatementNo.toLowerCase())) return false;
+    if (filterStatementType && row.statementType !== filterStatementType) return false;
+    if (filterStatus && row.status !== filterStatus) return false;
+    if (filterSource && row.source !== filterSource) return false;
+    if (filterCustomerName && !row.customer.toLowerCase().includes(filterCustomerName.toLowerCase())) return false;
+    return true;
+  });
+  const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const toggleRow = (id: string) => {
@@ -208,6 +273,7 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
     setFilterStatementNo('');
     setFilterStatementType('');
     setFilterStatus('');
+    setFilterSource('');
     setFilterCustomerName('');
     setFilterSettlementItems('');
     setFilterAllocationMode('');
@@ -240,7 +306,12 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
       >
         {/* Page title bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div className="section-title" style={{ margin: 0 }}>AR Statement List</div>
+          <div>
+            <div className="section-title" style={{ margin: 0 }}>AP Statement List</div>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+              统一展示 TMS 自建 (Internal) 与供应商提交 (Vendor Portal) 的所有对账单 · V4 §3.1
+            </div>
+          </div>
           <button
             className="btn-primary"
             onClick={onAddStatement}
@@ -255,7 +326,7 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
               fontWeight: 500,
             }}
           >
-            + Create AR Statement
+            + Create Statement
           </button>
         </div>
 
@@ -282,15 +353,27 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
               value={filterStatementType}
               onChange={(e) => setFilterStatementType(e.target.value)}
             />
-            <input
+            {/* V4 §3.1 — Status 改为下拉，五态枚举 */}
+            <select
               style={inputStyle}
-              placeholder="Status"
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            />
+              onChange={(e) => setFilterStatus(e.target.value as StatementStatus | '')}
+            >
+              <option value="">All Statuses</option>
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            {/* V4 §3.1 — Source 过滤新增 */}
+            <select
+              style={inputStyle}
+              value={filterSource}
+              onChange={(e) => setFilterSource(e.target.value as StatementSource | '')}
+            >
+              <option value="">All Sources</option>
+              {SOURCE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
             <input
               style={inputStyle}
-              placeholder="Customer Name"
+              placeholder="Customer / Vendor"
               value={filterCustomerName}
               onChange={(e) => setFilterCustomerName(e.target.value)}
             />
@@ -371,9 +454,10 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
               <tr>
                 <th style={{ width: 32 }}></th>
                 <th>Statement No.</th>
+                <th>Source</th>
                 <th>Statement Type</th>
                 <th>Status</th>
-                <th>Customer</th>
+                <th>Customer / Vendor</th>
                 <th>Settlement Items</th>
                 <th>Allocation Mode</th>
                 <th>Statement Tax Mark</th>
@@ -386,12 +470,13 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
               </tr>
             </thead>
             <tbody>
-              {SAMPLE_DATA.map((row) => {
+              {filteredData.map((row) => {
                 const isExpanded = expandedRows.has(row.id);
                 const hasInvoices = row.invoices.length > 0;
                 const allocationModeLabel =
                   row.allocationMode === 'auto' ? 'Auto' :
                   row.allocationMode === 'manual' ? 'Manual' : '-';
+                const showWarn = row.hasMismatch || row.status === 'Awaiting Rebill';
 
                 return (
                   <React.Fragment key={row.id}>
@@ -430,6 +515,27 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
                         >
                           {row.id}
                         </span>
+                        {showWarn && (
+                          <span
+                            title="Has Mismatch / Miss — please review"
+                            style={{
+                              marginLeft: 6,
+                              background: '#fffbe6',
+                              color: '#d48806',
+                              border: '1px solid #ffe58f',
+                              borderRadius: 4,
+                              padding: '0 6px',
+                              fontSize: 11,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            ⚠ 异常
+                          </span>
+                        )}
+                      </td>
+
+                      <td>
+                        <span style={getSourceBadgeStyle(row.source)}>{row.source}</span>
                       </td>
 
                       <td>{row.statementType}</td>
@@ -480,7 +586,7 @@ function StatementList({ onAddStatement, onViewDetail }: StatementListProps) {
                     {/* Expanded sub-row */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan={14} style={{ padding: '0 0 0 32px', background: '#fafafa' }}>
+                        <td colSpan={15} style={{ padding: '0 0 0 32px', background: '#fafafa' }}>
                           {hasInvoices ? (
                             <table
                               className="data-table sub-table"

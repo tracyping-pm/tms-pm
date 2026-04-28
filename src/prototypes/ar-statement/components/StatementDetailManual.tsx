@@ -954,6 +954,110 @@ function StatementDetailManual({ onBack, onExport, onAddInvoice, onEditInvoice }
         </button>
       </Section>
 
+      {/* ── 6.5 Communication Records (V4 §3.2) ── */}
+      <Section>
+        <div className="section-title" style={{ marginBottom: 6 }}>Communication Records</div>
+        <div style={{ fontSize: 12, color: '#999', marginBottom: 14 }}>
+          History of submissions, rejections and resubmissions between TMS and Vendor Portal —
+          provides a lightweight "message board" so every Mismatch adjustment is traceable.
+        </div>
+
+        <div
+          style={{
+            background: '#fff1f0',
+            border: '1px solid #ffa39e',
+            borderLeft: '4px solid #ff4d4f',
+            borderRadius: 4,
+            padding: '10px 14px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+          }}
+        >
+          <span style={{ color: '#ff4d4f', fontSize: 16, marginTop: 1 }}>✕</span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Latest Reject Reason · TMS</div>
+            <div style={{ fontSize: 13, color: '#444' }}>
+              Manual allocation amount mismatch on Invoice INV2024014001. Please review.
+            </div>
+            <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>2024-01-22 14:30 · FA Lily</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { id: '1', timestamp: '2024-01-20 10:15', actor: 'VP', action: 'Submitted', note: 'Statement created and submitted from Vendor Portal.' },
+            { id: '2', timestamp: '2024-01-22 14:30', actor: 'TMS', action: 'Rejected', note: 'Manual allocation amount mismatch on INV2024014001.' },
+            { id: '3', timestamp: '2024-01-23 09:40', actor: 'VP', action: 'Resubmitted', note: 'Adjusted invoice allocation per TMS feedback.' },
+          ].map(record => (
+            <div
+              key={record.id}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 6,
+                background: record.actor === 'TMS' ? '#fff1f0' : '#f6ffed',
+                borderLeft: `3px solid ${record.actor === 'TMS' ? '#ff4d4f' : '#00b96b'}`,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontWeight: 600, fontSize: 13 }}>
+                  {record.actor === 'VP' ? 'Vendor (VP)' : 'TMS · FA'} · {record.action}
+                </span>
+                <span style={{ fontSize: 11, color: '#999' }}>{record.timestamp}</span>
+              </div>
+              {record.note && <div style={{ fontSize: 12, color: '#666' }}>{record.note}</div>}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 14, padding: 12, background: '#fafafa', borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>Add Note / Reject Reason</div>
+          <textarea
+            placeholder="Describe the issue or your action so the other side has full context..."
+            style={{
+              width: '100%',
+              minHeight: 60,
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+              padding: 8,
+              fontSize: 13,
+              resize: 'vertical',
+              fontFamily: 'inherit',
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <button
+              style={{
+                background: '#fff',
+                border: '1px solid #d9d9d9',
+                color: '#333',
+                borderRadius: 4,
+                padding: '5px 14px',
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Add Internal Note
+            </button>
+            <button
+              style={{
+                background: '#ff4d4f',
+                border: 'none',
+                color: '#fff',
+                borderRadius: 4,
+                padding: '5px 14px',
+                fontSize: 13,
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
+            >
+              Reject &amp; Send to VP
+            </button>
+          </div>
+        </div>
+      </Section>
+
       {/* ── 7. Operation Log ── */}
       <Section>
         <div className="section-title">Operation Log</div>
