@@ -15,14 +15,14 @@ const MENU_MAIN = [
 ];
 
 const MENU_FIN = [
-  { key: 'accreditation', label: 'Accreditation Application' },
+  { key: 'prepaid-application', label: 'PrePaid Application' },
   { key: 'unbilled-waybills', label: 'Unbilled Waybills' },
   { key: 'claim-tickets', label: 'Claim Tickets' },
   { key: 'my-statements', label: 'My Statements' },
 ];
 
 function VendorPortalShell({ children, breadcrumb, activeMenu, onMenuChange }: Props) {
-  const isClickable = (k: string) => ['unbilled-waybills', 'claim-tickets', 'my-statements'].includes(k);
+  const isClickable = (k: string) => ['prepaid-application', 'unbilled-waybills', 'claim-tickets', 'my-statements'].includes(k);
 
   return (
     <div className="vp-layout">

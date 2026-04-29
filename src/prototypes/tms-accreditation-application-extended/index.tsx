@@ -1,11 +1,13 @@
 /**
- * @name TMS Accreditation Application Extended
+ * @name TMS Prepaid Application & AP Statement
+ *
+ * V5/V6 设计：
+ * - Prepaid Application：VP 同步 + TMS 内部创建，FA 审核（Approve→HR API / Reject / Edit）
+ * - AP Statement：VP 提交后同步，初始状态 Awaiting Confirmation，支持 TMS 内部创建
  *
  * 参考资料：
- * - /Users/tracy/.claude/plans/unified-cuddling-hare.md
- * - src/docs/prds/S33Vendor 认证材料处理.md（原申请审核框架）
- * - src/docs/prds/S34 对账单优化.md（Edit Billed Amount + Discrepancy Proof）
- * - src/docs/prds/S36Procurement财务.md（Procurement PIC 数据权限）
+ * - src/docs/prds/S44 VP Billing/VP billing V5.md §3
+ * - src/docs/prds/S44 VP Billing/VP billing V6.md §1–§2
  */
 
 import './style.css';
@@ -13,60 +15,100 @@ import './style.css';
 import React, { useState } from 'react';
 
 import TmsShell from './components/TmsShell';
-import ApplicationList, { type AppType } from './components/ApplicationList';
-import SettlementReviewDetail from './components/SettlementReviewDetail';
-import ModificationReviewDetail from './components/ModificationReviewDetail';
+import ApplicationList from './components/ApplicationList';
+import PrepaidReviewDetail from './components/PrepaidReviewDetail';
+import CreatePrepaidForm from './components/CreatePrepaidForm';
+import ApStatementList from './components/ApStatementList';
+import ApStatementDetail from './components/ApStatementDetail';
 
-type View = 'list' | 'settlement-detail' | 'modification-detail' | 'generic-detail';
+type ActiveMenu = 'accreditation' | 'ap-statement';
+type PrepaidView = 'list' | 'detail' | 'create';
+type ApView = 'list' | 'detail';
 
-const Component = function TmsAccreditationApplicationExtended() {
-  const [view, setView] = useState<View>('list');
-  const [openedApNo, setOpenedApNo] = useState('ApS260416002');
+const Component = function TmsPrepaidApplication() {
+  const [activeMenu, setActiveMenu] = useState<ActiveMenu>('accreditation');
 
-  const openDetail = (apNo: string, type: AppType) => {
-    setOpenedApNo(apNo);
-    if (type === 'Settlement') setView('settlement-detail');
-    else if (type === 'Modification') setView('modification-detail');
-    else setView('generic-detail');
+  // Prepaid Application views
+  const [prepaidView, setPrepaidView] = useState<PrepaidView>('list');
+  const [openedAppNo, setOpenedAppNo] = useState('');
+
+  // AP Statement views
+  const [apView, setApView] = useState<ApView>('list');
+  const [openedStatementId, setOpenedStatementId] = useState('');
+
+  const handleMenuChange = (key: string) => {
+    const menu = key as ActiveMenu;
+    setActiveMenu(menu);
+    if (menu === 'accreditation') setPrepaidView('list');
+    if (menu === 'ap-statement') setApView('list');
   };
 
-  const renderView = () => {
-    switch (view) {
+  const renderPrepaid = () => {
+    switch (prepaidView) {
       case 'list':
-        return <ApplicationList onOpenDetail={openDetail} />;
-      case 'settlement-detail':
-        return <SettlementReviewDetail apNo={openedApNo} onBack={() => setView('list')} />;
-      case 'modification-detail':
-        return <ModificationReviewDetail apNo={openedApNo} onBack={() => setView('list')} />;
-      case 'generic-detail':
         return (
-          <>
-            <div className="tms-card" style={{ padding: 14, marginBottom: 16 }}>
-              <button className="btn-link" onClick={() => setView('list')}>← Back to Applications</button>
-              <span style={{ marginLeft: 10, fontSize: 13, color: '#666' }}>{openedApNo}</span>
-            </div>
-            <div className="tms-card">
-              <div className="section-title">Vendor / Truck / Crew Accreditation</div>
-              <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>
-                Standard Accreditation application review flow (existing S33 behavior unchanged).
-              </div>
-            </div>
-          </>
+          <ApplicationList
+            onOpenDetail={(appNo) => { setOpenedAppNo(appNo); setPrepaidView('detail'); }}
+            onCreateNew={() => setPrepaidView('create')}
+          />
+        );
+      case 'detail':
+        return (
+          <PrepaidReviewDetail
+            appNo={openedAppNo}
+            onBack={() => setPrepaidView('list')}
+          />
+        );
+      case 'create':
+        return (
+          <CreatePrepaidForm
+            onBack={() => setPrepaidView('list')}
+            onSubmit={() => setPrepaidView('list')}
+          />
         );
     }
   };
 
-  const breadcrumb = (() => {
-    switch (view) {
-      case 'list': return ['Financial Management', 'Accreditation Application'];
-      case 'settlement-detail': return ['Financial Management', 'Accreditation Application', openedApNo];
-      case 'modification-detail': return ['Financial Management', 'Accreditation Application', openedApNo];
-      case 'generic-detail': return ['Financial Management', 'Accreditation Application', openedApNo];
+  const renderApStatement = () => {
+    switch (apView) {
+      case 'list':
+        return (
+          <ApStatementList
+            onCreateNew={() => setApView('list')} // placeholder: would open create form
+            onViewDetail={(id) => { setOpenedStatementId(id); setApView('detail'); }}
+          />
+        );
+      case 'detail':
+        return (
+          <ApStatementDetail
+            statementId={openedStatementId}
+            onBack={() => setApView('list')}
+          />
+        );
     }
+  };
+
+  const renderView = () => {
+    if (activeMenu === 'accreditation') return renderPrepaid();
+    if (activeMenu === 'ap-statement') return renderApStatement();
+    return null;
+  };
+
+  const breadcrumb = (() => {
+    if (activeMenu === 'accreditation') {
+      if (prepaidView === 'detail') return ['Procurement Mgmt', 'Prepaid Application', openedAppNo];
+      if (prepaidView === 'create') return ['Procurement Mgmt', 'Prepaid Application', 'Create'];
+      return ['Procurement Mgmt', 'Prepaid Application'];
+    }
+    if (activeMenu === 'ap-statement') {
+      if (apView === 'detail') return ['Financial Management', 'AP Statement', openedStatementId];
+      return ['Financial Management', 'AP Statement'];
+    }
+    return [];
   })();
 
   return (
-    <TmsShell breadcrumb={breadcrumb} activeMenu="accreditation">
+    <TmsShell breadcrumb={breadcrumb} activeMenu={activeMenu} onMenuChange={handleMenuChange}>
       {renderView()}
     </TmsShell>
   );

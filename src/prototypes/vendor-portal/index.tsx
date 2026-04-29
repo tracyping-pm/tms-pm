@@ -20,6 +20,10 @@ import React, { useState } from 'react';
 
 import VendorPortalShell from './components/VendorPortalShell';
 
+// PrePaid Application
+import PrePaidApplicationList, { type PrePaidApplication } from './components/PrePaidApplicationList';
+import PrePaidApplicationForm from './components/PrePaidApplicationForm';
+
 // Unbilled Waybills
 import UnbilledWaybillsList, { type CreateMode } from './components/UnbilledWaybillsList';
 
@@ -35,8 +39,9 @@ import DisputeClaimDialog from './components/DisputeClaimDialog';
 import StatementList, { type Status as StatementStatus } from './components/StatementList';
 import StatementDetailView from './components/StatementDetail';
 
-type Menu = 'unbilled-waybills' | 'claim-tickets' | 'my-statements';
+type Menu = 'prepaid-application' | 'unbilled-waybills' | 'claim-tickets' | 'my-statements';
 
+type PrepaidView = 'list' | 'create' | 'detail';
 type UnbilledView = 'list' | 'create';
 type ClaimView = 'list' | 'detail';
 type StatementView = 'list' | 'detail' | 'edit';
@@ -44,13 +49,18 @@ type StatementView = 'list' | 'detail' | 'edit';
 type Dialog = 'claim-dispute' | null;
 
 const MENU_LABEL: Record<Menu, string> = {
+  'prepaid-application': 'PrePaid Application',
   'unbilled-waybills': 'Unbilled Waybills',
   'claim-tickets': 'Claim Tickets',
   'my-statements': 'My Statements',
 };
 
 const Component = function VendorPortal() {
-  const [menu, setMenu] = useState<Menu>('unbilled-waybills');
+  const [menu, setMenu] = useState<Menu>('prepaid-application');
+
+  // PrePaid Application
+  const [prepaidView, setPrepaidView] = useState<PrepaidView>('list');
+  const [viewedPrepaidApp, setViewedPrepaidApp] = useState<PrePaidApplication | null>(null);
 
   // Unbilled Waybills
   const [unbilledView, setUnbilledView] = useState<UnbilledView>('list');
@@ -84,9 +94,78 @@ const Component = function VendorPortal() {
     setMenu(m);
     setDialog(null);
     setClaimReturn(null);
+    if (m === 'prepaid-application') setPrepaidView('list');
     if (m === 'unbilled-waybills') setUnbilledView('list');
     if (m === 'claim-tickets') setClaimView('list');
     if (m === 'my-statements') setStatementView('list');
+  };
+
+  // --- PrePaid Application handlers ---
+  const renderPrepaidApplication = () => {
+    if (prepaidView === 'create') {
+      return (
+        <PrePaidApplicationForm
+          onBack={() => setPrepaidView('list')}
+          onSubmit={() => setPrepaidView('list')}
+        />
+      );
+    }
+    if (prepaidView === 'detail' && viewedPrepaidApp) {
+      const app = viewedPrepaidApp;
+      const statusColors: Record<string, React.CSSProperties> = {
+        'Pending Review': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
+        'Approved': { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
+        'Rejected': { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+        'Paid': { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
+      };
+      const badge = { borderRadius: 4, padding: '3px 10px', fontSize: 13, ...(statusColors[app.status] || {}) };
+      return (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <button className="btn-default" onClick={() => { setViewedPrepaidApp(null); setPrepaidView('list'); }}>← Back</button>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{app.applicationNo}</h2>
+            <span style={badge}>{app.status}</span>
+          </div>
+
+          {app.status === 'Rejected' && app.rejectReason && (
+            <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
+              <strong>Rejected:</strong> {app.rejectReason}
+            </div>
+          )}
+
+          <div className="vp-card" style={{ marginBottom: 16 }}>
+            <div className="section-title" style={{ marginBottom: 12 }}>Application Details</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              {[
+                ['Application No.', app.applicationNo],
+                ['Application Date', app.applicationDate],
+                ['Associated Waybills', app.waybillNos.join(', ')],
+                ['PrePaid Amount', `${app.currency} ${app.prepaidAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+                ['VAT Amount', `${app.currency} ${app.vatAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+                ['Total Amount', `${app.currency} ${app.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`],
+              ].map(([label, value]) => (
+                <div key={label as string}>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontSize: 14, fontWeight: label === 'Total Amount' ? 600 : 400 }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {app.status === 'Rejected' && (
+            <div style={{ textAlign: 'right' }}>
+              <button className="btn-primary" onClick={() => setPrepaidView('create')}>Resubmit Application</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <PrePaidApplicationList
+        onCreate={() => setPrepaidView('create')}
+        onViewDetail={(app) => { setViewedPrepaidApp(app); setPrepaidView('detail'); }}
+      />
+    );
   };
 
   // --- Unbilled Waybills handlers ---
@@ -217,6 +296,7 @@ const Component = function VendorPortal() {
   };
 
   const renderMain = () => {
+    if (menu === 'prepaid-application') return renderPrepaidApplication();
     if (menu === 'unbilled-waybills') return renderUnbilledWaybills();
     if (menu === 'claim-tickets') return renderClaimTickets();
     if (menu === 'my-statements') return renderStatements();
@@ -225,6 +305,11 @@ const Component = function VendorPortal() {
 
   const breadcrumb = (() => {
     const root = ['Finance', MENU_LABEL[menu as Menu]];
+    if (menu === 'prepaid-application') {
+      if (prepaidView === 'create') return [...root, 'Create Application'];
+      if (prepaidView === 'detail' && viewedPrepaidApp) return [...root, viewedPrepaidApp.applicationNo];
+      return root;
+    }
     if (menu === 'unbilled-waybills') {
       if (unbilledView === 'create') return [...root, 'Create Statement'];
       return root;

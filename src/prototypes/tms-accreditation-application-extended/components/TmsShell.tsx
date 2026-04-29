@@ -4,6 +4,7 @@ interface Props {
   children: React.ReactNode;
   breadcrumb: string[];
   activeMenu: string;
+  onMenuChange: (key: string) => void;
 }
 
 const MENU_MAIN = [
@@ -13,13 +14,18 @@ const MENU_MAIN = [
   { key: 'trucks', label: 'Trucks' },
 ];
 
+const MENU_PROCUREMENT = [
+  { key: 'accreditation', label: 'Prepaid Application' },
+];
+
 const MENU_FIN = [
-  { key: 'accreditation', label: 'Accreditation Application' },
-  { key: 'vendor-statement', label: 'Vendor Statement' },
+  { key: 'ap-statement', label: 'AP Statement' },
   { key: 'ar-statement', label: 'AR Statement' },
 ];
 
-function TmsShell({ children, breadcrumb, activeMenu }: Props) {
+const CLICKABLE = new Set(['accreditation', 'ap-statement']);
+
+function TmsShell({ children, breadcrumb, activeMenu, onMenuChange }: Props) {
   return (
     <div className="tms-layout">
       <aside className="tms-sidebar">
@@ -38,13 +44,43 @@ function TmsShell({ children, breadcrumb, activeMenu }: Props) {
 
         <div className="tms-nav-group">Operations</div>
         {MENU_MAIN.map(m => (
-          <div key={m.key} className={`tms-nav-item${m.key === activeMenu ? ' active' : ''}`}>{m.label}</div>
+          <div
+            key={m.key}
+            className={`tms-nav-item${m.key === activeMenu ? ' active' : ''}`}
+            style={{ opacity: 0.5, cursor: 'not-allowed' }}
+            title="Not part of this prototype"
+          >
+            {m.label}
+          </div>
+        ))}
+
+        <div className="tms-nav-group">Procurement Mgmt</div>
+        {MENU_PROCUREMENT.map(m => (
+          <div
+            key={m.key}
+            className={`tms-nav-item${m.key === activeMenu ? ' active' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => onMenuChange(m.key)}
+          >
+            {m.label}
+          </div>
         ))}
 
         <div className="tms-nav-group">Financial Management</div>
-        {MENU_FIN.map(m => (
-          <div key={m.key} className={`tms-nav-item${m.key === activeMenu ? ' active' : ''}`}>{m.label}</div>
-        ))}
+        {MENU_FIN.map(m => {
+          const clickable = CLICKABLE.has(m.key);
+          return (
+            <div
+              key={m.key}
+              className={`tms-nav-item${m.key === activeMenu ? ' active' : ''}`}
+              style={clickable ? { cursor: 'pointer' } : { opacity: 0.5, cursor: 'not-allowed' }}
+              onClick={() => clickable && onMenuChange(m.key)}
+              title={clickable ? undefined : 'Not part of this prototype'}
+            >
+              {m.label}
+            </div>
+          );
+        })}
       </aside>
 
       <div className="tms-main">
@@ -59,7 +95,7 @@ function TmsShell({ children, breadcrumb, activeMenu }: Props) {
           </div>
           <div className="tms-user">
             <div className="tms-user-avatar">Z</div>
-            <span style={{ fontSize: 13, color: '#333' }}>Zhang Jialei · Procurement</span>
+            <span style={{ fontSize: 13, color: '#333' }}>Zhang Jialei · Finance</span>
           </div>
         </div>
         <div className="tms-content">{children}</div>

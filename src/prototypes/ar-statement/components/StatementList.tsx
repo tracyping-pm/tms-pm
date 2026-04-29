@@ -17,8 +17,9 @@ interface InvoiceRow {
   status: string;
 }
 
-// V4 §3.1 — 状态机统一为五态
+// V4 §3.1 — 五态 + V6 §2 — VP 提交初始态
 type StatementStatus =
+  | 'Awaiting Confirmation'
   | 'Awaiting Comparison'
   | 'Pending Payment'
   | 'Partially Payment'
@@ -49,6 +50,26 @@ interface StatementRow {
 }
 
 const SAMPLE_DATA: StatementRow[] = [
+  {
+    id: 'AR2024010007',
+    statementType: 'Standard',
+    status: 'Awaiting Confirmation',
+    source: 'Vendor Portal',
+    customer: 'Laguna Logistics Corp.',
+    settlementItems: ['Vendor Basic Amount', 'Vendor Additional Charge'],
+    allocationMode: '-',
+    statementTaxMark: 'Tax-inclusive',
+    currency: 'PHP',
+    totalAmountReceivable: 47200.00,
+    totalInvoiceAmount: 47200.00,
+    collectedAmount: 0,
+    createdDate: '2026-04-25',
+    createdBy: 'Laguna Logistics (VP)',
+    invoices: [
+      { no: 'INV-2026-00205', type: 'Vendor Invoice', date: '2026-04-25', amount: 47200.00, currency: 'PHP', taxAmount: 0, totalAmount: 47200.00, status: 'Issued' },
+    ],
+    hasMismatch: false,
+  },
   {
     id: 'AR2024010001',
     statementType: 'Standard',
@@ -183,10 +204,12 @@ function formatAmount(amount: number, currency: string): string {
   return `${currency} ${formatted}`;
 }
 
-// V4 §3.1 — 五态徽标样式
+// V4 §3.1 — 五态 + V6 §2 徽标样式
 function getStatusBadgeStyle(status: StatementStatus): React.CSSProperties {
   const base: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' as const };
   switch (status) {
+    case 'Awaiting Confirmation':
+      return { ...base, background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' };
     case 'Awaiting Comparison':
       return { ...base, background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' };
     case 'Pending Payment':
@@ -209,7 +232,7 @@ function getSourceBadgeStyle(source: StatementSource): React.CSSProperties {
   return { ...base, background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' };
 }
 
-const STATUS_OPTIONS: StatementStatus[] = ['Awaiting Comparison', 'Pending Payment', 'Partially Payment', 'Paid', 'Awaiting Rebill'];
+const STATUS_OPTIONS: StatementStatus[] = ['Awaiting Confirmation', 'Awaiting Comparison', 'Pending Payment', 'Partially Payment', 'Paid', 'Awaiting Rebill'];
 const SOURCE_OPTIONS: StatementSource[] = ['Internal', 'Vendor Portal'];
 
 function getInvoiceStatusBadgeStyle(status: string): React.CSSProperties {
