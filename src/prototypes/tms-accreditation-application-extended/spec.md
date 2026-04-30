@@ -1,13 +1,21 @@
-# TMS Accreditation Application Extended 规格文档
+# TMS Prepaid Application & AP Statement 规格文档（V7）
 
 ## 概述
 
-TMS 端 **Accreditation Application** 菜单扩展原型。在原有 `Vendor / Truck / Crew` 申请审核能力上，新增两种 Type：**Settlement**（结算申请审核）和 **Modification**（价格修改申请，逐行审核）。
+TMS 端 **Prepaid Application**（预付申请审核）和 **AP Statement**（应付对账单）管理原型，兼容 V5/V6/V7 设计。
+
+**核心功能：**
+- **Prepaid Application**：FA 审核供应商预付申请，Approve 时自动调用 HR Payment 接口生成 `Vendor Payment` 支付单
+- **AP Statement**：TMS 内部创建 + VP 供应商提交后自动同步，展示 `Source` 字段区分来源，VP 来源初始状态为 `Awaiting Confirmation`
+
+**V7 菜单变更**：`Accreditation Application`（认证申请）已从 `Financial Mgmt` 删除，统一归口至 `Procurement Mgmt` → `Application` 模块。
 
 **预览地址**：`http://localhost:51720/prototypes/tms-accreditation-application-extended/`
 
 相关方案与 PRD：
-- `/Users/tracy/.claude/plans/unified-cuddling-hare.md`（主方案）
+- `src/docs/prds/S44 VP Billing/VP billing V5.md` §3
+- `src/docs/prds/S44 VP Billing/VP billing V6.md` §1–§2
+- `src/docs/prds/S44 VP Billing/VP billing V7.md` §1–§3
 - `src/docs/prds/S33Vendor 认证材料处理.md`（既有申请审核框架）
 - `src/docs/prds/S34 对账单优化.md`（Edit Billed Amount + Discrepancy Proof 底层接口）
 - `src/docs/prds/S36Procurement财务.md`（Procurement PIC 数据权限）
@@ -28,12 +36,20 @@ index.tsx（视图状态机）
 
 ## 视图导航
 
+### Prepaid Application
+
 | 视图 state | 组件 | 触发方式 |
 |-----------|------|---------|
-| `list` | ApplicationList | 默认视图 |
-| `settlement-detail` | SettlementReviewDetail | 点击 Type=Settlement 的 Review/Details |
-| `modification-detail` | ModificationReviewDetail | 点击 Type=Modification 的 Review/Details |
-| `generic-detail` | 占位 | 点击 Type=Vendor/Truck/Crew（沿用 S33 原逻辑） |
+| `list` | ApplicationList | 默认视图（Procurement Mgmt → Prepaid Application） |
+| `detail` | PrepaidReviewDetail | 点击申请单查看详情、审核 |
+| `create` | CreatePrepaidForm | 点击 Create New |
+
+### AP Statement
+
+| 视图 state | 组件 | 触发方式 |
+|-----------|------|---------|
+| `list` | ApStatementList | Financial Management → AP Statement |
+| `detail` | ApStatementDetail | 点击对账单 ID 进入详情 / 比对视图 |
 
 ---
 
@@ -134,3 +150,47 @@ Waybill / Settlement Item / TMS Amount（删除线灰）/ Vendor Amount（蓝）
 - TMS Amount `#666` + 删除线
 - Vendor Amount `#1890ff` 蓝
 - Delta 正值 `#389e0d`，负值 `#cf1322`
+
+---
+
+## AP Statement（V6/V7）
+
+### 列表字段
+
+| 字段 | 说明 |
+|---|---|
+| Statement No. | 对账单编号，点击进入详情 |
+| **Source** | `Vendor Portal`（绿色）/ `Internal`（灰色）（V6 新增） |
+| Vendor | 供应商名称 |
+| Waybills | 运单数量 |
+| Total Amount | 对账总金额 |
+| Collected | 已收款金额 |
+| Status | 状态（见下表） |
+| Created At / By | 创建时间与创建人 |
+| Action | `Compare`（待处理）/ `Details` |
+
+### AP Statement 状态机
+
+| 状态 | 来源 | 说明 |
+|---|---|---|
+| `Awaiting Confirmation` | VP 提交 | VP 对账单进入 TMS 后的初始状态（橙色高亮，提示 FA 介入）（V7） |
+| `Awaiting Comparison` | VP / Internal | FA 介入进行 Match / Mismatch 比对中 |
+| `Pending Payment` | 比对通过 | 等待付款 |
+| `Partially Payment` | 部分付款 | — |
+| `Paid` | 完全付款 | — |
+| `Awaiting Rebill` | 比对不通过 | 拒回 VP 重新提单 |
+
+### 核心 UI 要点（V7）
+
+- 列表顶部蓝色 info 提示：VP 来源对账单以 `Awaiting Confirmation` 入场，点击进入**盲核对视图**（Match / Mismatch）
+- `Awaiting Confirmation` 状态使用橙色标签，提醒 FA 这是需要介入核对的新单据
+- 过滤器支持按 `Source` 和 `Status` 筛选
+- KPI 卡片：Total Statements / Needs Action / Awaiting Confirmation / Awaiting Comparison / From Vendor Portal
+
+### Prepaid Application 审核（V7）
+
+- **Approve 确认弹窗**：点击 Approve 必须弹出确认框，提示：
+  > *Approval will automatically trigger a Payment Request in the HR system. Do you wish to proceed?*
+- **Approve 动作**：调用 HR Payment 接口，自动生成类型为 `Vendor Payment` 的支付申请单（Payment Request），带入金额、币种、供应商银行账户及关联运单号
+- **状态回传**：HR 支付单状态变为 `Released` 或 `Closed` → Prepaid Application 状态自动更新为 `Paid`
+- **操作按钮**（详情页顶部）：`Approve` / `Reject` / `Edit`（仅 Pending Review 状态可见）

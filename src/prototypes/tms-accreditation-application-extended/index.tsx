@@ -1,13 +1,15 @@
 /**
  * @name TMS Prepaid Application & AP Statement
  *
- * V5/V6 设计：
- * - Prepaid Application：VP 同步 + TMS 内部创建，FA 审核（Approve→HR API / Reject / Edit）
- * - AP Statement：VP 提交后同步，初始状态 Awaiting Confirmation，支持 TMS 内部创建
+ * V5/V6/V7 设计：
+ * - Prepaid Application：VP 同步 + TMS 内部创建，FA 审核（Approve→自动调用 HR Payment API / Reject / Edit）
+ * - AP Statement：VP 提交后同步，初始状态 Awaiting Confirmation，支持 TMS 内部创建，新增 Source 字段（VP/Internal）
+ * - 菜单：Accreditation Application 已从 Financial Mgmt 删除，统一归口至 Procurement Mgmt
  *
  * 参考资料：
  * - src/docs/prds/S44 VP Billing/VP billing V5.md §3
  * - src/docs/prds/S44 VP Billing/VP billing V6.md §1–§2
+ * - src/docs/prds/S44 VP Billing/VP billing V7.md §1–§3
  */
 
 import './style.css';

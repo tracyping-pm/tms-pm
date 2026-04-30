@@ -127,6 +127,11 @@ const Component = function VendorPortal() {
             <span style={badge}>{app.status}</span>
           </div>
 
+          {app.status === 'Approved' && (
+            <div className="alert" style={{ background: '#e6f4ff', border: '1px solid #91caff', color: '#0958d9', marginBottom: 16 }}>
+              <strong>Payment Request Auto-generated:</strong> A <em>Vendor Payment</em> request has been automatically created in the HR system. You will be notified once payment is released.
+            </div>
+          )}
           {app.status === 'Rejected' && app.rejectReason && (
             <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
               <strong>Rejected:</strong> {app.rejectReason}

@@ -158,6 +158,11 @@ function PrePaidApplicationList({ onCreate, onViewDetail }: Props) {
               <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatAmount(app.totalAmount, app.currency)}</td>
               <td>
                 <span style={getStatusBadgeStyle(app.status)}>{app.status}</span>
+                {app.status === 'Approved' && (
+                  <div style={{ fontSize: 11, color: '#0958d9', marginTop: 4 }}>
+                    HR Payment Request triggered
+                  </div>
+                )}
                 {app.status === 'Rejected' && (
                   <div style={{ fontSize: 11, color: '#cf1322', marginTop: 4, maxWidth: 200 }}
                     title={app.rejectReason}>
