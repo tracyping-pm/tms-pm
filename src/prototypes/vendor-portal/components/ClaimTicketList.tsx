@@ -12,7 +12,7 @@ const VP_STATUSES: ClaimStatus[] = [
   'Completed',
 ];
 
-const DEDUCTION_OPTIONS: (DeductionState | 'all')[] = ['all', 'Pending Vendor Confirm', 'Vendor Disputed', 'For deduction', 'Completed'];
+const DEDUCTION_OPTIONS: (DeductionState | 'all')[] = ['all', 'Deducted', 'For Deduction', 'Not Linked AP', 'Written Off'];
 
 function statusTagClass(s: ClaimStatus): string {
   switch (s) {

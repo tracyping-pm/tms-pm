@@ -10,6 +10,7 @@ type Source = 'Vendor Portal' | 'Internal';
 
 interface Row {
   appNo: string;
+  appType: 'Prepaid Application' | 'AP Application';
   source: Source;
   vendor: string;
   waybillNos: string[];
@@ -25,6 +26,7 @@ interface Row {
 const SAMPLE: Row[] = [
   {
     appNo: 'PPA2604003',
+    appType: 'Prepaid Application',
     source: 'Vendor Portal',
     vendor: 'Coca-Cola Bottlers PH Inc.',
     waybillNos: ['WB2604021', 'WB2604022', 'WB2604023'],
@@ -37,6 +39,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604005',
+    appType: 'Prepaid Application',
     source: 'Vendor Portal',
     vendor: 'SMC Logistics',
     waybillNos: ['WB2604030'],
@@ -49,6 +52,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604002',
+    appType: 'Prepaid Application',
     source: 'Vendor Portal',
     vendor: 'Coca-Cola Bottlers PH Inc.',
     waybillNos: ['WB2604020'],
@@ -61,6 +65,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604006',
+    appType: 'Prepaid Application',
     source: 'Internal',
     vendor: 'JG Summit Freight',
     waybillNos: ['WB2604035', 'WB2604036'],
@@ -73,6 +78,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604004',
+    appType: 'Prepaid Application',
     source: 'Vendor Portal',
     vendor: 'Manila Freight Co.',
     waybillNos: ['WB2604018'],
@@ -86,6 +92,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604001',
+    appType: 'Prepaid Application',
     source: 'Vendor Portal',
     vendor: 'Coca-Cola Bottlers PH Inc.',
     waybillNos: ['WB2604010', 'WB2604011'],
@@ -98,6 +105,7 @@ const SAMPLE: Row[] = [
   },
   {
     appNo: 'PPA2604007',
+    appType: 'Prepaid Application',
     source: 'Internal',
     vendor: 'Bangkok Express Logistics',
     waybillNos: ['WB2604040'],
@@ -108,6 +116,32 @@ const SAMPLE: Row[] = [
     submittedAt: '2026-04-23 10:00',
     status: 'Paid',
   },
+  {
+    appNo: 'APA2604001',
+    appType: 'AP Application',
+    source: 'Internal',
+    vendor: 'Laguna Logistics Corp.',
+    waybillNos: ['WB2604050', 'WB2604051', 'WB2604052', 'WB2604053'],
+    prepaidAmount: 47200,
+    vatAmount: 0,
+    totalAmount: 47200,
+    currency: 'PHP',
+    submittedAt: '2026-04-25 09:30',
+    status: 'Pending Review',
+  },
+  {
+    appNo: 'APA2604002',
+    appType: 'AP Application',
+    source: 'Internal',
+    vendor: 'Cebu Trans Lines',
+    waybillNos: ['WB2604060', 'WB2604061'],
+    prepaidAmount: 38500,
+    vatAmount: 0,
+    totalAmount: 38500,
+    currency: 'PHP',
+    submittedAt: '2026-04-23 14:00',
+    status: 'Pending Review',
+  },
 ];
 
 const STATUS_STYLE: Record<AppStatus, React.CSSProperties> = {
@@ -115,6 +149,11 @@ const STATUS_STYLE: Record<AppStatus, React.CSSProperties> = {
   'Approved':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
   'Rejected':       { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
   'Paid':           { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+};
+
+const APP_TYPE_STYLE: Record<'Prepaid Application' | 'AP Application', React.CSSProperties> = {
+  'Prepaid Application': { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'AP Application':      { background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
 };
 
 const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
@@ -129,11 +168,13 @@ function fmt(n: number, cur: string) {
 function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
   const [filterSource, setFilterSource] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
   const [keyword, setKeyword] = useState('');
 
   const filtered = SAMPLE.filter(r => {
     if (filterSource && r.source !== filterSource) return false;
     if (filterStatus && r.status !== filterStatus) return false;
+    if (filterType && r.appType !== filterType) return false;
     if (keyword && !r.appNo.toLowerCase().includes(keyword.toLowerCase()) &&
       !r.vendor.toLowerCase().includes(keyword.toLowerCase()) &&
       !r.waybillNos.some(w => w.toLowerCase().includes(keyword.toLowerCase()))) return false;
@@ -173,7 +214,7 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
       <div className="tms-card">
         <div className="tms-card-title">
           <div>
-            <div className="section-title">Prepaid Applications</div>
+            <div className="section-title">Vendor Payment Applications</div>
             <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
               Unified pool — applications submitted from Vendor Portal and created internally.
             </div>
@@ -209,7 +250,12 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
             <option value="Rejected">Rejected</option>
             <option value="Paid">Paid</option>
           </select>
-          <button className="btn-default" onClick={() => { setKeyword(''); setFilterSource(''); setFilterStatus(''); }}>Reset</button>
+          <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
+            <option value="">Application Type: All</option>
+            <option value="Prepaid Application">Prepaid Application</option>
+            <option value="AP Application">AP Application</option>
+          </select>
+          <button className="btn-default" onClick={() => { setKeyword(''); setFilterSource(''); setFilterStatus(''); setFilterType(''); }}>Reset</button>
           <button className="btn-primary">Search</button>
         </div>
 
@@ -218,6 +264,7 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
             <tr>
               <th>Application No.</th>
               <th>Source</th>
+              <th>Application Type</th>
               <th>Vendor</th>
               <th>Waybills</th>
               <th style={{ textAlign: 'right' }}>Prepaid Amount</th>
@@ -235,6 +282,7 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
                   <button className="btn-link" onClick={() => onOpenDetail(r.appNo)}>{r.appNo}</button>
                 </td>
                 <td><span style={SOURCE_STYLE[r.source]}>{r.source}</span></td>
+                <td><span style={APP_TYPE_STYLE[r.appType]}>{r.appType}</span></td>
                 <td style={{ fontSize: 13 }}>{r.vendor}</td>
                 <td style={{ fontSize: 12, color: '#666' }}>{r.waybillNos.join(', ')}</td>
                 <td style={{ textAlign: 'right', fontSize: 13 }}>{fmt(r.prepaidAmount, r.currency)}</td>
@@ -257,7 +305,7 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={10} className="empty">No prepaid applications found.</td></tr>
+              <tr><td colSpan={11} className="empty">No vendor payment applications found.</td></tr>
             )}
           </tbody>
         </table>
@@ -274,4 +322,3 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
 }
 
 export default ApplicationList;
-export type { AppStatus };

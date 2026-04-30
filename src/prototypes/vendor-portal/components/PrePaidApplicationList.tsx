@@ -77,8 +77,8 @@ function getStatusBadgeStyle(status: PrePaidStatus): React.CSSProperties {
   }
 }
 
-function formatAmount(amount: number, currency: string) {
-  return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+function formatAmount(amount: number, _currency: string) {
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
 function PrePaidApplicationList({ onCreate, onViewDetail }: Props) {

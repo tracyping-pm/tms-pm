@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 
 interface Props {
   onBack: () => void;
@@ -11,19 +11,22 @@ interface InTransitWaybill {
   truckType: string;
   origin: string;
   destination: string;
-  basicAmount: number;
-  currency: string;
 }
 
 const IN_TRANSIT_WAYBILLS: InTransitWaybill[] = [
-  { no: 'WB2604020', status: 'In Transit', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC', basicAmount: 12500, currency: 'PHP' },
-  { no: 'WB2604021', status: 'In Transit', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig', basicAmount: 8000, currency: 'PHP' },
-  { no: 'WB2604022', status: 'Planning', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila', basicAmount: 15000, currency: 'PHP' },
-  { no: 'WB2604023', status: 'Pending', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba', basicAmount: 6000, currency: 'PHP' },
-  { no: 'WB2604024', status: 'In Transit', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area', basicAmount: 18000, currency: 'PHP' },
+  { no: 'WB2604020', status: 'In Transit', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC' },
+  { no: 'WB2604021', status: 'In Transit', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig' },
+  { no: 'WB2604022', status: 'Planning', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila' },
+  { no: 'WB2604023', status: 'Pending', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba' },
+  { no: 'WB2604024', status: 'In Transit', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area' },
 ];
 
-const BANK_ACCOUNTS = [
+interface BankAccount {
+  id: string;
+  label: string;
+}
+
+const INITIAL_BANK_ACCOUNTS: BankAccount[] = [
   { id: 'BA001', label: 'BPI — 1234-5678-90 (Coca-Cola Bottlers PH)' },
   { id: 'BA002', label: 'BDO — 9876-5432-10 (Coca-Cola Bottlers PH)' },
   { id: 'BA003', label: 'UnionBank — 5555-1111-22 (Coca-Cola Bottlers PH)' },
@@ -51,6 +54,14 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
   const [remark, setRemark] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(INITIAL_BANK_ACCOUNTS);
+
+  // Add New Bank Info modal state
+  const [showAddBankModal, setShowAddBankModal] = useState(false);
+  const [newBankName, setNewBankName] = useState('');
+  const [newAccountNumber, setNewAccountNumber] = useState('');
+  const [newAccountHolder, setNewAccountHolder] = useState('');
+  const [bankModalError, setBankModalError] = useState('');
 
   const toggleWaybill = (no: string) => {
     setSelectedWaybills(prev => {
@@ -68,26 +79,44 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
     }
   };
 
-  const totalBasic = useMemo(() => {
-    return IN_TRANSIT_WAYBILLS.filter(w => selectedWaybills.has(w.no))
-      .reduce((sum, w) => sum + w.basicAmount, 0);
-  }, [selectedWaybills]);
-
   const amount = parseFloat(prepaidAmount) || 0;
   const vatAmount = +(amount * vatRate / 100).toFixed(2);
   const whtAmount = +(amount * whtRate / 100).toFixed(2);
   const totalAmount = +(amount + vatAmount - whtAmount).toFixed(2);
 
-  const prepaidRatio = totalBasic > 0 ? (amount / totalBasic * 100).toFixed(1) : '—';
-  const isOverLimit = totalBasic > 0 && amount > totalBasic;
-
   const handleSubmit = () => {
     if (selectedWaybills.size === 0) { setValidationError('Please select at least one waybill.'); return; }
     if (!prepaidAmount || amount <= 0) { setValidationError('Please enter a valid prepaid amount.'); return; }
-    if (isOverLimit) { setValidationError(`Prepaid amount cannot exceed total basic freight (PHP ${totalBasic.toLocaleString()}).`); return; }
     if (!bankAccount) { setValidationError('Please select a bank account.'); return; }
     setValidationError('');
     setSubmitted(true);
+  };
+
+  const handleSaveNewBank = () => {
+    if (!newBankName.trim() || !newAccountNumber.trim() || !newAccountHolder.trim()) {
+      setBankModalError('All fields are required.');
+      return;
+    }
+    const newId = `BA${String(bankAccounts.length + 1).padStart(3, '0')}`;
+    const newEntry: BankAccount = {
+      id: newId,
+      label: `${newBankName.trim()} — ${newAccountNumber.trim()} (${newAccountHolder.trim()})`,
+    };
+    setBankAccounts(prev => [...prev, newEntry]);
+    setBankAccount(newId);
+    setShowAddBankModal(false);
+    setNewBankName('');
+    setNewAccountNumber('');
+    setNewAccountHolder('');
+    setBankModalError('');
+  };
+
+  const handleCancelNewBank = () => {
+    setShowAddBankModal(false);
+    setNewBankName('');
+    setNewAccountNumber('');
+    setNewAccountHolder('');
+    setBankModalError('');
   };
 
   if (submitted) {
@@ -134,7 +163,6 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
               <th>Truck Type</th>
               <th>Origin</th>
               <th>Destination</th>
-              <th style={{ textAlign: 'right' }}>Basic Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +180,6 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
                 <td>{w.truckType}</td>
                 <td style={{ fontSize: 12 }}>{w.origin}</td>
                 <td style={{ fontSize: 12 }}>{w.destination}</td>
-                <td style={{ textAlign: 'right' }}>PHP {w.basicAmount.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
@@ -160,8 +187,7 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
 
         {selectedWaybills.size > 0 && (
           <div style={{ marginTop: 10, padding: '8px 12px', background: '#f0f5ff', borderRadius: 6, fontSize: 13 }}>
-            <strong>{selectedWaybills.size}</strong> waybill(s) selected · Total Basic Amount:
-            <strong> PHP {totalBasic.toLocaleString()}</strong>
+            <strong>{selectedWaybills.size}</strong> waybill(s) selected.
           </div>
         )}
       </div>
@@ -186,11 +212,6 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
                 onChange={e => setPrepaidAmount(e.target.value)}
               />
             </div>
-            {totalBasic > 0 && amount > 0 && (
-              <div style={{ fontSize: 11, color: isOverLimit ? '#cf1322' : '#00b96b', marginTop: 4 }}>
-                {isOverLimit ? '⚠ Exceeds total basic freight' : `${prepaidRatio}% of total basic freight`}
-              </div>
-            )}
           </div>
 
           <div>
@@ -257,8 +278,16 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
             onChange={e => setBankAccount(e.target.value)}
           >
             <option value="">— Select Bank Account —</option>
-            {BANK_ACCOUNTS.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+            {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
           </select>
+          <div style={{ textAlign: 'right', marginTop: 6 }}>
+            <button
+              style={{ background: 'none', border: 'none', color: '#00b96b', fontSize: 13, cursor: 'pointer', padding: 0 }}
+              onClick={() => setShowAddBankModal(true)}
+            >
+              + Add New Bank Info
+            </button>
+          </div>
           <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
             Only accounts already registered in the system are shown.
           </div>
@@ -323,6 +352,70 @@ function PrePaidApplicationForm({ onBack, onSubmit }: Props) {
         <button className="btn-default" onClick={onBack}>Cancel</button>
         <button className="btn-primary" onClick={handleSubmit}>Submit Application</button>
       </div>
+
+      {/* Add New Bank Info Modal */}
+      {showAddBankModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.45)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 10, padding: 28, width: 420,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+          }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Add New Bank Info</div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>
+                Bank Name <span style={{ color: '#ff4d4f' }}>*</span>
+              </label>
+              <input
+                className="filter-input"
+                style={{ width: '100%', boxSizing: 'border-box' }}
+                placeholder="e.g. BPI"
+                value={newBankName}
+                onChange={e => setNewBankName(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>
+                Account Number <span style={{ color: '#ff4d4f' }}>*</span>
+              </label>
+              <input
+                className="filter-input"
+                style={{ width: '100%', boxSizing: 'border-box' }}
+                placeholder="e.g. 1234-5678-90"
+                value={newAccountNumber}
+                onChange={e => setNewAccountNumber(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>
+                Account Holder Name <span style={{ color: '#ff4d4f' }}>*</span>
+              </label>
+              <input
+                className="filter-input"
+                style={{ width: '100%', boxSizing: 'border-box' }}
+                placeholder="e.g. Coca-Cola Bottlers PH"
+                value={newAccountHolder}
+                onChange={e => setNewAccountHolder(e.target.value)}
+              />
+            </div>
+
+            {bankModalError && (
+              <div style={{ fontSize: 12, color: '#cf1322', marginBottom: 12 }}>⚠ {bankModalError}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn-default" onClick={handleCancelNewBank}>Cancel</button>
+              <button className="btn-primary" onClick={handleSaveNewBank}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

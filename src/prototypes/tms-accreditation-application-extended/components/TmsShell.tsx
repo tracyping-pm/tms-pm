@@ -15,7 +15,7 @@ const MENU_MAIN = [
 ];
 
 const MENU_PROCUREMENT = [
-  { key: 'accreditation', label: 'Prepaid Application' },
+  { key: 'accreditation', label: 'Vendor Payment Application' },
 ];
 
 const MENU_FIN = [
