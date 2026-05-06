@@ -15,6 +15,7 @@ interface Row {
   status: Status;
   createdAt: string;
   rejectReason?: string;
+  releaseProof?: string;
 }
 
 const SAMPLE: Row[] = [
@@ -51,26 +52,15 @@ const SAMPLE: Row[] = [
     invoiceNo: 'INV-2026-00157',
     status: 'Paid',
     createdAt: '2026-03-28 14:10',
+    releaseProof: 'payment_release_Mar2026.pdf',
   },
 ];
 
 const STATUS_TAG: Record<Status, { cls: string; label: string }> = {
-  'Awaiting Comparison': {
-    cls: 'tag-under-review',
-    label: 'Awaiting Comparison',
-  },
-  'Awaiting Re-bill': {
-    cls: 'tag-rejected',
-    label: 'Awaiting Re-bill',
-  },
-  'Pending Payment': {
-    cls: 'tag-partial',
-    label: 'Pending Payment',
-  },
-  Paid: {
-    cls: 'tag-approved',
-    label: 'Paid',
-  },
+  'Awaiting Comparison': { cls: 'tag-under-review', label: 'Processing' },
+  'Awaiting Re-bill':    { cls: 'tag-rejected',     label: 'Action Required' },
+  'Pending Payment':     { cls: 'tag-partial',       label: 'Processing' },
+  'Paid':                { cls: 'tag-approved',      label: 'Paid' },
 };
 
 function StatusTag({ s }: { s: Status }) {
@@ -167,6 +157,7 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
               <th>Invoice No.</th>
               <th>Status</th>
               <th>Created At</th>
+              <th>Release Proof</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -203,6 +194,12 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
                   </td>
                   <td>{r.createdAt}</td>
                   <td>
+                    {r.releaseProof
+                      ? <span style={{ color: '#1677ff', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }}>📄 {r.releaseProof}</span>
+                      : <span style={{ color: '#bbb' }}>—</span>
+                    }
+                  </td>
+                  <td>
                     <button
                       className="btn-link"
                       onClick={() => onOpenDetail(r.no, r.status)}
@@ -227,7 +224,7 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty">
+                <td colSpan={8} className="empty">
                   No statements match the current filter.
                 </td>
               </tr>

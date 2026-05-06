@@ -228,3 +228,128 @@ Waybill / Settlement Item / TMS Amount（删除线灰）/ Vendor Amount（蓝）
 | **Invoice** | 表格展示 Invoice No. / Amount / Date / Status（Verified 绿色，Pending Verification 橙色） |
 | **Supporting Proof** | 文件列表 + 下载链接，无凭证时显示"No proof uploaded." |
 | **Operation Log** | 混合日志流：内部操作（绿色圆点）+ 供应商交互（蓝色圆点），按时间倒序；交互动作（Confirm/Reject/Matched）实时追加至顶部 |
+
+---
+
+## V9 变更说明
+
+### AP Statement 全流程闭环（ApStatementDetail）
+
+#### 比对结果：4 态自动计算（替换手动 toggle）
+
+| 比对结果 Tag | 触发条件 | 视觉 |
+|---|---|---|
+| `Matched` | Vendor 合计 = TMS 合计 | 绿色 |
+| `Matched (Vendor Discount)` | Vendor 合计 < TMS 合计（供应商打折）| 绿色 + 折扣金额提示 |
+| `Mismatched` | Vendor 合计 > TMS 合计（强拦截）| 红色 |
+| `Missed` | TMS 无对应结算项（tmsBasic=0 且 tmsAdditional=0，但 VP 有金额）| 橙黄色 |
+
+- 行背景色：Mismatched→红底，Missed→黄底，Matched(Discount)→浅绿底
+- `Edit in Waybill` 按钮：Mismatched 或 Missed 行可见，点击弹出 toast（原型模拟穿透跳转）
+
+#### Refresh 按钮
+- FA 修改运单金额后返回，点击 `↻ Refresh` 重新触发比对引擎（原型模拟 1 秒加载）
+- 刷新完成后显示 toast："Comparison refreshed."
+
+#### Confirm & Create Vendor Payment 前置校验
+- 仅当所有行结果均为 `Matched` 或 `Matched (Vendor Discount)` 时按钮可点击
+- 否则显示红色提示："Resolve all Mismatched / Missed items first."
+
+#### Amount Summary 新增 Net Payable
+- `Net Payable` = Vendor Total − Deductions（当前无扣款时等于 Vendor Total）
+
+### Vendor Payment Application 列表（ApplicationList）—— V9 新增
+
+| 变更项 | 说明 |
+|---|---|
+| **新状态** | `Sync Failed`（粉红色）：API 推送 HR 失败，可 Retry；`Payment Rejected`（深红色）：HR 财务驳回 |
+| **Associated AP Stmt.** | AP Application 类型行显示关联的 AP Statement 单号（蓝色链接） |
+| **Retry / Review 操作** | Sync Failed → Retry 按钮；Payment Rejected → Review 按钮 |
+
+### VP My Statements（StatementList）—— V9 对外状态简化
+
+| 内部状态 | VP 对外展示 | 说明 |
+|---|---|---|
+| `Awaiting Comparison` | **Processing** | 隐藏内部比对细节 |
+| `Pending Payment` | **Processing** | 隐藏支付流程细节 |
+| `Awaiting Re-bill` | **Action Required** | 提示供应商需操作 |
+| `Paid` | **Paid** | 不变 |
+
+- **Release Proof**：`Paid` 状态行新增 Release Proof 列，展示打款凭证文件链接
+
+---
+
+## V10 变更说明
+
+### AP Statement 操作栏进入详情页调整
+
+#### Statement Info 字段与布局
+
+详情页 `Statement Info` 固定展示 9 个字段，采用 3 列网格对齐：
+
+| 字段 | 说明 |
+|---|---|
+| Statement NO | 对账单编号 |
+| Statement Status | 当前 AP Statement 状态 |
+| Statement Tax Mark | 税标识，原型默认 `VAT-ex` |
+| Total Amount Payable | 本次应付总额 |
+| Total Invoice Amount | 已上传 Invoice 金额合计 |
+| Paid Amount | 已支付金额，部分支付状态读取已支付申请合计 |
+| Vendor | 供应商 |
+| Create date | 创建日期 |
+| Create By | 创建人 |
+
+#### Amount Summary
+
+按用户示意图改为财务摘要面板，并升级为双口径对比：
+- 顶部大行展示 `Total Amount Payable`，同时显示 `TMS / VP / Diff`
+- 下方三列分别为 `Waybill Contract Cost`、`Claim`、`Others`，每行均显示 `TMS / VP / Diff`
+- `Waybill Contract Cost` 内展示 `Basic Amount`、`Additional Charge`、`Exception Fee`
+- `Claim` 内展示 `KPI Claim`
+- `Others` 内展示 `VAT`、`WHT`
+- 本页面所有价格字段均不显示币种前缀，仅展示数值
+
+#### Waybill List (Vendor-Submitted)
+
+该区块改为标签页：
+- `Waybill List ({count})`
+- `Claim Ticket ({count})`
+
+Waybill 主表按供应商提交口径展示，每行支持点击展开/收起：
+
+| 主表字段 | 说明 |
+|---|---|
+| Waybill | 运单号，带展开箭头 |
+| TMS Amount | TMS 运单金额合计 |
+| VP Amount | Vendor Portal 提交金额合计 |
+| Status | 金额一致展示 `Match`，不一致展示 `Discrepancy` |
+| Discrepancy | `Match` 时为 `0.00`，不一致时展示 VP − TMS 的差异额 |
+| Position Time | 车辆到位时间 |
+| Unloading Time | 卸货时间 |
+| Truck Type | 车型 |
+| Origin | 起点 |
+| Destination | 终点 |
+| Actions | `Status=Discrepancy` 时展示 `Edit Price`，点击后固定跳转 `https://rc.gaia.inteluck.com/project/waybill/detail/2530248` 新页；`Match` 时为空 |
+
+展开区展示 Waybill 项目金额对比：
+- `Basic Amount`
+- `Additional Charge`
+- `Exception Fee`
+
+每个项目均展示 `TMS Amount`、`VP Amount`、`Difference`，用于快速定位具体差异项。
+
+#### Claim Ticket 标签页
+
+Claim Ticket 表格按用户示意图展示：
+
+| 字段 | 说明 |
+|---|---|
+| Ticket No. | Claim Ticket 编号 |
+| Claim Type | Claim 类型，如 Damage / KPI Claim |
+| Customer | 客户 + 供应商信息 |
+| Claim Amount | Claim 金额，红色强调 |
+| Claim Reason | Claim 原因 |
+| Status | 状态标签，Approved 使用绿色胶囊标签 |
+| Created Date | 创建日期 |
+| Created By | 创建人 |
+| Actions | 删除图标按钮，原型中点击后移除当前行 |

@@ -5,7 +5,7 @@ interface Props {
   onCreateNew: () => void;
 }
 
-export type AppStatus = 'Pending Review' | 'Approved' | 'Rejected' | 'Paid';
+export type AppStatus = 'Pending Review' | 'Approved' | 'Rejected' | 'Paid' | 'Sync Failed' | 'Payment Rejected';
 type Source = 'Vendor Portal' | 'Internal';
 
 interface Row {
@@ -21,6 +21,7 @@ interface Row {
   submittedAt: string;
   status: AppStatus;
   rejectReason?: string;
+  associatedStatementId?: string;
 }
 
 const SAMPLE: Row[] = [
@@ -128,6 +129,7 @@ const SAMPLE: Row[] = [
     currency: 'PHP',
     submittedAt: '2026-04-25 09:30',
     status: 'Pending Review',
+    associatedStatementId: 'AP2026040007',
   },
   {
     appNo: 'APA2604002',
@@ -141,14 +143,41 @@ const SAMPLE: Row[] = [
     currency: 'PHP',
     submittedAt: '2026-04-23 14:00',
     status: 'Pending Review',
+    associatedStatementId: 'AP2026040002',
+  },
+  {
+    appNo: 'APA2604003',
+    appType: 'AP Application',
+    source: 'Internal',
+    vendor: 'Bangkok Express Logistics',
+    waybillNos: ['WB2604040','WB2604041','WB2604042','WB2604043','WB2604044','WB2604045'],
+    prepaidAmount: 156000, vatAmount: 0, totalAmount: 156000,
+    currency: 'THB',
+    submittedAt: '2026-04-19 11:30',
+    status: 'Sync Failed',
+    associatedStatementId: 'AP2026040003',
+  },
+  {
+    appNo: 'APA2604004',
+    appType: 'AP Application',
+    source: 'Internal',
+    vendor: 'Laguna Logistics Corp.',
+    waybillNos: ['WB2604055'],
+    prepaidAmount: 22000, vatAmount: 0, totalAmount: 22000,
+    currency: 'PHP',
+    submittedAt: '2026-04-15 09:00',
+    status: 'Payment Rejected',
+    associatedStatementId: 'AP2026040008',
   },
 ];
 
 const STATUS_STYLE: Record<AppStatus, React.CSSProperties> = {
-  'Pending Review': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
-  'Approved':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
-  'Rejected':       { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
-  'Paid':           { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Pending Review':    { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Approved':          { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Rejected':          { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Paid':              { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Sync Failed':       { background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Payment Rejected':  { background: '#fff1f0', color: '#a8071a', border: '1px solid #ff7875', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
 };
 
 const APP_TYPE_STYLE: Record<'Prepaid Application' | 'AP Application', React.CSSProperties> = {
@@ -249,6 +278,8 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
             <option value="Paid">Paid</option>
+            <option value="Sync Failed">Sync Failed</option>
+            <option value="Payment Rejected">Payment Rejected</option>
           </select>
           <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
             <option value="">Application Type: All</option>
@@ -265,6 +296,7 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
               <th>Application No.</th>
               <th>Source</th>
               <th>Application Type</th>
+              <th>Associated AP Stmt.</th>
               <th>Vendor</th>
               <th>Waybills</th>
               <th style={{ textAlign: 'right' }}>Prepaid Amount</th>
@@ -283,6 +315,12 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
                 </td>
                 <td><span style={SOURCE_STYLE[r.source]}>{r.source}</span></td>
                 <td><span style={APP_TYPE_STYLE[r.appType]}>{r.appType}</span></td>
+                <td>
+                  {r.associatedStatementId
+                    ? <span style={{ color: '#1677ff', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }}>{r.associatedStatementId}</span>
+                    : <span style={{ color: '#bbb' }}>—</span>
+                  }
+                </td>
                 <td style={{ fontSize: 13 }}>{r.vendor}</td>
                 <td style={{ fontSize: 12, color: '#666' }}>{r.waybillNos.join(', ')}</td>
                 <td style={{ textAlign: 'right', fontSize: 13 }}>{fmt(r.prepaidAmount, r.currency)}</td>
@@ -298,14 +336,19 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
                   )}
                 </td>
                 <td>
-                  <button className="btn-link" onClick={() => onOpenDetail(r.appNo)}>
-                    {r.status === 'Pending Review' ? 'Review' : 'Details'}
-                  </button>
+                  {r.status === 'Sync Failed'
+                    ? <button className="btn-primary" onClick={() => {}}>Retry</button>
+                    : r.status === 'Payment Rejected'
+                      ? <button className="btn-link" onClick={() => onOpenDetail(r.appNo)}>Review</button>
+                      : <button className="btn-link" onClick={() => onOpenDetail(r.appNo)}>
+                          {r.status === 'Pending Review' ? 'Review' : 'Details'}
+                        </button>
+                  }
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={11} className="empty">No vendor payment applications found.</td></tr>
+              <tr><td colSpan={12} className="empty">No vendor payment applications found.</td></tr>
             )}
           </tbody>
         </table>

@@ -61,6 +61,7 @@ const Component = function VendorPortal() {
   // PrePaid Application
   const [prepaidView, setPrepaidView] = useState<PrepaidView>('list');
   const [viewedPrepaidApp, setViewedPrepaidApp] = useState<PrePaidApplication | null>(null);
+  const [proofPreviewMsg, setProofPreviewMsg] = useState('');
 
   // Unbilled Waybills
   const [unbilledView, setUnbilledView] = useState<UnbilledView>('list');
@@ -156,7 +157,8 @@ const Component = function VendorPortal() {
             { name: 'approval_memo.pdf', icon: '📄' },
           ]
         : [];
-      const [previewMsg, setPreviewMsg] = React.useState('');
+      const previewMsg = proofPreviewMsg;
+      const setPreviewMsg = setProofPreviewMsg;
 
       return (
         <div>
