@@ -22,10 +22,11 @@ import PrepaidReviewDetail from './components/PrepaidReviewDetail';
 import CreatePrepaidForm from './components/CreatePrepaidForm';
 import ApStatementList from './components/ApStatementList';
 import ApStatementDetail from './components/ApStatementDetail';
+import CreateApStatementForm from './components/CreateApStatementForm';
 
 type ActiveMenu = 'accreditation' | 'ap-statement';
 type PrepaidView = 'list' | 'detail' | 'create';
-type ApView = 'list' | 'detail';
+type ApView = 'list' | 'detail' | 'create';
 
 const Component = function TmsPrepaidApplication() {
   const [activeMenu, setActiveMenu] = useState<ActiveMenu>('accreditation');
@@ -76,7 +77,7 @@ const Component = function TmsPrepaidApplication() {
       case 'list':
         return (
           <ApStatementList
-            onCreateNew={() => setApView('list')} // placeholder: would open create form
+            onCreateNew={() => setApView('create')}
             onViewDetail={(id) => { setOpenedStatementId(id); setApView('detail'); }}
           />
         );
@@ -85,6 +86,13 @@ const Component = function TmsPrepaidApplication() {
           <ApStatementDetail
             statementId={openedStatementId}
             onBack={() => setApView('list')}
+          />
+        );
+      case 'create':
+        return (
+          <CreateApStatementForm
+            onBack={() => setApView('list')}
+            onGenerate={() => setApView('list')}
           />
         );
     }
@@ -104,6 +112,7 @@ const Component = function TmsPrepaidApplication() {
     }
     if (activeMenu === 'ap-statement') {
       if (apView === 'detail') return ['Financial Management', 'AP Statement', openedStatementId];
+      if (apView === 'create') return ['Financial Management', 'AP Statement', 'Create AP Statement'];
       return ['Financial Management', 'AP Statement'];
     }
     return [];

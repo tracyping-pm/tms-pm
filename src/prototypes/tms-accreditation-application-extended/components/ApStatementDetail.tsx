@@ -533,7 +533,6 @@ const PARTIAL_PAYMENT_DATA: Record<string, PartialPaymentInfo> = {
 
 const mockProofNames = ['proof_doc_001.pdf', 'payment_evidence.jpg', 'waybill_scan.png', 'receipt_Apr2026.pdf'];
 
-const CLIENT_ENTITY_OPTIONS = ['Coca-Cola Bottlers PH', 'Bangkok Express TH', 'Cebu Trans PH', 'Laguna Logistics PH'];
 
 function ApStatementDetail({ statementId, onBack }: Props) {
   const data = STATEMENT_DATA[statementId] || { ...FALLBACK, id: statementId };
@@ -933,6 +932,35 @@ function ApStatementDetail({ statementId, onBack }: Props) {
       </div>
     );
 
+    const twoCol: React.CSSProperties = { gridTemplateColumns: 'minmax(132px, 1.3fr) minmax(90px, 1fr)' };
+    const renderSimpleSummaryBlock = (
+      title: string,
+      total: number,
+      rows: Array<{ label: string; amount: number }>
+    ) => (
+      <div className="ap-summary-col">
+        <div className="ap-summary-block-title">{title}</div>
+        <div className="ap-summary-table">
+          <div className="ap-summary-table-head" style={twoCol}>
+            <span>Item</span>
+            <span>Amount</span>
+          </div>
+          <div className="ap-summary-row is-strong" style={twoCol}>
+            <span className="ap-summary-item-label">{title}</span>
+            <span className="ap-summary-cell">{fmt(total)}</span>
+          </div>
+          <div className="ap-summary-sublist">
+            {rows.map(row => (
+              <div key={row.label} className="ap-summary-row" style={twoCol}>
+                <span className="ap-summary-item-label">{row.label}</span>
+                <span className="ap-summary-cell">{fmt(row.amount)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div className="ap-amount-summary">
         <div className="ap-summary-total">
@@ -963,12 +991,11 @@ function ApStatementDetail({ statementId, onBack }: Props) {
               { label: 'Exception Fee', tms: tmsAmountSummary.exception, vp: vpAmountSummary.exception },
             ]
           )}
-          {renderSummaryBlock(
+          {renderSimpleSummaryBlock(
             'Claim',
-            tmsClaimAmount,
             vpClaimAmount,
             [
-              { label: 'KPI Claim', tms: tmsKpiClaim, vp: vpKpiClaim },
+              { label: 'KPI Claim', amount: vpKpiClaim },
             ]
           )}
           {renderSummaryBlock(
@@ -998,18 +1025,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
 
           {invoiceFormRows.map((row, idx) => (
             <div key={row.id} style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: 16, marginBottom: 12, position: 'relative' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Client Entity</div>
-                  <select
-                    style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%' }}
-                    value={row.clientEntity}
-                    onChange={e => updateFormRow(row.id, 'clientEntity', e.target.value)}
-                  >
-                    <option value="">Select...</option>
-                    {CLIENT_ENTITY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Number</div>
                   <input
@@ -1233,7 +1249,6 @@ function ApStatementDetail({ statementId, onBack }: Props) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Client Entity</th>
                   <th>Invoice No.</th>
                   <th>Invoice Amount</th>
                   <th>Invoice Date</th>
@@ -1244,7 +1259,6 @@ function ApStatementDetail({ statementId, onBack }: Props) {
               <tbody>
                 {invoices.map(inv => (
                   <tr key={inv.id}>
-                    <td style={{ fontSize: 13 }}>{inv.clientEntity}</td>
                     <td style={{ fontSize: 13 }}>{inv.no}</td>
                     <td style={{ fontSize: 13 }}>{inv.amount}</td>
                     <td style={{ fontSize: 13 }}>{inv.date}</td>
