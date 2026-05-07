@@ -5,23 +5,50 @@ interface Props {
   onEdit: (no: string, status: Status) => void;
 }
 
-export type Status = 'Awaiting Comparison' | 'Awaiting Re-bill' | 'Pending Payment' | 'Paid';
+export type Status =
+  | 'Draft'
+  | 'Awaiting Comparison'
+  | 'Awaiting Re-bill'
+  | 'Pending Payment'
+  | 'Partially Payment'
+  | 'Paid'
+  | 'Written Off'
+  | 'Canceled';
+
+type Source = 'Self-Created' | 'TMS-Synced';
+type StatementType = 'Standard' | 'Standalone';
 
 interface Row {
   no: string;
+  source: Source;
   totalSubmittedAmount: number;
+  currency: string;
+  statementType: StatementType;
   waybillCount: number;
   invoiceNo: string;
   status: Status;
   createdAt: string;
   rejectReason?: string;
-  releaseProof?: string;
 }
 
 const SAMPLE: Row[] = [
   {
+    no: 'VS2604008',
+    source: 'Self-Created',
+    totalSubmittedAmount: 0,
+    currency: 'PHP',
+    statementType: 'Standard',
+    waybillCount: 2,
+    invoiceNo: '—',
+    status: 'Draft',
+    createdAt: '2026-04-28 09:20',
+  },
+  {
     no: 'VS2604001',
+    source: 'TMS-Synced',
     totalSubmittedAmount: 52800,
+    currency: 'PHP',
+    statementType: 'Standard',
     waybillCount: 3,
     invoiceNo: 'INV-2026-00201',
     status: 'Awaiting Comparison',
@@ -29,219 +56,259 @@ const SAMPLE: Row[] = [
   },
   {
     no: 'VS2604002',
+    source: 'Self-Created',
     totalSubmittedAmount: 38500,
+    currency: 'PHP',
+    statementType: 'Standalone',
     waybillCount: 2,
     invoiceNo: 'INV-2026-00198',
     status: 'Awaiting Re-bill',
     createdAt: '2026-04-18 14:30',
     rejectReason:
-      'Basic Amount for WB2604011 exceeds contracted rate. Additional Charge for WB2604012 has no supporting proof. Please correct and resubmit.',
+      'Basic Amount for WB2604011 exceeds contracted rate. Please correct and resubmit.',
   },
   {
     no: 'VS2604003',
+    source: 'TMS-Synced',
     totalSubmittedAmount: 68800,
+    currency: 'PHP',
+    statementType: 'Standard',
     waybillCount: 4,
     invoiceNo: 'INV-2026-00185',
     status: 'Pending Payment',
     createdAt: '2026-04-13 11:45',
   },
   {
+    no: 'VS2604004',
+    source: 'TMS-Synced',
+    totalSubmittedAmount: 99000,
+    currency: 'PHP',
+    statementType: 'Standard',
+    waybillCount: 7,
+    invoiceNo: 'INV-2026-00179',
+    status: 'Partially Payment',
+    createdAt: '2026-04-10 08:30',
+  },
+  {
     no: 'VS2603001',
+    source: 'Self-Created',
     totalSubmittedAmount: 48000,
+    currency: 'PHP',
+    statementType: 'Standalone',
     waybillCount: 3,
     invoiceNo: 'INV-2026-00157',
     status: 'Paid',
     createdAt: '2026-03-28 14:10',
-    releaseProof: 'payment_release_Mar2026.pdf',
+  },
+  {
+    no: 'VS2603002',
+    source: 'TMS-Synced',
+    totalSubmittedAmount: 32000,
+    currency: 'PHP',
+    statementType: 'Standard',
+    waybillCount: 2,
+    invoiceNo: 'INV-2026-00143',
+    status: 'Written Off',
+    createdAt: '2026-03-15 10:00',
+  },
+  {
+    no: 'VS2603003',
+    source: 'Self-Created',
+    totalSubmittedAmount: 15500,
+    currency: 'PHP',
+    statementType: 'Standard',
+    waybillCount: 1,
+    invoiceNo: '—',
+    status: 'Canceled',
+    createdAt: '2026-03-10 16:45',
   },
 ];
 
-const STATUS_TAG: Record<Status, { cls: string; label: string }> = {
-  'Awaiting Comparison': { cls: 'tag-under-review', label: 'Processing' },
-  'Awaiting Re-bill':    { cls: 'tag-rejected',     label: 'Action Required' },
-  'Pending Payment':     { cls: 'tag-partial',       label: 'Processing' },
-  'Paid':                { cls: 'tag-approved',      label: 'Paid' },
+const STATUS_STYLE: Record<Status, React.CSSProperties> = {
+  'Draft':                { background: '#f5f5f5',  color: '#595959', border: '1px solid #d9d9d9' },
+  'Awaiting Comparison':  { background: '#f0f5ff',  color: '#2f54eb', border: '1px solid #adc6ff' },
+  'Awaiting Re-bill':     { background: '#fff1f0',  color: '#cf1322', border: '1px solid #ffa39e' },
+  'Pending Payment':      { background: '#e6f4ff',  color: '#0958d9', border: '1px solid #91caff' },
+  'Partially Payment':    { background: '#fffbe6',  color: '#d48806', border: '1px solid #ffe58f' },
+  'Paid':                 { background: '#f6ffed',  color: '#389e0d', border: '1px solid #b7eb8f' },
+  'Written Off':          { background: '#f5f5f5',  color: '#595959', border: '1px solid #d9d9d9' },
+  'Canceled':             { background: '#fff1f0',  color: '#cf1322', border: '1px solid #ffa39e' },
 };
 
-function StatusTag({ s }: { s: Status }) {
-  const { cls, label } = STATUS_TAG[s];
-  return <span className={`tag ${cls}`}>{label}</span>;
-}
+const BASE_BADGE: React.CSSProperties = {
+  borderRadius: 4,
+  padding: '2px 8px',
+  fontSize: 12,
+  whiteSpace: 'nowrap',
+  display: 'inline-block',
+};
+
+const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
+  'Self-Created': { background: '#f5f5f5',  color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
+  'TMS-Synced':   { background: '#f0f5ff',  color: '#2f54eb', border: '1px solid #adc6ff', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
+};
+
+const TYPE_STYLE: Record<StatementType, React.CSSProperties> = {
+  'Standard':   { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
+  'Standalone': { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
+};
+
+const STATUS_OPTIONS: Status[] = [
+  'Draft', 'Awaiting Comparison', 'Awaiting Re-bill', 'Pending Payment',
+  'Partially Payment', 'Paid', 'Written Off', 'Canceled',
+];
 
 function StatementList({ onOpenDetail, onEdit }: Props) {
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [keyword, setKeyword] = useState('');
+  const [filterStatementNo, setFilterStatementNo] = useState('');
+  const [filterSource, setFilterSource] = useState('');
+  const [filterInvoiceNo, setFilterInvoiceNo] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterType, setFilterType] = useState('');
 
   const filtered = SAMPLE.filter(r => {
-    const matchStatus = statusFilter === 'all' || r.status === statusFilter;
-    const matchKeyword = !keyword || r.no.includes(keyword) || r.invoiceNo.includes(keyword);
-    return matchStatus && matchKeyword;
+    if (filterStatementNo && !r.no.toLowerCase().includes(filterStatementNo.toLowerCase())) return false;
+    if (filterSource && r.source !== filterSource) return false;
+    if (filterInvoiceNo && !r.invoiceNo.toLowerCase().includes(filterInvoiceNo.toLowerCase())) return false;
+    if (filterStatus && r.status !== filterStatus) return false;
+    if (filterType && r.statementType !== filterType) return false;
+    return true;
   });
 
-  const awaitingCount = SAMPLE.filter(r => r.status === 'Awaiting Comparison').length;
-  const rebillCount = SAMPLE.filter(r => r.status === 'Awaiting Re-bill').length;
-  const pendingCount = SAMPLE.filter(r => r.status === 'Pending Payment').length;
-  const paidCount = SAMPLE.filter(r => r.status === 'Paid').length;
+  function handleReset() {
+    setFilterStatementNo('');
+    setFilterSource('');
+    setFilterInvoiceNo('');
+    setFilterStatus('');
+    setFilterType('');
+  }
 
   return (
-    <>
-      <div className="vp-kpi-row">
-        <div className="vp-kpi">
-          <div className="vp-kpi-label">Total Statements</div>
-          <div className="vp-kpi-value">{SAMPLE.length}</div>
-        </div>
-        <div className="vp-kpi">
-          <div className="vp-kpi-label">Awaiting Comparison</div>
-          <div className="vp-kpi-value" style={{ color: '#1677ff' }}>{awaitingCount}</div>
-        </div>
-        <div className="vp-kpi">
-          <div className="vp-kpi-label">Awaiting Re-bill</div>
-          <div className="vp-kpi-value red">{rebillCount}</div>
-        </div>
-        <div className="vp-kpi">
-          <div className="vp-kpi-label">Pending Payment</div>
-          <div className="vp-kpi-value orange">{pendingCount}</div>
-        </div>
-        <div className="vp-kpi">
-          <div className="vp-kpi-label">Paid</div>
-          <div className="vp-kpi-value green">{paidCount}</div>
-        </div>
+    <div className="vp-card">
+      <div className="vp-card-title">
+        <div className="section-title">Statement List</div>
       </div>
 
-      {rebillCount > 0 && (
-        <div className="alert alert-danger" style={{ marginBottom: 12 }}>
-          <span>⚠</span>
-          <span>
-            You have <strong>{rebillCount}</strong> statement{rebillCount > 1 ? 's' : ''} rejected by TMS.
-            Please review the rejection reason and resubmit.
-          </span>
-        </div>
-      )}
-
-      <div className="vp-card">
-        <div className="vp-card-title">
-          <div className="section-title">My Statements</div>
-          <div style={{ fontSize: 12, color: '#999' }}>
-            Statements submitted to TMS. Once submitted, TMS will compare amounts and notify you of the result.
-          </div>
-        </div>
-
-        <div className="filter-row">
-          <input
-            className="filter-input"
-            placeholder="Statement No. / Invoice No."
-            value={keyword}
-            onChange={e => setKeyword(e.target.value)}
-          />
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="Awaiting Comparison">Awaiting Comparison</option>
-            <option value="Awaiting Re-bill">Awaiting Re-bill</option>
-            <option value="Pending Payment">Pending Payment</option>
-            <option value="Paid">Paid</option>
-          </select>
-          <button className="btn-default" onClick={() => { setKeyword(''); setStatusFilter('all'); }}>Reset</button>
+      {/* Filter bar */}
+      <div className="filter-row" style={{ flexWrap: 'wrap', gap: '8px 12px', marginBottom: 16 }}>
+        <input
+          className="filter-input"
+          placeholder="Statement Number"
+          value={filterStatementNo}
+          onChange={e => setFilterStatementNo(e.target.value)}
+          style={{ width: 160 }}
+        />
+        <select
+          className="filter-select"
+          value={filterSource}
+          onChange={e => setFilterSource(e.target.value)}
+        >
+          <option value="">Source: All</option>
+          <option value="Self-Created">Self-Created</option>
+          <option value="TMS-Synced">TMS-Synced</option>
+        </select>
+        <input
+          className="filter-input"
+          placeholder="Invoice Number"
+          value={filterInvoiceNo}
+          onChange={e => setFilterInvoiceNo(e.target.value)}
+          style={{ width: 160 }}
+        />
+        <select
+          className="filter-select"
+          value={filterStatus}
+          onChange={e => setFilterStatus(e.target.value)}
+        >
+          <option value="">Statement Status: All</option>
+          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select
+          className="filter-select"
+          value={filterType}
+          onChange={e => setFilterType(e.target.value)}
+        >
+          <option value="">Statement Type: All</option>
+          <option value="Standard">Standard</option>
+          <option value="Standalone">Standalone</option>
+        </select>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button className="btn-default" onClick={handleReset}>Reset</button>
           <button className="btn-primary">Search</button>
         </div>
+      </div>
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Statement No.</th>
-              <th className="num">Total Submitted Amount</th>
-              <th>Waybills</th>
-              <th>Invoice No.</th>
-              <th>Status</th>
-              <th>Created At</th>
-              <th>Release Proof</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(r => {
-              const isRebill = r.status === 'Awaiting Re-bill';
-              return (
-                <tr key={r.no} className={isRebill ? 'rebill-row' : undefined}>
-                  <td>
-                    <button
-                      className="btn-link"
-                      onClick={() => onOpenDetail(r.no, r.status)}
-                    >
-                      {r.no}
-                    </button>
-                  </td>
-                  <td className="num" style={{ fontWeight: 600 }}>
-                    {r.totalSubmittedAmount.toLocaleString()} PHP
-                  </td>
-                  <td style={{ fontSize: 12, color: '#666' }}>{r.waybillCount} waybills</td>
-                  <td style={{ fontSize: 12 }}>{r.invoiceNo}</td>
-                  <td>
-                    <StatusTag s={r.status} />
-                    {isRebill && (
-                      <div
-                        style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 200 }}
-                        title={r.rejectReason}
-                      >
-                        {r.rejectReason && r.rejectReason.length > 60
-                          ? r.rejectReason.slice(0, 60) + '…'
-                          : r.rejectReason}
-                      </div>
-                    )}
-                  </td>
-                  <td>{r.createdAt}</td>
-                  <td>
-                    {r.releaseProof
-                      ? <span style={{ color: '#1677ff', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }}>📄 {r.releaseProof}</span>
-                      : <span style={{ color: '#bbb' }}>—</span>
-                    }
-                  </td>
-                  <td>
-                    <button
-                      className="btn-link"
-                      onClick={() => onOpenDetail(r.no, r.status)}
-                    >
-                      View
-                    </button>
-                    {isRebill && (
-                      <>
-                        {' '}·{' '}
-                        <button
-                          className="btn-link"
-                          style={{ color: '#d46b08' }}
-                          onClick={() => onEdit(r.no, r.status)}
-                        >
-                          Edit & Resubmit
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="empty">
-                  No statements match the current filter.
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Statement No.</th>
+            <th>Source</th>
+            <th style={{ textAlign: 'right' }}>Total Submitted Amount</th>
+            <th>Statement Type</th>
+            <th style={{ textAlign: 'center' }}>Waybills</th>
+            <th>Invoice No.</th>
+            <th>Status</th>
+            <th>Creation Time</th>
+            <th>Operation</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map(r => {
+            const isDraftOrRebill = r.status === 'Draft' || r.status === 'Awaiting Re-bill';
+            return (
+              <tr key={r.no}>
+                <td>
+                  <strong
+                    style={{ color: '#1677ff', cursor: 'pointer' }}
+                    onClick={() => onOpenDetail(r.no, r.status)}
+                  >
+                    {r.no}
+                  </strong>
+                </td>
+                <td><span style={SOURCE_STYLE[r.source]}>{r.source}</span></td>
+                <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 13 }}>
+                  {r.totalSubmittedAmount > 0
+                    ? `${r.currency} ${r.totalSubmittedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                    : <span style={{ color: '#bbb' }}>—</span>
+                  }
+                </td>
+                <td><span style={TYPE_STYLE[r.statementType]}>{r.statementType}</span></td>
+                <td style={{ textAlign: 'center', fontSize: 13, color: '#666' }}>{r.waybillCount}</td>
+                <td style={{ fontSize: 13, color: r.invoiceNo === '—' ? '#bbb' : '#333' }}>{r.invoiceNo}</td>
+                <td>
+                  <span style={{ ...BASE_BADGE, ...STATUS_STYLE[r.status] }}>{r.status}</span>
+                  {r.status === 'Awaiting Re-bill' && r.rejectReason && (
+                    <div style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 220 }} title={r.rejectReason}>
+                      {r.rejectReason.length > 55 ? r.rejectReason.slice(0, 55) + '…' : r.rejectReason}
+                    </div>
+                  )}
+                </td>
+                <td style={{ fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{r.createdAt}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  <button className="btn-link" onClick={() => onOpenDetail(r.no, r.status)}>Details</button>
                 </td>
               </tr>
-            )}
-          </tbody>
-        </table>
+            );
+          })}
+          {filtered.length === 0 && (
+            <tr>
+              <td colSpan={9} className="empty">No statements found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
 
-        <div className="pagination">
+      <div className="pagination" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 12, color: '#666' }}>458 Statement</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button className="page-btn">&lt;</button>
           <button className="page-btn active">1</button>
+          <button className="page-btn">2</button>
+          <button className="page-btn">3</button>
+          <span style={{ fontSize: 12, color: '#999', padding: '0 4px' }}>...</span>
           <button className="page-btn">&gt;</button>
-          <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>
-            Total {filtered.length} · 20/page
-          </span>
+          <button className="page-btn">Last</button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

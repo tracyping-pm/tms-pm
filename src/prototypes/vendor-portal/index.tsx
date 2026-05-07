@@ -422,7 +422,7 @@ const Component = function VendorPortal() {
             status={openedStmtStatus}
             onBack={() => setStatementView('list')}
             onEdit={
-              openedStmtStatus === 'Awaiting Re-bill'
+              openedStmtStatus === 'Draft' || openedStmtStatus === 'Awaiting Re-bill'
                 ? () => handleEditStatement(openedStmtNo, openedStmtStatus)
                 : undefined
             }
