@@ -303,6 +303,26 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
   const [vatRate, setVatRate] = useState('0');
   const [whtRate, setWhtRate] = useState('0');
 
+  // Mutable local lists so Add / Remove / Void actually work
+  const [localWaybills, setLocalWaybills] = useState<WaybillRow[]>(() => data?.waybills ?? []);
+  const [localInvoices, setLocalInvoices] = useState<InvoiceEntry[]>(() => data?.invoices ?? []);
+
+  // Toast
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+  // Add Waybill modal
+  const [showAddWaybill, setShowAddWaybill] = useState(false);
+  const [addWaybillNo, setAddWaybillNo] = useState('');
+
+  // Edit Waybill modal – edit basic amounts inline
+  const [showEditWaybills, setShowEditWaybills] = useState(false);
+  const [editAmounts, setEditAmounts] = useState<Record<string, string>>({});
+
+  // Add Invoice modal
+  const [showAddInvoice, setShowAddInvoice] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState({ no: '', amount: '', date: '' });
+
   if (!data) {
     return (
       <div className="vp-card">
@@ -320,14 +340,14 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
 
   const {
     source, reconciliationPeriod, taxMark, totalAmountPayable, createDate,
-    waybills, claimTickets, invoices, payments, operationLog, rejectReason,
+    claimTickets, payments, operationLog, rejectReason,
   } = data;
 
   // ── Tax settings calculations ──────────────────────────────────────────────
-  const calcBasicAmount     = checkedItems.basicAmount     ? waybills.reduce((s, r) => s + r.basicAmount, 0)     : 0;
-  const calcAdditionalCharge= checkedItems.additionalCharge? waybills.reduce((s, r) => s + r.additionalCharge, 0): 0;
-  const calcExceptionFee    = checkedItems.exceptionFee    ? waybills.reduce((s, r) => s + r.exceptionFee, 0)    : 0;
-  const calcReimbursement   = checkedItems.reimbursement   ? waybills.reduce((s, r) => s + r.reimbursement, 0)   : 0;
+  const calcBasicAmount     = checkedItems.basicAmount     ? localWaybills.reduce((s, r) => s + r.basicAmount, 0)     : 0;
+  const calcAdditionalCharge= checkedItems.additionalCharge? localWaybills.reduce((s, r) => s + r.additionalCharge, 0): 0;
+  const calcExceptionFee    = checkedItems.exceptionFee    ? localWaybills.reduce((s, r) => s + r.exceptionFee, 0)    : 0;
+  const calcReimbursement   = checkedItems.reimbursement   ? localWaybills.reduce((s, r) => s + r.reimbursement, 0)   : 0;
   const calcClaimDeduction  = checkedItems.claimDeduction  ? claimTickets.reduce((s, t) => s + t.claimAmount, 0) : 0;
   const waybillSubtotal     = calcBasicAmount + calcAdditionalCharge + calcExceptionFee + calcReimbursement;
   const vatAmount           = Math.round(waybillSubtotal * Number(vatRate) / 100);
@@ -340,6 +360,117 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
     borderRadius: 6,
     padding: '20px 24px',
     marginBottom: 16,
+  };
+
+  // ── Amount Summary ─────────────────────────────────────────────────────────
+  const renderAmountSummary = () => {
+    const vpBasic      = data.vendorBasicAmount;
+    const vpAdditional = data.vendorAdditionalCharge;
+    const vpException  = data.vendorExceptionFee;
+    const vpWaybillTotal = vpBasic + vpAdditional + vpException;
+
+    const claimTotal  = data.kpiClaim;
+    const kpiClaimAmt = data.kpiClaim;
+
+    const vpVat = data.vat;
+    const vpWht = Math.abs(data.wht);
+    const vpOthersTotal = vpVat - vpWht;
+
+    const vpTotalPayable = vpWaybillTotal + claimTotal + vpOthersTotal;
+
+    const f = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+    const headStyle: React.CSSProperties = {
+      display: 'grid', alignItems: 'center',
+      background: '#fafafa', fontSize: 11, fontWeight: 700, color: '#8c8c8c',
+      textTransform: 'uppercase', borderBottom: '1px solid #efefef',
+    };
+    const g2: React.CSSProperties = { gridTemplateColumns: 'minmax(110px, 1.5fr) 1fr' };
+    const cp: React.CSSProperties = { padding: '7px 8px' };
+    const nc: React.CSSProperties = { ...cp, textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' };
+    const strongBg: React.CSSProperties = { background: '#f9fbf8', fontWeight: 700 };
+    const rowBase: React.CSSProperties = { display: 'grid', alignItems: 'center', borderBottom: '1px solid #f8f8f8', fontSize: 13 };
+
+    const Row = ({ label, amount, strong = false }: { label: string; amount: number; strong?: boolean }) => (
+      <div style={{ ...rowBase, ...g2, ...(strong ? strongBg : {}) }}>
+        <span style={{ ...cp, fontWeight: strong ? 700 : 400 }}>{label}</span>
+        <span style={nc}>{f(amount)}</span>
+      </div>
+    );
+
+    const colStyle = (last = false): React.CSSProperties => ({
+      flex: 1,
+      borderRight: last ? 'none' : '1px solid #efefef',
+      padding: '0 16px 14px',
+    });
+    const colTitle: React.CSSProperties = {
+      fontSize: 11, fontWeight: 700, color: '#8c8c8c',
+      textTransform: 'uppercase', letterSpacing: '0.4px',
+      padding: '10px 0 8px',
+    };
+    const innerTable: React.CSSProperties = {
+      border: '1px solid #efefef', borderRadius: 4, overflow: 'hidden',
+    };
+    const head2 = (
+      <div style={{ ...headStyle, ...g2 }}>
+        <span style={cp}>Item</span>
+        <span style={nc}>Amount</span>
+      </div>
+    );
+
+    return (
+      <div style={sectionStyle}>
+        <SectionTitle>Amount Summary</SectionTitle>
+
+        {/* Total header */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#fafafa', border: '1px solid #efefef', borderRadius: 6, padding: '10px 16px', marginBottom: 12 }}>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>Total Amount Payable</span>
+          <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 700, color: '#00b96b' }}>{f(vpTotalPayable)}</span>
+        </div>
+
+        {/* Three columns */}
+        <div style={{ display: 'flex', border: '1px solid #efefef', borderRadius: 6, overflow: 'hidden' }}>
+          {/* Waybill Contract Cost */}
+          <div style={colStyle()}>
+            <div style={colTitle}>Waybill Contract Cost</div>
+            <div style={innerTable}>
+              {head2}
+              <Row label="Waybill Contract Cost" amount={vpWaybillTotal} strong />
+              <div style={{ borderTop: '1px solid #f5f5f5' }}>
+                <Row label="Basic Amount"      amount={vpBasic} />
+                <Row label="Additional Charge" amount={vpAdditional} />
+                <Row label="Exception Fee"     amount={vpException} />
+              </div>
+            </div>
+          </div>
+
+          {/* Claim */}
+          <div style={colStyle()}>
+            <div style={colTitle}>Claim</div>
+            <div style={innerTable}>
+              {head2}
+              <Row label="Claim" amount={claimTotal} strong />
+              <div style={{ borderTop: '1px solid #f5f5f5' }}>
+                <Row label="KPI Claim" amount={kpiClaimAmt} />
+              </div>
+            </div>
+          </div>
+
+          {/* Others */}
+          <div style={colStyle(true)}>
+            <div style={colTitle}>Others</div>
+            <div style={innerTable}>
+              {head2}
+              <Row label="Others" amount={vpOthersTotal} strong />
+              <div style={{ borderTop: '1px solid #f5f5f5' }}>
+                <Row label="VAT" amount={vpVat} />
+                <Row label="WHT" amount={vpWht} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -356,8 +487,17 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
         <span style={{ ...BADGE_BASE, ...STATUS_BADGE[status] }}>{status}</span>
         <span style={{ ...BADGE_BASE, ...SOURCE_BADGE[source] }}>{source}</span>
         <div style={{ flex: 1 }} />
-        {(status === 'Draft' || status === 'Awaiting Re-bill') && (
-          <button className="btn-primary" onClick={onEdit}>Submit</button>
+        {isEditable && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-default" onClick={() => showToast('Draft saved successfully.')}>Save as Draft</button>
+            <button
+              className="btn-primary"
+              style={{ background: '#52c41a', borderColor: '#52c41a' }}
+              onClick={() => onSubmitToTMS?.(no)}
+            >
+              Submit to TMS
+            </button>
+          </div>
         )}
       </div>
 
@@ -404,7 +544,7 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: activeTab === 'waybills' ? 600 : 400, color: activeTab === 'waybills' ? '#333' : '#666', padding: 0 }}
               onClick={() => setActiveTab('waybills')}
             >
-              Waybill List ({waybills.length})
+              Waybill List ({localWaybills.length})
             </button>
             <button
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: activeTab === 'tickets' ? 600 : 400, color: activeTab === 'tickets' ? '#333' : '#666', padding: 0 }}
@@ -416,8 +556,13 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
           <div style={{ flex: 1 }} />
           {isEditable && (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-default">Add Waybill</button>
-              <button className="btn-default">Edit Waybill</button>
+              <button className="btn-default" onClick={() => { setAddWaybillNo(''); setShowAddWaybill(true); }}>Add Waybill</button>
+              <button className="btn-default" onClick={() => {
+                const init: Record<string, string> = {};
+                localWaybills.forEach(w => { init[w.no] = String(w.basicAmount); });
+                setEditAmounts(init);
+                setShowEditWaybills(true);
+              }}>Edit Waybill</button>
             </div>
           )}
         </div>
@@ -428,12 +573,12 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
             <thead>
               <tr>
                 <th>Waybill</th>
-                <th style={{ textAlign: 'right' }}>Waybill Amount</th>
-                <th style={{ textAlign: 'right' }}>Basic Amount</th>
-                <th style={{ textAlign: 'right' }}>Prepaid Amount</th>
-                <th style={{ textAlign: 'right' }}>Additional Charge</th>
-                <th style={{ textAlign: 'right' }}>Exception Fee</th>
-                <th style={{ textAlign: 'right' }}>Reimbursement</th>
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Waybill Amount</th>}
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Basic Amount</th>}
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Prepaid Amount</th>}
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Additional Charge</th>}
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Exception Fee</th>}
+                {source !== 'TMS-Synced' && <th style={{ textAlign: 'right' }}>Reimbursement</th>}
                 <th>Position Time</th>
                 <th>Unloading Time</th>
                 <th>Truck Type</th>
@@ -443,15 +588,15 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
               </tr>
             </thead>
             <tbody>
-              {waybills.map(r => (
+              {localWaybills.map(r => (
                 <tr key={r.no}>
                   <td style={{ fontWeight: 500 }}>{r.no}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.waybillAmount)}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.basicAmount)}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.prepaidAmount)}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.additionalCharge)}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.exceptionFee)}</td>
-                  <td style={{ textAlign: 'right' }}>{NUM_FMT(r.reimbursement)}</td>
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.waybillAmount)}</td>}
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.basicAmount)}</td>}
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.prepaidAmount)}</td>}
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.additionalCharge)}</td>}
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.exceptionFee)}</td>}
+                  {source !== 'TMS-Synced' && <td style={{ textAlign: 'right' }}>{NUM_FMT(r.reimbursement)}</td>}
                   <td>{r.positionTime}</td>
                   <td>{r.unloadingTime}</td>
                   <td>{r.truckType}</td>
@@ -459,7 +604,10 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
                   <td>{r.destination || <span style={{ color: '#bbb' }}>—</span>}</td>
                   {hasRemove && (
                     <td>
-                      <button className="btn-link" style={{ color: '#cf1322' }}>Remove</button>
+                      <button className="btn-link" style={{ color: '#cf1322' }}
+                        onClick={() => { setLocalWaybills(prev => prev.filter(w => w.no !== r.no)); showToast(`Waybill ${r.no} removed.`); }}>
+                        Remove
+                      </button>
                     </td>
                   )}
                 </tr>
@@ -566,54 +714,52 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
       {/* ── Total Summary Panel (editable only) ── */}
       {isEditable && (
         <div style={{
-          background: 'linear-gradient(160deg, #f6ffed 0%, #d9f7be 100%)',
+          background: 'linear-gradient(135deg, #f6ffed 0%, #e8f9d4 100%)',
           border: '1px solid #b7eb8f', borderRadius: 8,
-          padding: '20px 24px', marginBottom: 16,
+          padding: '12px 20px', marginBottom: 16,
+          display: 'flex', alignItems: 'center', gap: 20,
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-            {/* Left: amounts */}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, color: '#52c41a', marginBottom: 4 }}>Total Amount Payable</div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: '#52c41a', marginBottom: 16 }}>
-                {calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 0 })} PHP
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13, maxWidth: 360 }}>
-                {[
-                  { label: 'Basic Amount',       val: calcBasicAmount },
-                  { label: 'Additional Charge',   val: calcAdditionalCharge },
-                  { label: 'Exception Fee',        val: calcExceptionFee },
-                  { label: 'Reimbursement',        val: calcReimbursement },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#5a5a5a' }}>{item.label}</span>
-                    <span style={{ color: '#5a5a5a' }}>{item.val.toLocaleString()}</span>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #b7eb8f', paddingTop: 6, marginTop: 2, fontWeight: 700 }}>
-                  <span>Waybill Subtotal</span>
-                  <span>{waybillSubtotal.toLocaleString()}</span>
-                </div>
-              </div>
+          {/* Total */}
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ fontSize: 11, color: '#52c41a', fontWeight: 600, marginBottom: 2 }}>Total Amount Payable</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#389e0d', whiteSpace: 'nowrap' }}>
+              {calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              <span style={{ fontSize: 12, fontWeight: 500, marginLeft: 4, color: '#52c41a' }}>PHP</span>
             </div>
-            {/* Right: actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, paddingTop: 4 }}>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn-default">Save as Draft</button>
-                <button
-                  className="btn-primary"
-                  style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                  onClick={() => onSubmitToTMS?.(no)}
-                >
-                  Submit to TMS
-                </button>
+          </div>
+
+          <div style={{ width: 1, height: 36, background: '#b7eb8f', flexShrink: 0 }} />
+
+          {/* Breakdown */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 18px', fontSize: 12 }}>
+            {[
+              { label: 'Basic',         val: calcBasicAmount },
+              { label: 'Additional',    val: calcAdditionalCharge },
+              { label: 'Exception',     val: calcExceptionFee },
+              { label: 'Reimbursement', val: calcReimbursement },
+              { label: 'Subtotal',      val: waybillSubtotal, bold: true },
+              { label: 'Claim',         val: calcClaimDeduction, neg: true },
+              { label: 'VAT',           val: vatAmount },
+              { label: 'WHT',           val: whtAmount, neg: true },
+            ].map(item => (
+              <div key={item.label} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ color: '#6b7280' }}>{item.label}</span>
+                <span style={{
+                  fontWeight: item.bold ? 700 : 500,
+                  color: item.neg && item.val > 0 ? '#cf1322' : '#333',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {item.neg && item.val > 0 ? '−' : ''}
+                  {item.val.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </span>
               </div>
-              <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-                {waybills.length} waybill{waybills.length !== 1 ? 's' : ''} · {claimTickets.length} claim(s) · {(invoices || []).length} invoice(s)
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
+
+      {/* ── Amount Summary ── */}
+      {status !== 'Draft' && status !== 'Awaiting Re-bill' && renderAmountSummary()}
 
       {/* ── Invoice ── */}
       {showInvoice && (
@@ -624,7 +770,7 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
               <span style={{ fontWeight: 600, fontSize: 15 }}>Invoice</span>
             </div>
             <div style={{ flex: 1 }} />
-            <button className="btn-default">Add Invoice</button>
+            <button className="btn-default" onClick={() => { setInvoiceForm({ no: '', amount: '', date: '' }); setShowAddInvoice(true); }}>Add Invoice</button>
           </div>
           <table className="data-table" style={{ fontSize: 13 }}>
             <thead>
@@ -637,7 +783,7 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
               </tr>
             </thead>
             <tbody>
-              {(invoices || []).map((inv, i) => (
+              {localInvoices.map((inv, i) => (
                 <tr key={i}>
                   <td style={{ color: '#1677ff' }}>{inv.invoiceNo}</td>
                   <td style={{ textAlign: 'right', fontWeight: 600 }}>{NUM_FMT(inv.invoiceAmount)}</td>
@@ -648,11 +794,14 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
                       : <span style={{ color: '#bbb' }}>—</span>}
                   </td>
                   <td>
-                    <button className="btn-link" style={{ color: '#cf1322' }}>Void</button>
+                    <button className="btn-link" style={{ color: '#cf1322' }}
+                      onClick={() => { setLocalInvoices(prev => prev.filter((_, j) => j !== i)); showToast(`Invoice ${inv.invoiceNo} voided.`); }}>
+                      Void
+                    </button>
                   </td>
                 </tr>
               ))}
-              {(invoices || []).length === 0 && (
+              {localInvoices.length === 0 && (
                 <tr><td colSpan={5} className="empty">No invoices.</td></tr>
               )}
             </tbody>
@@ -725,6 +874,153 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
               <div className="empty">No operation records.</div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Add Waybill modal ── */}
+      {showAddWaybill && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 380, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 18 }}>Add Waybill</div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Waybill No. <span style={{ color: '#ff4d4f' }}>*</span></div>
+              <input
+                className="filter-input"
+                style={{ width: '100%', boxSizing: 'border-box' }}
+                placeholder="e.g. WB2604099"
+                value={addWaybillNo}
+                onChange={e => setAddWaybillNo(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn-default" onClick={() => setShowAddWaybill(false)}>Cancel</button>
+              <button
+                className="btn-primary"
+                disabled={!addWaybillNo.trim()}
+                style={{ opacity: addWaybillNo.trim() ? 1 : 0.5 }}
+                onClick={() => {
+                  const newWaybill: WaybillRow = {
+                    no: addWaybillNo.trim(), waybillAmount: 0, basicAmount: 0,
+                    prepaidAmount: 0, additionalCharge: 0, exceptionFee: 0, reimbursement: 0,
+                    positionTime: '—', unloadingTime: '—', truckType: '—', origin: '', destination: '',
+                  };
+                  setLocalWaybills(prev => [...prev, newWaybill]);
+                  setShowAddWaybill(false);
+                  showToast(`Waybill ${addWaybillNo.trim()} added.`);
+                }}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Waybill modal ── */}
+      {showEditWaybills && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 520, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 18 }}>Edit Waybill Amounts</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
+                  <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600 }}>Waybill</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 600 }}>Basic Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {localWaybills.map(w => (
+                  <tr key={w.no} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: 500 }}>{w.no}</td>
+                    <td style={{ padding: '6px 10px', textAlign: 'right' }}>
+                      <input
+                        type="number"
+                        style={{ width: 120, textAlign: 'right', border: '1px solid #d9d9d9', borderRadius: 4, padding: '4px 8px', fontSize: 13 }}
+                        value={editAmounts[w.no] ?? String(w.basicAmount)}
+                        onChange={e => setEditAmounts(prev => ({ ...prev, [w.no]: e.target.value }))}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
+              <button className="btn-default" onClick={() => setShowEditWaybills(false)}>Cancel</button>
+              <button className="btn-primary" onClick={() => {
+                setLocalWaybills(prev => prev.map(w => ({
+                  ...w,
+                  basicAmount: Number(editAmounts[w.no] ?? w.basicAmount) || w.basicAmount,
+                  waybillAmount: Number(editAmounts[w.no] ?? w.basicAmount) || w.basicAmount,
+                })));
+                setShowEditWaybills(false);
+                showToast('Waybill amounts updated.');
+              }}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Invoice modal ── */}
+      {showAddInvoice && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 18 }}>Add Invoice</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {[
+                { label: 'Invoice No.', key: 'no', placeholder: 'e.g. INV-2026-00301', type: 'text' },
+                { label: 'Invoice Amount', key: 'amount', placeholder: 'e.g. 44500', type: 'number' },
+                { label: 'Invoice Date', key: 'date', placeholder: '', type: 'date' },
+              ].map(({ label, key, placeholder, type }) => (
+                <div key={key}>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>{label} <span style={{ color: '#ff4d4f' }}>*</span></div>
+                  <input
+                    type={type}
+                    className="filter-input"
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                    placeholder={placeholder}
+                    value={(invoiceForm as Record<string, string>)[key]}
+                    onChange={e => setInvoiceForm(prev => ({ ...prev, [key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn-default" onClick={() => setShowAddInvoice(false)}>Cancel</button>
+              <button
+                className="btn-primary"
+                disabled={!invoiceForm.no.trim() || !invoiceForm.amount || !invoiceForm.date}
+                style={{ opacity: invoiceForm.no.trim() && invoiceForm.amount && invoiceForm.date ? 1 : 0.5 }}
+                onClick={() => {
+                  const newInv: InvoiceEntry = {
+                    invoiceNo: invoiceForm.no.trim(),
+                    invoiceAmount: Number(invoiceForm.amount) || 0,
+                    invoiceDate: invoiceForm.date,
+                  };
+                  setLocalInvoices(prev => [...prev, newInv]);
+                  setShowAddInvoice(false);
+                  showToast(`Invoice ${newInv.invoiceNo} added.`);
+                }}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, background: '#fff',
+          border: '1px solid #d9d9d9', borderRadius: 8, padding: '10px 16px',
+          fontSize: 13, color: '#333', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 2000,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ color: '#52c41a', fontSize: 16 }}>✓</span>
+          {toast}
         </div>
       )}
     </div>
