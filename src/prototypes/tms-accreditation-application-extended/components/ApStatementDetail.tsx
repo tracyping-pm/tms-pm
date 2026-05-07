@@ -711,6 +711,16 @@ function ApStatementDetail({ statementId, onBack }: Props) {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [apAppNo, setApAppNo] = useState('');
   const [apAppAmount, setApAppAmount] = useState('');
+
+  // Create AP Application form state
+  const [apPaymentDefinition, setApPaymentDefinition] = useState('');
+  const [apEntity, setApEntity] = useState('');
+  const [apBusinessUnit, setApBusinessUnit] = useState('');
+  const [apDateOfNeeded, setApDateOfNeeded] = useState('');
+  const [apPaymentIdL2, setApPaymentIdL2] = useState('');
+  const [apBankName, setApBankName] = useState('');
+  const [apPayeeAccount, setApPayeeAccount] = useState('');
+  const [apSupportingDocs, setApSupportingDocs] = useState<string[]>(['invoice_proof.png']);
   const [actionDone, setActionDone] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -1836,40 +1846,272 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         </div>
       )}
 
-      {/* Confirm & Create Vendor Payment dialog */}
-      {showConfirmPaymentDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 520, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Confirm & Create Vendor Payment</div>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 16 }}>
-              Review the payment details below. An AP Application will be created and pushed to the HR system for payment processing.
-            </div>
-            <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
-                <div><span style={{ color: '#888' }}>Vendor:</span> <strong>{data.vendor}</strong></div>
-                <div><span style={{ color: '#888' }}>Currency:</span> <strong>{data.currency}</strong></div>
-                <div><span style={{ color: '#888' }}>Waybills:</span> <strong>{data.waybills.length}</strong></div>
-                <div><span style={{ color: '#888' }}>Claim Tickets:</span> <strong>{claimTickets.length}</strong></div>
+      {/* Confirm & Create Vendor Payment — full HR form */}
+      {showConfirmPaymentDialog && (() => {
+        // Build payment items from waybill data
+        const paymentItems = (() => {
+          const buckets: Record<string, number> = {};
+          data.waybills.forEach(w => w.items.forEach(item => {
+            const bucket = item.name;
+            buckets[bucket] = (buckets[bucket] || 0) + item.vendorAmount;
+          }));
+          return Object.entries(buckets).map(([type, amount]) => ({
+            type, amount,
+            vatRate: '7%', whtRate: '2%',
+            vat: Math.round(amount * 0.07), wht: Math.round(amount * 0.02),
+            invoiceNo: invoices[0]?.no || '',
+          }));
+        })();
+
+        // Deduction items from claim tickets
+        const deductionItems = claimTickets.map(t => ({
+          type: t.claimType,
+          amount: t.claimAmount,
+          vatRate: '7%', whtRate: '2%',
+          vat: Math.round(t.claimAmount * 0.07), wht: Math.round(t.claimAmount * 0.02),
+          refNo: t.ticketNo,
+        }));
+
+        const totalPayment = paymentItems.reduce((s, i) => s + i.amount, 0)
+          - deductionItems.reduce((s, i) => s + i.amount, 0);
+
+        const fieldLabel = (label: string, required = true) => (
+          <div style={{ fontSize: 12, color: '#777', marginBottom: 8 }}>
+            {required && <span style={{ color: '#ff4d4f', marginRight: 2 }}>*</span>}{label}
+          </div>
+        );
+
+        const selectStyle: React.CSSProperties = {
+          width: '100%', padding: '9px 32px 9px 12px', border: '1px solid #d9d9d9', borderRadius: 6,
+          fontSize: 13, background: '#fff', appearance: 'none',
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E\")",
+          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+          boxSizing: 'border-box', height: 38,
+        };
+
+        const inputStyle: React.CSSProperties = {
+          width: '100%', padding: '9px 12px', border: '1px solid #d9d9d9', borderRadius: 6,
+          fontSize: 13, boxSizing: 'border-box', height: 38,
+        };
+
+        const readonlyStyle: React.CSSProperties = {
+          ...inputStyle, background: '#fafafa', color: '#555',
+        };
+
+        const sectionTitle = (title: string) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 18px' }}>
+            <div style={{ width: 4, height: 18, background: '#00b96b', borderRadius: 2, flexShrink: 0 }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#222', letterSpacing: 0.1 }}>{title}</span>
+          </div>
+        );
+
+        const itemTableHeader = (cols: string[]) => (
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.3fr 2fr', gap: '0 20px', padding: '0 0 8px', borderBottom: '1px solid #f0f0f0', marginBottom: 12 }}>
+            {cols.map(h => <div key={h} style={{ fontSize: 12, color: '#999', fontWeight: 600 }}>{h}</div>)}
+          </div>
+        );
+
+        const itemTableRow = (cells: React.ReactNode[], key: number) => (
+          <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.3fr 2fr', gap: '0 20px', marginBottom: 12, alignItems: 'center' }}>
+            {cells}
+          </div>
+        );
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, overflowY: 'auto', padding: '40px 20px' }}>
+            <div style={{ background: '#fff', borderRadius: 12, width: '90vw', maxWidth: 1200, boxShadow: '0 12px 48px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+
+              {/* Modal header */}
+              <div style={{ padding: '18px 32px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafafa' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 4, height: 20, background: '#00b96b', borderRadius: 2 }} />
+                  <span style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Create AP Application</span>
+                </div>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', padding: 6, borderRadius: 4, lineHeight: 1 }} onClick={() => setShowConfirmPaymentDialog(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ padding: '8px 32px 32px' }}>
+
+                {/* Row 1: 4 fields */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 28 }}>
+                  <div>
+                    {fieldLabel('Responsible Department')}
+                    <select style={selectStyle} defaultValue="ap">
+                      <option value="ap">Account Payable Department</option>
+                    </select>
+                  </div>
+                  <div>
+                    {fieldLabel('Payment Definition')}
+                    <select style={selectStyle} value={apPaymentDefinition} onChange={e => setApPaymentDefinition(e.target.value)}>
+                      <option value=""></option>
+                      <option value="vendor">Vendor Payment</option>
+                      <option value="freight">Freight Settlement</option>
+                    </select>
+                  </div>
+                  <div>
+                    {fieldLabel('Entity')}
+                    <select style={selectStyle} value={apEntity} onChange={e => setApEntity(e.target.value)}>
+                      <option value=""></option>
+                      <option value="ph">Inteluck Philippines</option>
+                      <option value="th">Inteluck Thailand</option>
+                      <option value="sg">Inteluck Singapore</option>
+                    </select>
+                  </div>
+                  <div>
+                    {fieldLabel('Business Unit')}
+                    <select style={selectStyle} value={apBusinessUnit} onChange={e => setApBusinessUnit(e.target.value)}>
+                      <option value=""></option>
+                      <option value="logistics">Logistics</option>
+                      <option value="trucking">Trucking</option>
+                      <option value="freight">Freight</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 2: 4 fields */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 20 }}>
+                  <div>
+                    {fieldLabel('Date of Needed')}
+                    <select style={selectStyle} value={apDateOfNeeded} onChange={e => setApDateOfNeeded(e.target.value)}>
+                      <option value=""></option>
+                      <option value="2026-05-07">2026-05-07</option>
+                      <option value="2026-05-14">2026-05-14</option>
+                      <option value="2026-05-21">2026-05-21</option>
+                    </select>
+                  </div>
+                  <div>
+                    {fieldLabel('Payment Category', false)}
+                    <div style={{ height: 38, display: 'flex', alignItems: 'center', fontSize: 13, fontWeight: 500, color: '#333' }}>Vendor Payment</div>
+                  </div>
+                  <div>
+                    {fieldLabel('Payment Identification L1')}
+                    <select style={selectStyle} defaultValue="logistics">
+                      <option value="logistics">Logistics &amp; Trucking</option>
+                      <option value="freight">Freight Forwarding</option>
+                    </select>
+                  </div>
+                  <div>
+                    {fieldLabel('Payment Identification L2')}
+                    <select style={selectStyle} value={apPaymentIdL2} onChange={e => setApPaymentIdL2(e.target.value)}>
+                      <option value=""></option>
+                      <option value="land">Land Transport</option>
+                      <option value="sea">Sea Freight</option>
+                      <option value="air">Air Freight</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Amount Information */}
+                {sectionTitle('Amount Information')}
+                <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: '20px 24px' }}>
+
+                  {/* Currency + Payment Amount summary */}
+                  <div style={{ display: 'flex', gap: 40, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
+                    <span style={{ color: '#888' }}>Currency &nbsp;<strong style={{ color: '#333', fontSize: 14 }}>{data.currency}</strong></span>
+                    <span style={{ color: '#888' }}>Payment Amount &nbsp;<strong style={{ color: '#00b96b', fontSize: 16 }}>{fmt(totalPayment)}</strong></span>
+                  </div>
+
+                  {/* Payment Items */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#444', marginBottom: 14 }}>Payment Item</div>
+                    {itemTableHeader(['* Payment Item Type', '* Net Amount', 'VAT Rate & WHT Rate', 'VAT & WHT', 'Invoice Number'])}
+                    {paymentItems.map((item, i) => itemTableRow([
+                      <input key="type" style={readonlyStyle} readOnly value={item.type} />,
+                      <input key="amt" style={readonlyStyle} readOnly value={fmt(item.amount)} />,
+                      <input key="rate" style={readonlyStyle} readOnly value={`${item.vatRate}, ${item.whtRate}`} />,
+                      <span key="vw" style={{ fontSize: 13, color: '#555' }}>{item.vat.toLocaleString()}, {item.wht.toLocaleString()}</span>,
+                      <input key="inv" style={inputStyle} placeholder="Invoice No." defaultValue={i === 0 ? (invoices[0]?.no || '') : ''} />,
+                    ], i))}
+                  </div>
+
+                  {/* Deduction Items */}
+                  {deductionItems.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#444', marginBottom: 14 }}>Deduction Item</div>
+                      {itemTableHeader(['* Deduction Item Type', '* Net Amount', 'VAT Rate & WHT Rate', 'VAT & WHT', 'Reference Number'])}
+                      {deductionItems.map((item, i) => itemTableRow([
+                        <input key="type" style={readonlyStyle} readOnly value={item.type} />,
+                        <input key="amt" style={readonlyStyle} readOnly value={fmt(item.amount)} />,
+                        <input key="rate" style={readonlyStyle} readOnly value={`${item.vatRate}, ${item.whtRate}`} />,
+                        <span key="vw" style={{ fontSize: 13, color: '#555' }}>{item.vat.toLocaleString()}, {item.wht.toLocaleString()}</span>,
+                        <input key="ref" style={readonlyStyle} readOnly value={item.refNo} />,
+                      ], i))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Payee Information */}
+                {sectionTitle('Payee Information')}
+                <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: '20px 24px' }}>
+                  <div style={{ display: 'flex', gap: 48, marginBottom: 20, fontSize: 13 }}>
+                    <span><span style={{ color: '#888' }}>Payee Type</span> &nbsp;<strong>External Vendor</strong></span>
+                    <span><span style={{ color: '#888' }}>Payee Name</span> &nbsp;<strong>{data.vendor}</strong></span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 20 }}>
+                    <div>
+                      {fieldLabel('Bank Name')}
+                      <select style={selectStyle} value={apBankName} onChange={e => setApBankName(e.target.value)}>
+                        <option value=""></option>
+                        <option value="bdo">BDO Unibank</option>
+                        <option value="bpi">Bank of the Philippine Islands</option>
+                        <option value="metrobank">Metrobank</option>
+                        <option value="scb">Standard Chartered</option>
+                      </select>
+                    </div>
+                    <div>
+                      {fieldLabel('Payee Account')}
+                      <select style={selectStyle} value={apPayeeAccount} onChange={e => setApPayeeAccount(e.target.value)}>
+                        <option value=""></option>
+                        <option value="1">**** 4521</option>
+                        <option value="2">**** 8834</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Supporting Documents */}
+                {sectionTitle('Supporting Documents')}
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                  {apSupportingDocs.map((doc, i) => (
+                    <div key={i} style={{ position: 'relative' }}>
+                      <div style={{
+                        width: 96, height: 96, border: '1px solid #e8e8e8', borderRadius: 8,
+                        background: '#fafafa', display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: 6,
+                        fontSize: 11, color: '#999',
+                      }}>
+                        <FileText size={28} color="#bbb" />
+                        <span style={{ maxWidth: 84, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', padding: '0 4px' }}>{doc}</span>
+                      </div>
+                      <button
+                        onClick={() => setApSupportingDocs(prev => prev.filter((_, j) => j !== i))}
+                        style={{ position: 'absolute', top: -7, right: -7, width: 20, height: 20, borderRadius: '50%', background: '#ff4d4f', border: '2px solid #fff', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                      >×</button>
+                    </div>
+                  ))}
+                  <div
+                    onClick={() => setApSupportingDocs(prev => [...prev, `document_${prev.length + 1}.pdf`])}
+                    style={{
+                      width: 96, height: 96, border: '1px dashed #d9d9d9', borderRadius: 8,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: 32, color: '#ccc',
+                      transition: 'border-color 0.2s',
+                    }}
+                  >+</div>
+                </div>
+
+                {/* Footer */}
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 32, paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
+                  <button className="btn-default" style={{ minWidth: 100, height: 36 }} onClick={() => setShowConfirmPaymentDialog(false)}>Cancel</button>
+                  <button className="btn-primary" style={{ minWidth: 100, height: 36 }} onClick={handleConfirmPayment}>Confirm</button>
+                </div>
               </div>
             </div>
-            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
-              Payment Amount <span style={{ color: '#888', fontWeight: 400 }}>(editable)</span>
-            </label>
-            <input
-              type="text"
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 15, fontWeight: 700, boxSizing: 'border-box' }}
-              value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)}
-            />
-            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-              Calculated total: {data.currency} {fmt(totalAmountPayable)}. You may adjust the payment amount if needed.
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-              <button className="btn-default" onClick={() => setShowConfirmPaymentDialog(false)}>Cancel</button>
-              <button className="btn-primary" onClick={handleConfirmPayment}>Create Vendor Payment</button>
-            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Add AP Application dialog */}
       {showAddApAppDialog && (
