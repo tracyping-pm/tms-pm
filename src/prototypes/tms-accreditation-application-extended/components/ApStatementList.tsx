@@ -6,12 +6,14 @@ interface Props {
 }
 
 type Status =
-  | 'Awaiting Confirmation'
+  | 'Payment Preparation'
   | 'Awaiting Comparison'
+  | 'Awaiting Re-bill'
   | 'Pending Payment'
   | 'Partially Payment'
   | 'Paid'
-  | 'Awaiting Rebill';
+  | 'Written Off'
+  | 'Canceled';
 
 type Source = 'Vendor Portal' | 'Internal';
 
@@ -32,15 +34,15 @@ interface Row {
 const SAMPLE: Row[] = [
   {
     id: 'AP2026040007',
-    source: 'Vendor Portal',
+    source: 'Internal',
     vendor: 'Laguna Logistics Corp.',
-    waybillCount: 4,
+    waybillCount: 3,
     currency: 'PHP',
-    totalAmount: 47200,
+    totalAmount: 37200,
     collectedAmount: 0,
-    status: 'Awaiting Confirmation',
+    status: 'Payment Preparation',
     createdAt: '2026-04-25',
-    createdBy: 'Laguna Logistics (VP)',
+    createdBy: 'Zhang Jialei',
   },
   {
     id: 'AP2026040003',
@@ -48,7 +50,7 @@ const SAMPLE: Row[] = [
     vendor: 'Bangkok Express Logistics',
     waybillCount: 6,
     currency: 'THB',
-    totalAmount: 156000,
+    totalAmount: 157000,
     collectedAmount: 0,
     status: 'Awaiting Comparison',
     createdAt: '2026-04-18',
@@ -59,11 +61,11 @@ const SAMPLE: Row[] = [
     id: 'AP2026040004',
     source: 'Vendor Portal',
     vendor: 'Manila Freight Co.',
-    waybillCount: 3,
+    waybillCount: 2,
     currency: 'PHP',
-    totalAmount: 20020,
+    totalAmount: 24020,
     collectedAmount: 0,
-    status: 'Awaiting Rebill',
+    status: 'Awaiting Re-bill',
     createdAt: '2026-04-20',
     createdBy: 'Manila Freight (VP)',
     hasMismatch: true,
@@ -72,7 +74,7 @@ const SAMPLE: Row[] = [
     id: 'AP2026040001',
     source: 'Internal',
     vendor: 'JG Summit Freight',
-    waybillCount: 5,
+    waybillCount: 3,
     currency: 'PHP',
     totalAmount: 53200,
     collectedAmount: 53200,
@@ -86,7 +88,7 @@ const SAMPLE: Row[] = [
     vendor: 'SMC Logistics',
     waybillCount: 7,
     currency: 'PHP',
-    totalAmount: 89000,
+    totalAmount: 99000,
     collectedAmount: 45000,
     status: 'Partially Payment',
     createdAt: '2026-04-22',
@@ -96,9 +98,9 @@ const SAMPLE: Row[] = [
     id: 'AP2026040002',
     source: 'Vendor Portal',
     vendor: 'Cebu Trans Lines',
-    waybillCount: 2,
+    waybillCount: 3,
     currency: 'PHP',
-    totalAmount: 38500,
+    totalAmount: 42000,
     collectedAmount: 0,
     status: 'Awaiting Comparison',
     createdAt: '2026-04-23',
@@ -109,7 +111,7 @@ const SAMPLE: Row[] = [
     id: 'AP2026040006',
     source: 'Internal',
     vendor: 'Coca-Cola Bottlers PH Inc.',
-    waybillCount: 4,
+    waybillCount: 3,
     currency: 'PHP',
     totalAmount: 44500,
     collectedAmount: 0,
@@ -117,15 +119,41 @@ const SAMPLE: Row[] = [
     createdAt: '2026-04-15',
     createdBy: 'Zhang Jialei',
   },
+  {
+    id: 'AP2026040008',
+    source: 'Internal',
+    vendor: 'Pacific Logistics Inc.',
+    waybillCount: 2,
+    currency: 'PHP',
+    totalAmount: 32000,
+    collectedAmount: 18000,
+    status: 'Written Off',
+    createdAt: '2026-04-10',
+    createdBy: 'Zhang Jialei',
+  },
+  {
+    id: 'AP2026040009',
+    source: 'Internal',
+    vendor: 'Metro Transport Corp.',
+    waybillCount: 2,
+    currency: 'PHP',
+    totalAmount: 15500,
+    collectedAmount: 0,
+    status: 'Canceled',
+    createdAt: '2026-04-08',
+    createdBy: 'Zhang Jialei',
+  },
 ];
 
 const STATUS_STYLE: Record<Status, React.CSSProperties> = {
-  'Awaiting Confirmation': { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
+  'Payment Preparation':   { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
   'Awaiting Comparison':   { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' },
+  'Awaiting Re-bill':      { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
   'Pending Payment':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
   'Partially Payment':     { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
   'Paid':                  { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
-  'Awaiting Rebill':       { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+  'Written Off':           { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' },
+  'Canceled':              { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
 };
 
 const BASE_BADGE: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' };
@@ -140,7 +168,7 @@ function fmt(n: number, cur: string) {
 }
 
 const STATUS_OPTIONS: Status[] = [
-  'Awaiting Confirmation', 'Awaiting Comparison', 'Pending Payment', 'Partially Payment', 'Paid', 'Awaiting Rebill',
+  'Payment Preparation', 'Awaiting Comparison', 'Awaiting Re-bill', 'Pending Payment', 'Partially Payment', 'Paid', 'Written Off', 'Canceled',
 ];
 
 function ApStatementList({ onCreateNew, onViewDetail }: Props) {
@@ -156,9 +184,9 @@ function ApStatementList({ onCreateNew, onViewDetail }: Props) {
     return true;
   });
 
-  const awaitingConfirmation = SAMPLE.filter(r => r.status === 'Awaiting Confirmation').length;
+  const paymentPrep = SAMPLE.filter(r => r.status === 'Payment Preparation').length;
   const awaitingComparison = SAMPLE.filter(r => r.status === 'Awaiting Comparison').length;
-  const needAction = awaitingConfirmation + awaitingComparison + SAMPLE.filter(r => r.status === 'Awaiting Rebill').length;
+  const needAction = paymentPrep + awaitingComparison + SAMPLE.filter(r => r.status === 'Awaiting Re-bill').length;
   const vpCount = SAMPLE.filter(r => r.source === 'Vendor Portal').length;
 
   return (
@@ -173,8 +201,8 @@ function ApStatementList({ onCreateNew, onViewDetail }: Props) {
           <div className="tms-kpi-value orange">{needAction}</div>
         </div>
         <div className="tms-kpi">
-          <div className="tms-kpi-label">Awaiting Confirmation</div>
-          <div className="tms-kpi-value blue">{awaitingConfirmation}</div>
+          <div className="tms-kpi-label">Payment Preparation</div>
+          <div className="tms-kpi-value blue">{paymentPrep}</div>
         </div>
         <div className="tms-kpi">
           <div className="tms-kpi-label">Awaiting Comparison</div>
@@ -191,7 +219,7 @@ function ApStatementList({ onCreateNew, onViewDetail }: Props) {
           <div>
             <div className="section-title">AP Statement</div>
             <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
-              Vendor statements submitted from Vendor Portal sync here automatically. TMS can also create internally.
+              Vendor statements from Vendor Portal enter as Awaiting Comparison. Internal drafts start as Payment Preparation.
             </div>
           </div>
           <button className="btn-primary" onClick={onCreateNew}>+ Create Statement</button>
@@ -200,9 +228,10 @@ function ApStatementList({ onCreateNew, onViewDetail }: Props) {
         <div className="alert alert-info" style={{ marginBottom: 12 }}>
           <span>ⓘ</span>
           <span>
-            Statements from <strong>Vendor Portal</strong> enter with status{' '}
-            <span style={{ ...BASE_BADGE, ...STATUS_STYLE['Awaiting Confirmation'], display: 'inline-block', margin: '0 4px' }}>Awaiting Confirmation</span>.
-            Click to enter the blind-comparison view for Match / Mismatch processing.
+            Statements from <strong>Vendor Portal</strong> enter as{' '}
+            <span style={{ ...BASE_BADGE, ...STATUS_STYLE['Awaiting Comparison'], display: 'inline-block', margin: '0 4px' }}>Awaiting Comparison</span>
+            for blind-comparison processing. Internal drafts start as{' '}
+            <span style={{ ...BASE_BADGE, ...STATUS_STYLE['Payment Preparation'], display: 'inline-block', margin: '0 4px' }}>Payment Preparation</span>.
           </span>
         </div>
 
@@ -266,7 +295,7 @@ function ApStatementList({ onCreateNew, onViewDetail }: Props) {
                 <td style={{ fontSize: 12, color: '#666' }}>{r.createdBy}</td>
                 <td>
                   <button className="btn-link" onClick={() => onViewDetail(r.id)}>
-                    {r.status === 'Awaiting Confirmation' || r.status === 'Awaiting Comparison' ? 'Compare' : 'Details'}
+                    {r.status === 'Awaiting Comparison' ? 'Compare' : r.status === 'Payment Preparation' ? 'Edit' : 'Details'}
                   </button>
                 </td>
               </tr>

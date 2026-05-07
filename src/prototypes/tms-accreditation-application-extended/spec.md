@@ -1,8 +1,8 @@
-# TMS Vendor Payment Application & AP Statement 规格文档（V8）
+# TMS Vendor Payment Application & AP Statement 规格文档（V10）
 
 ## 概述
 
-TMS 端 **Vendor Payment Application**（支付申请中心）和 **AP Statement**（应付对账单）管理原型，兼容 V5–V8 设计。
+TMS 端 **Vendor Payment Application**（支付申请中心）和 **AP Statement**（应付对账单）管理原型，兼容 V5–V10 设计。
 
 **核心功能：**
 - **Vendor Payment Application**（原 Prepaid Application，V8 改名）：统一展示 Prepaid Application 与 AP Application 两种类型，FA 审核，Approve 自动调用 HR Payment 接口
@@ -18,6 +18,7 @@ TMS 端 **Vendor Payment Application**（支付申请中心）和 **AP Statement
 - `src/docs/prds/S44 VP Billing/VP billing V6.md` §1–§2
 - `src/docs/prds/S44 VP Billing/VP billing V7.md` §1–§3
 - `src/docs/prds/S44 VP Billing/VP billing V8.md` §2.2
+- `src/docs/prds/S44 VP Billing/VP billing V10.md`（V10 AP Statement 详情页 8 状态规格）
 - `src/docs/prds/S33Vendor 认证材料处理.md`（既有申请审核框架）
 - `src/docs/prds/S34 对账单优化.md`（Edit Billed Amount + Discrepancy Proof 底层接口）
 - `src/docs/prds/S36Procurement财务.md`（Procurement PIC 数据权限）
@@ -155,47 +156,66 @@ Waybill / Settlement Item / TMS Amount（删除线灰）/ Vendor Amount（蓝）
 
 ---
 
-## AP Statement（V6/V7/V8）
+## AP Statement（V10）
+
+参考 PRD：`src/docs/prds/S44 VP Billing/VP billing V10.md`
 
 ### 列表字段
 
 | 字段 | 说明 |
 |---|---|
 | Statement No. | 对账单编号，点击进入详情 |
-| **Source** | `Vendor Portal`（绿色）/ `Internal`（灰色）（V6 新增） |
+| **Source** | `Vendor Portal`（绿色）/ `Internal`（灰色） |
 | Vendor | 供应商名称 |
 | Waybills | 运单数量 |
 | Total Amount | 对账总金额 |
 | Collected | 已收款金额 |
-| Status | 状态（见下表） |
+| Status | 状态（见下表，8 种） |
 | Created At / By | 创建时间与创建人 |
-| Action | `Compare`（待处理）/ `Details` |
+| Action | `Compare`（Awaiting Comparison）/ `Edit`（Payment Preparation）/ `Details`（其他） |
 
-### AP Statement 状态机
+### AP Statement 状态机（V10 — 8 状态）
 
-| 状态 | 来源 | 说明 |
-|---|---|---|
-| `Awaiting Confirmation` | VP 提交 | VP 对账单进入 TMS 后的初始状态（橙色高亮，提示 FA 介入）（V7） |
-| `Awaiting Comparison` | VP / Internal | FA 介入进行 Match / Mismatch 比对中 |
-| `Pending Payment` | 比对通过 | 等待付款 |
-| `Partially Payment` | 部分付款 | — |
-| `Paid` | 完全付款 | — |
-| `Awaiting Rebill` | 比对不通过 | 拒回 VP 重新提单 |
+| # | 状态 | 场景 | 可用操作 |
+|---|---|---|---|
+| 1 | `Payment Preparation` | FA 内部创建草稿 | 添加/移除 Waybill & Ticket、Cancel、Confirm & Create VP |
+| 2 | `Awaiting Comparison` | VP 提交，TMS 双向对账 | Reject、Edit Waybill Amount、Confirm & Create VP |
+| 3 | `Awaiting Re-bill` | 驳回后等待 VP 修改 | 仅 Cancel |
+| 4 | `Pending Payment` | 已推送 HR 系统 | Void Invoice、Add AP Application、Write Off、Export |
+| 5 | `Partially Payment` | 部分已支付 | Write Off、Add AP Application |
+| 6 | `Paid` | 全额结清（终态） | 纯只读，仅 Export |
+| 7 | `Written Off` | 核销（终态） | 纯只读，仅 Export |
+| 8 | `Canceled` | 作废（终态） | 纯只读，仅 Export |
 
-### 核心 UI 要点（V7）
+### 匹配规则
+- `Vendor Amount == TMS Amount` → Matched
+- `Vendor Amount < TMS Amount`（供应商让利）→ Matched
+- `Vendor Amount > TMS Amount` → Mismatched
 
-- 列表顶部蓝色 info 提示：VP 来源对账单以 `Awaiting Confirmation` 入场，点击进入**盲核对视图**（Match / Mismatch）
-- `Awaiting Confirmation` 状态使用橙色标签，提醒 FA 这是需要介入核对的新单据
+### 终态展示
+- **Paid**：绿色成功横幅，完整打款时间线与凭证
+- **Written Off**：橙色横幅，显示核销原因、操作人、核销差额
+- **Canceled**：红色横幅，显示作废原因，底层运单和 Ticket 被释放
+
+### 核心 UI 要点（V10）
+
+- 列表顶部蓝色 info 提示：VP 来源对账单以 `Awaiting Comparison` 入场进行盲核对；内部草稿以 `Payment Preparation` 入场
 - 过滤器支持按 `Source` 和 `Status` 筛选
-- KPI 卡片：Total Statements / Needs Action / Awaiting Confirmation / Awaiting Comparison / From Vendor Portal
+- KPI 卡片：Total Statements / Needs Action / Payment Preparation / Awaiting Comparison / From Vendor Portal
+- 终态（Paid / Written Off / Canceled）数据全部置灰只读
 
-### Vendor Payment Application 审核（V7/V8）
+### Confirm & Create Vendor Payment 弹窗
+- 展示供应商、币种、运单数、Ticket 数
+- **支付金额可编辑**，默认为计算总额
+- 确认后创建 AP Application 并推送 HR 系统
 
-- **Approve 确认弹窗**：点击 Approve 必须弹出确认框，提示：
-  > *Approval will automatically trigger a Payment Request in the HR system. Do you wish to proceed?*
-- **Approve 动作**：调用 HR Payment 接口，自动生成类型为 `Vendor Payment` 的支付申请单（Payment Request），带入金额、币种、供应商银行账户及关联运单号
-- **状态回传**：HR 支付单状态变为 `Released` 或 `Closed` → 状态自动更新为 `Paid`
-- **操作按钮**（详情页顶部）：`Approve` / `Reject` / `Edit`（仅 Pending Review 状态可见）
+### Write Off 弹窗
+- 显示总金额、已付金额、待核销金额
+- 必填核销原因
+
+### Cancel 弹窗
+- 提示关联运单和 Ticket 将被释放
+- 必填作废原因
 
 ---
 

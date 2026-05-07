@@ -1,4 +1,4 @@
-详情页应该展示的核心信息与可执行操作：
+TMS Prepaid Application & AP Statement的列表数据点击detail或者compare之后的页面页应该展示的核心信息与可执行操作：
 
 1. Under Payment Preparation (付款准备中)
 业务场景： TMS 内部人员（FA）主动创建的对账单草稿。
@@ -7,7 +7,7 @@
 
 基础信息： 对账单号、对账单状态，供应商名称、创建时间、总金额,创建人。
 
-结算明细表： FA 手动勾选或系统带入的运单列表、Ticket 列表、各项费用明细。
+结算明细表： 财务人员 手动勾选或系统带入的运单列表、Ticket 列表、各项费用明细。
 
 税务/发票： Add Invoice（上传发票）、税务配置（税率）。
 
@@ -18,7 +18,7 @@
 
 Cancel（直接作废）
 
-Confirm & Create Vendor Payment（核对无误，直接推 HR 支付）
+Confirm & Create Vendor Payment（核对无误，直接推 HR系统 支付）
 
 2. Awaiting Comparison (待比对)
 业务场景： VP 端供应商提交了结算申请（或重新修改后提交），等待 TMS 内部双向对账。这是最核心的对账工作台。
@@ -29,7 +29,7 @@ Confirm & Create Vendor Payment（核对无误，直接推 HR 支付）
 
 双向比对明细表 (重点)： 必须并排展示 TMS Amount vs Vendor Amount，并高亮 Variance (差值)。
 
-状态标签： 每一行显示 🟢 Matched, 🔴 Mismatched, 🟡 Missed。
+状态标签： 每一行显示 Matched（如果Vendor Amount与TMS Amount一致或者Vendor Amount - TMS Amount < 0，系统自动匹配为 Matched）, Mismatched, Missed。
 
 展示Statement Basic Info ,发票信息, Amount Summary ,Proof
 Operation log

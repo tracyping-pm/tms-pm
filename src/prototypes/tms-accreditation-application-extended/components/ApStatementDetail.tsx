@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Trash2 } from 'lucide-react';
+import { ExternalLink, Trash2, Download, Plus, FileText, X } from 'lucide-react';
 
 interface Props {
   statementId: string;
@@ -7,12 +7,14 @@ interface Props {
 }
 
 type Status =
-  | 'Awaiting Confirmation'
+  | 'Payment Preparation'
   | 'Awaiting Comparison'
+  | 'Awaiting Re-bill'
   | 'Pending Payment'
   | 'Partially Payment'
   | 'Paid'
-  | 'Awaiting Rebill';
+  | 'Written Off'
+  | 'Canceled';
 
 interface SettlementItem {
   name: string;
@@ -45,6 +47,11 @@ interface StatementData {
   vendorTotal: number;
   tmsTotal: number;
   rejectReason?: string;
+  cancelReason?: string;
+  cancelBy?: string;
+  writeOffReason?: string;
+  writeOffBy?: string;
+  writeOffAmount?: number;
 }
 
 type CompareResult = 'Matched' | 'Matched (Vendor Discount)' | 'Mismatched' | 'Missed';
@@ -74,20 +81,24 @@ function computeItemResult(item: SettlementItem): CompareResult {
   return 'Matched';
 }
 
+// ── Mock Data ──────────────────────────────────────────────
+
 const STATEMENT_DATA: Record<string, StatementData> = {
+  // 1. Payment Preparation — FA internal draft
   AP2026040007: {
     id: 'AP2026040007',
     vendor: 'Laguna Logistics Corp.',
-    source: 'Vendor Portal',
-    status: 'Awaiting Confirmation',
+    source: 'Internal',
+    status: 'Payment Preparation',
     currency: 'PHP',
     createdAt: '2026-04-25',
+    createdBy: 'Zhang Jialei',
     waybills: [
       {
         no: 'WB2604050', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus',
         items: [
           { name: 'Basic Freight', vendorAmount: 12500, tmsAmount: 12500 },
-          { name: 'Additional Charge', vendorAmount: 800, tmsAmount: 0 },
+          { name: 'Additional Charge', vendorAmount: 800, tmsAmount: 800 },
         ],
       },
       {
@@ -100,20 +111,14 @@ const STATEMENT_DATA: Record<string, StatementData> = {
         no: 'WB2604052', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Batangas',
         items: [
           { name: 'Basic Freight', vendorAmount: 14300, tmsAmount: 14300 },
-          { name: 'Additional Charge', vendorAmount: 1400, tmsAmount: 1200 },
-        ],
-      },
-      {
-        no: 'WB2604053', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 10000, tmsAmount: 10000 },
-          { name: 'Fuel Surcharge', vendorAmount: 500, tmsAmount: 500 },
+          { name: 'Additional Charge', vendorAmount: 1400, tmsAmount: 1400 },
         ],
       },
     ],
-    vendorTotal: 47700,
-    tmsTotal: 46700,
+    vendorTotal: 37200,
+    tmsTotal: 37200,
   },
+  // 2. Awaiting Comparison — VP submitted, TMS comparing
   AP2026040003: {
     id: 'AP2026040003',
     vendor: 'Bangkok Express Logistics',
@@ -166,6 +171,7 @@ const STATEMENT_DATA: Record<string, StatementData> = {
     vendorTotal: 157000,
     tmsTotal: 157500,
   },
+  // 2b. Awaiting Comparison with more mismatches
   AP2026040002: {
     id: 'AP2026040002',
     vendor: 'Cebu Trans Lines',
@@ -197,6 +203,34 @@ const STATEMENT_DATA: Record<string, StatementData> = {
     vendorTotal: 42000,
     tmsTotal: 36500,
   },
+  // 3. Awaiting Re-bill — rejected
+  AP2026040004: {
+    id: 'AP2026040004',
+    vendor: 'Manila Freight Co.',
+    source: 'Vendor Portal',
+    status: 'Awaiting Re-bill',
+    currency: 'PHP',
+    createdAt: '2026-04-20',
+    rejectReason: 'Vendor overcharged on WB2604055 Additional Charge by PHP 2,000. Please review and resubmit.',
+    waybills: [
+      {
+        no: 'WB2604055', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Bulacan',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 11000, tmsAmount: 11000 },
+          { name: 'Additional Charge', vendorAmount: 4500, tmsAmount: 2500 },
+        ],
+      },
+      {
+        no: 'WB2604056', truckType: '6-Wheeler', origin: 'PH-Bulacan', destination: 'PH-NCR-Quezon City',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 8520, tmsAmount: 8520 },
+        ],
+      },
+    ],
+    vendorTotal: 24020,
+    tmsTotal: 22020,
+  },
+  // 4. Pending Payment — pushed to HR
   AP2026040006: {
     id: 'AP2026040006',
     vendor: 'Coca-Cola Bottlers PH Inc.',
@@ -204,6 +238,7 @@ const STATEMENT_DATA: Record<string, StatementData> = {
     status: 'Pending Payment',
     currency: 'PHP',
     createdAt: '2026-04-15',
+    createdBy: 'Zhang Jialei',
     waybills: [
       {
         no: 'WB2604070', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC',
@@ -230,6 +265,7 @@ const STATEMENT_DATA: Record<string, StatementData> = {
     vendorTotal: 44500,
     tmsTotal: 44500,
   },
+  // 5. Partially Payment
   AP2026040005: {
     id: 'AP2026040005',
     vendor: 'SMC Logistics',
@@ -237,6 +273,7 @@ const STATEMENT_DATA: Record<string, StatementData> = {
     status: 'Partially Payment',
     currency: 'PHP',
     createdAt: '2026-04-22',
+    createdBy: 'Zhang Jialei',
     waybills: [
       {
         no: 'WB2604080', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Bulacan / Sta. Maria',
@@ -287,8 +324,100 @@ const STATEMENT_DATA: Record<string, StatementData> = {
         ],
       },
     ],
-    vendorTotal: 89000,
-    tmsTotal: 89000,
+    vendorTotal: 99000,
+    tmsTotal: 99000,
+  },
+  // 6. Paid — terminal
+  AP2026040001: {
+    id: 'AP2026040001',
+    vendor: 'JG Summit Freight',
+    source: 'Internal',
+    status: 'Paid',
+    currency: 'PHP',
+    createdAt: '2026-04-14',
+    createdBy: 'Zhang Jialei',
+    waybills: [
+      {
+        no: 'WB2604010', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 18000, tmsAmount: 18000 },
+          { name: 'Additional Charge', vendorAmount: 1200, tmsAmount: 1200 },
+        ],
+      },
+      {
+        no: 'WB2604011', truckType: '6-Wheeler', origin: 'PH-Laguna-Calamba', destination: 'PH-NCR-Manila',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 14000, tmsAmount: 14000 },
+        ],
+      },
+      {
+        no: 'WB2604012', truckType: '10-Wheeler', origin: 'PH-Batangas', destination: 'PH-NCR-Taguig',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 20000, tmsAmount: 20000 },
+        ],
+      },
+    ],
+    vendorTotal: 53200,
+    tmsTotal: 53200,
+  },
+  // 7. Written Off — terminal
+  AP2026040008: {
+    id: 'AP2026040008',
+    vendor: 'Pacific Logistics Inc.',
+    source: 'Internal',
+    status: 'Written Off',
+    currency: 'PHP',
+    createdAt: '2026-04-10',
+    createdBy: 'Zhang Jialei',
+    writeOffReason: 'Vendor became unreachable. Remaining balance PHP 14,000 written off per finance approval.',
+    writeOffBy: 'Li Wei',
+    writeOffAmount: 14000,
+    waybills: [
+      {
+        no: 'WB2604090', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Pampanga / Clark',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 18000, tmsAmount: 18000 },
+          { name: 'Additional Charge', vendorAmount: 1500, tmsAmount: 1500 },
+        ],
+      },
+      {
+        no: 'WB2604091', truckType: '6-Wheeler', origin: 'PH-Bulacan', destination: 'PH-NCR-Quezon City',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 12500, tmsAmount: 12500 },
+        ],
+      },
+    ],
+    vendorTotal: 32000,
+    tmsTotal: 32000,
+    paidAmount: 18000,
+  },
+  // 8. Canceled — terminal
+  AP2026040009: {
+    id: 'AP2026040009',
+    vendor: 'Metro Transport Corp.',
+    source: 'Internal',
+    status: 'Canceled',
+    currency: 'PHP',
+    createdAt: '2026-04-08',
+    createdBy: 'Zhang Jialei',
+    cancelReason: 'Duplicate statement created in error. All waybills released back to pool.',
+    cancelBy: 'Zhang Jialei',
+    waybills: [
+      {
+        no: 'WB2604095', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Bacoor',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 9500, tmsAmount: 9500 },
+        ],
+      },
+      {
+        no: 'WB2604096', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Makati',
+        items: [
+          { name: 'Basic Freight', vendorAmount: 6000, tmsAmount: 6000 },
+        ],
+      },
+    ],
+    vendorTotal: 15500,
+    tmsTotal: 15500,
   },
 };
 
@@ -307,12 +436,14 @@ const FALLBACK: StatementData = {
 };
 
 const STATUS_STYLE: Record<Status, React.CSSProperties> = {
-  'Awaiting Confirmation': { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
+  'Payment Preparation':   { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
   'Awaiting Comparison':   { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' },
+  'Awaiting Re-bill':      { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
   'Pending Payment':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
   'Partially Payment':     { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
   'Paid':                  { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
-  'Awaiting Rebill':       { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+  'Written Off':           { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' },
+  'Canceled':              { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
 };
 
 function fmt(n: number) { return n.toLocaleString('en-US', { minimumFractionDigits: 2 }); }
@@ -325,23 +456,13 @@ function fmtDiff(n: number) {
 type SummaryBucket = 'basic' | 'additional' | 'exception';
 
 const POSITION_TIMES = [
-  '2026-04-16 08:30',
-  '2026-04-16 10:10',
-  '2026-04-17 09:25',
-  '2026-04-17 13:40',
-  '2026-04-18 07:50',
-  '2026-04-18 15:20',
-  '2026-04-19 11:05',
+  '2026-04-16 08:30', '2026-04-16 10:10', '2026-04-17 09:25',
+  '2026-04-17 13:40', '2026-04-18 07:50', '2026-04-18 15:20', '2026-04-19 11:05',
 ];
 
 const UNLOADING_TIMES = [
-  '2026-04-16 12:45',
-  '2026-04-16 14:35',
-  '2026-04-17 13:10',
-  '2026-04-17 18:05',
-  '2026-04-18 11:25',
-  '2026-04-18 19:15',
-  '2026-04-19 15:30',
+  '2026-04-16 12:45', '2026-04-16 14:35', '2026-04-17 13:10',
+  '2026-04-17 18:05', '2026-04-18 11:25', '2026-04-18 19:15', '2026-04-19 15:30',
 ];
 
 function getItemBucket(name: string): SummaryBucket {
@@ -377,13 +498,15 @@ interface InvoiceRecord {
   no: string;
   amount: string;
   date: string;
-  status: 'Verified' | 'Pending Verification';
+  status: 'Verified' | 'Pending Verification' | 'Voided';
   proofFileName?: string;
 }
 
 const INITIAL_INVOICES: Record<string, InvoiceRecord[]> = {
   AP2026040003: [{ id: '1', clientEntity: 'Bangkok Express TH', no: 'INV-TH-2604003', amount: '156,000.00', date: '2026-04-17', status: 'Verified', proofFileName: 'inv_bkk_apr.pdf' }],
   AP2026040002: [{ id: '2', clientEntity: 'Cebu Trans PH', no: 'INV-PH-2604002', amount: '38,500.00', date: '2026-04-22', status: 'Pending Verification' }],
+  AP2026040006: [{ id: '3', clientEntity: 'Coca-Cola PH', no: 'INV-PH-2604006', amount: '44,500.00', date: '2026-04-15', status: 'Verified', proofFileName: 'inv_coke_apr.pdf' }],
+  AP2026040001: [{ id: '4', clientEntity: 'JG Summit PH', no: 'INV-PH-2604001', amount: '53,200.00', date: '2026-04-14', status: 'Verified', proofFileName: 'inv_jg_apr.pdf' }],
 };
 
 const PROOF_DATA: Record<string, string[]> = {
@@ -466,27 +589,58 @@ interface LogEntry {
 
 const STATIC_LOGS: Record<string, LogEntry[]> = {
   AP2026040007: [
-    { color: '#1677ff', time: '2026-04-25 09:20', desc: 'Vendor submitted statement', actor: 'Laguna Logistics Corp. (VP)' },
+    { color: '#00b96b', time: '2026-04-25 09:20', desc: 'Statement created (Payment Preparation)', actor: 'Zhang Jialei' },
   ],
   AP2026040003: [
-    { color: '#00b96b', time: '2026-04-19 11:05', desc: 'Status changed: Awaiting Confirmation → Awaiting Comparison', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-19 11:05', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
     { color: '#1677ff', time: '2026-04-18 16:00', desc: 'Vendor submitted statement', actor: 'Bangkok Express Logistics (VP)' },
   ],
   AP2026040002: [
-    { color: '#00b96b', time: '2026-04-24 10:30', desc: 'Status changed: Awaiting Confirmation → Awaiting Comparison', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-24 10:30', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
     { color: '#1677ff', time: '2026-04-23 14:55', desc: 'Vendor submitted statement', actor: 'Cebu Trans Lines (VP)' },
+  ],
+  AP2026040004: [
+    { color: '#cf1322', time: '2026-04-21 14:20', desc: 'Statement rejected — Vendor overcharged on WB2604055 Additional Charge by PHP 2,000', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-20 16:00', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
+    { color: '#1677ff', time: '2026-04-20 10:30', desc: 'Vendor submitted statement', actor: 'Manila Freight Co. (VP)' },
+  ],
+  AP2026040006: [
+    { color: '#0958d9', time: '2026-04-16 09:30', desc: 'AP Application APA2604001 created and pushed to HR', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-15 17:00', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-15 10:00', desc: 'Statement created (Internal)', actor: 'Zhang Jialei' },
+  ],
+  AP2026040005: [
+    { color: '#d48806', time: '2026-04-24 15:30', desc: 'Partial payment released — APA2604005A (PHP 45,000.00)', actor: 'HR System' },
+    { color: '#0958d9', time: '2026-04-23 09:00', desc: 'AP Application APA2604005B submitted for remaining balance', actor: 'Zhang Jialei' },
+    { color: '#0958d9', time: '2026-04-22 16:00', desc: 'AP Application APA2604005A created and pushed to HR', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-22 14:00', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' },
+  ],
+  AP2026040001: [
+    { color: '#389e0d', time: '2026-04-18 10:00', desc: 'Full payment released — APA2604010 (PHP 53,200.00)', actor: 'HR System' },
+    { color: '#0958d9', time: '2026-04-15 09:00', desc: 'AP Application APA2604010 created and pushed to HR', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-14 15:00', desc: 'Statement created and confirmed', actor: 'Zhang Jialei' },
+  ],
+  AP2026040008: [
+    { color: '#d46b08', time: '2026-04-18 14:00', desc: 'Remaining PHP 14,000.00 written off — Vendor became unreachable', actor: 'Li Wei' },
+    { color: '#389e0d', time: '2026-04-14 11:00', desc: 'Partial payment released — APA2604008A (PHP 18,000.00)', actor: 'HR System' },
+    { color: '#0958d9', time: '2026-04-12 09:00', desc: 'AP Application APA2604008A created', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-10 10:00', desc: 'Statement created', actor: 'Zhang Jialei' },
+  ],
+  AP2026040009: [
+    { color: '#cf1322', time: '2026-04-09 11:30', desc: 'Statement canceled — Duplicate statement created in error', actor: 'Zhang Jialei' },
+    { color: '#00b96b', time: '2026-04-08 14:00', desc: 'Statement created', actor: 'Zhang Jialei' },
   ],
 };
 
-const LINKED_PAYMENT: Record<string, { appNo: string; appType: string; status: string; amount: string; submittedAt: string; hrStatus: string }> = {
-  AP2026040006: {
+const LINKED_PAYMENT: Record<string, { appNo: string; appType: string; status: string; amount: string; submittedAt: string; hrStatus: string }[]> = {
+  AP2026040006: [{
     appNo: 'APA2604001',
     appType: 'AP Application',
     status: 'Pending Review',
     amount: '44,500.00',
     submittedAt: '2026-04-16 09:30',
     hrStatus: 'Under Review in HR System',
-  },
+  }],
 };
 
 interface PaidPaymentApp {
@@ -513,35 +667,51 @@ const PARTIAL_PAYMENT_DATA: Record<string, PartialPaymentInfo> = {
   AP2026040005: {
     paidAmount: 45000,
     paidApplications: [
-      {
-        appNo: 'APA2604005A',
-        amount: 45000,
-        releasedAt: '2026-04-24 15:30',
-        proofFile: 'payment_receipt_APA2604005A.pdf',
-      },
+      { appNo: 'APA2604005A', amount: 45000, releasedAt: '2026-04-24 15:30', proofFile: 'payment_receipt_APA2604005A.pdf' },
     ],
     unpaidApplications: [
-      {
-        appNo: 'APA2604005B',
-        amount: 44000,
-        status: 'Pending Review',
-        submittedAt: '2026-04-25 09:00',
-      },
+      { appNo: 'APA2604005B', amount: 54000, status: 'Pending Review', submittedAt: '2026-04-25 09:00' },
+    ],
+  },
+};
+
+const PAID_PAYMENT_DATA: Record<string, { paidAmount: number; apps: PaidPaymentApp[] }> = {
+  AP2026040001: {
+    paidAmount: 53200,
+    apps: [
+      { appNo: 'APA2604010', amount: 53200, releasedAt: '2026-04-18 10:00', proofFile: 'payment_receipt_APA2604010.pdf' },
     ],
   },
 };
 
 const mockProofNames = ['proof_doc_001.pdf', 'payment_evidence.jpg', 'waybill_scan.png', 'receipt_Apr2026.pdf'];
 
+// ── Helpers ──────────────────────────────────────────────
+
+const TERMINAL_STATUSES: Status[] = ['Paid', 'Written Off', 'Canceled'];
+
+function isTerminal(status: Status) {
+  return TERMINAL_STATUSES.includes(status);
+}
+
+// ── Component ──────────────────────────────────────────────
 
 function ApStatementDetail({ statementId, onBack }: Props) {
   const data = STATEMENT_DATA[statementId] || { ...FALLBACK, id: statementId };
 
   const [currentStatus, setCurrentStatus] = useState<Status>(data.status);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showWriteOffDialog, setShowWriteOffDialog] = useState(false);
+  const [showConfirmPaymentDialog, setShowConfirmPaymentDialog] = useState(false);
+  const [showAddApAppDialog, setShowAddApAppDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [actionDone, setActionDone] = useState<'confirmed' | 'rejected' | 'matched' | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [writeOffReason, setWriteOffReason] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [apAppNo, setApAppNo] = useState('');
+  const [apAppAmount, setApAppAmount] = useState('');
+  const [actionDone, setActionDone] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedWaybills, setExpandedWaybills] = useState<Set<string>>(() => new Set(data.waybills[0] ? [data.waybills[0].no] : []));
@@ -554,18 +724,26 @@ function ApStatementDetail({ statementId, onBack }: Props) {
 
   const [proofFiles, setProofFiles] = useState<string[]>(PROOF_DATA[statementId] || []);
   const [claimTickets, setClaimTickets] = useState<ClaimTicketRow[]>(CLAIM_TICKET_DATA[statementId] || []);
+  const [linkedPayments, setLinkedPayments] = useState(LINKED_PAYMENT[statementId] || []);
 
   const badge = (s: Status) => ({ ...STATUS_STYLE[s], borderRadius: 4, padding: '3px 10px', fontSize: 13 });
-  const statementPaidAmount = data.paidAmount ?? PARTIAL_PAYMENT_DATA[statementId]?.paidAmount ?? (currentStatus === 'Paid' ? data.vendorTotal : 0);
+  const statementPaidAmount = data.paidAmount ?? PARTIAL_PAYMENT_DATA[statementId]?.paidAmount ?? PAID_PAYMENT_DATA[statementId]?.paidAmount ?? (currentStatus === 'Paid' ? data.vendorTotal : 0);
   const statementTotalInvoiceAmount = data.totalInvoiceAmount ?? invoices.reduce((sum, inv) => {
     const amount = Number(inv.amount.replace(/,/g, ''));
     return sum + (Number.isFinite(amount) ? amount : 0);
   }, 0);
 
-  const isAwaitingConfirmation = currentStatus === 'Awaiting Confirmation';
+  const isPaymentPrep = currentStatus === 'Payment Preparation';
   const isAwaitingComparison = currentStatus === 'Awaiting Comparison';
+  const isAwaitingRebill = currentStatus === 'Awaiting Re-bill';
   const isPendingPayment = currentStatus === 'Pending Payment';
   const isPartiallyPayment = currentStatus === 'Partially Payment';
+  const isPaid = currentStatus === 'Paid';
+  const isWrittenOff = currentStatus === 'Written Off';
+  const isCanceled = currentStatus === 'Canceled';
+  const isReadOnly = isTerminal(currentStatus);
+  const canEditWaybills = isPaymentPrep;
+  const canEditInvoice = isPaymentPrep || isAwaitingComparison;
 
   const allReady = data.waybills.every(w =>
     w.items.every(item => {
@@ -581,22 +759,58 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     })
   ).length;
 
-  const handleConfirm = () => {
-    setShowConfirmDialog(false);
-    setCurrentStatus('Awaiting Comparison');
-    setActionDone('confirmed');
+  // ── Handlers ──
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
   };
 
   const handleReject = () => {
     if (!rejectReason.trim()) return;
     setShowRejectDialog(false);
-    setCurrentStatus('Awaiting Rebill');
+    setCurrentStatus('Awaiting Re-bill');
     setActionDone('rejected');
+    showToast('Statement rejected and sent back to vendor.');
   };
 
-  const handleFinalise = () => {
-    setCurrentStatus(mismatchCount > 0 ? 'Awaiting Rebill' : 'Pending Payment');
-    setActionDone('matched');
+  const handleCancel = () => {
+    if (!cancelReason.trim()) return;
+    setShowCancelDialog(false);
+    setCurrentStatus('Canceled');
+    setActionDone('canceled');
+    showToast('Statement has been canceled.');
+  };
+
+  const handleWriteOff = () => {
+    if (!writeOffReason.trim()) return;
+    setShowWriteOffDialog(false);
+    setCurrentStatus('Written Off');
+    setActionDone('written-off');
+    showToast('Remaining balance has been written off.');
+  };
+
+  const handleConfirmPayment = () => {
+    setShowConfirmPaymentDialog(false);
+    setCurrentStatus('Pending Payment');
+    setActionDone('confirmed-payment');
+    showToast('Vendor Payment created and pushed to HR system.');
+  };
+
+  const handleAddApApp = () => {
+    if (!apAppNo.trim() || !apAppAmount.trim()) return;
+    setLinkedPayments(prev => [...prev, {
+      appNo: apAppNo,
+      appType: 'AP Application',
+      status: 'Pending Review',
+      amount: apAppAmount,
+      submittedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      hrStatus: 'Submitted',
+    }]);
+    setShowAddApAppDialog(false);
+    setApAppNo('');
+    setApAppAmount('');
+    showToast(`AP Application ${apAppNo} added successfully.`);
   };
 
   const handleRefresh = () => {
@@ -607,9 +821,9 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     }, 1000);
   };
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+  const handleVoidInvoice = (invId: string) => {
+    setInvoices(prev => prev.map(i => i.id === invId ? { ...i, status: 'Voided' as const } : i));
+    showToast('Invoice voided.');
   };
 
   const toggleWaybill = (waybillNo: string) => {
@@ -641,24 +855,15 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     if (editingInvoice) {
       const row = invoiceFormRows[0];
       setInvoices(prev => prev.map(i => i.id === editingInvoice.id ? {
-        ...i,
-        clientEntity: row.clientEntity,
-        no: row.no,
-        date: row.date,
-        amount: row.amount,
+        ...i, clientEntity: row.clientEntity, no: row.no, date: row.date, amount: row.amount,
         proofFileName: row.proofFileName || undefined,
       } : i));
     } else {
       const newInvs: InvoiceRecord[] = invoiceFormRows
         .filter(r => r.no.trim())
         .map(r => ({
-          id: r.id,
-          clientEntity: r.clientEntity,
-          no: r.no,
-          date: r.date,
-          amount: r.amount,
-          status: 'Pending Verification' as const,
-          proofFileName: r.proofFileName || undefined,
+          id: r.id, clientEntity: r.clientEntity, no: r.no, date: r.date, amount: r.amount,
+          status: 'Pending Verification' as const, proofFileName: r.proofFileName || undefined,
         }));
       setInvoices(prev => [...prev, ...newInvs]);
     }
@@ -686,32 +891,34 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     }, 1500);
   };
 
+  // ── Log computation ──
+
   const staticLogs: LogEntry[] = STATIC_LOGS[statementId] || [
     { color: '#00b96b', time: `${data.createdAt} 08:00`, desc: 'Statement created', actor: 'Zhang Jialei' },
   ];
 
   const dynamicLogs: LogEntry[] = [];
-  if (actionDone === 'confirmed') {
-    dynamicLogs.push({ color: '#00b96b', time: '刚刚', desc: 'Status changed: Awaiting Confirmation → Awaiting Comparison', actor: 'Zhang Jialei' });
-  } else if (actionDone === 'rejected') {
-    dynamicLogs.push({ color: '#00b96b', time: '刚刚', desc: 'Statement sent back to vendor', actor: 'Zhang Jialei' });
-  } else if (actionDone === 'matched' && mismatchCount === 0) {
-    dynamicLogs.push({ color: '#00b96b', time: '刚刚', desc: 'Confirm & Create Vendor Payment triggered', actor: 'Zhang Jialei' });
+  if (actionDone === 'rejected') {
+    dynamicLogs.push({ color: '#cf1322', time: 'Just now', desc: `Statement rejected — ${rejectReason}`, actor: 'Zhang Jialei' });
+  } else if (actionDone === 'canceled') {
+    dynamicLogs.push({ color: '#cf1322', time: 'Just now', desc: `Statement canceled — ${cancelReason}`, actor: 'Zhang Jialei' });
+  } else if (actionDone === 'written-off') {
+    dynamicLogs.push({ color: '#d46b08', time: 'Just now', desc: `Remaining balance written off — ${writeOffReason}`, actor: 'Zhang Jialei' });
+  } else if (actionDone === 'confirmed-payment') {
+    dynamicLogs.push({ color: '#00b96b', time: 'Just now', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' });
   }
 
   const allLogs = [...dynamicLogs, ...staticLogs];
 
+  // ── Amount summaries ──
+
   const vpAmountSummary = data.waybills.reduce<Record<SummaryBucket, number>>((acc, waybill) => {
-    waybill.items.forEach(item => {
-      acc[getItemBucket(item.name)] += item.vendorAmount;
-    });
+    waybill.items.forEach(item => { acc[getItemBucket(item.name)] += item.vendorAmount; });
     return acc;
   }, { basic: 0, additional: 0, exception: 0 });
 
   const tmsAmountSummary = data.waybills.reduce<Record<SummaryBucket, number>>((acc, waybill) => {
-    waybill.items.forEach(item => {
-      acc[getItemBucket(item.name)] += item.tmsAmount;
-    });
+    waybill.items.forEach(item => { acc[getItemBucket(item.name)] += item.tmsAmount; });
     return acc;
   }, { basic: 0, additional: 0, exception: 0 });
 
@@ -728,8 +935,11 @@ function ApStatementDetail({ statementId, onBack }: Props) {
   const totalAmountPayable = data.vendorTotal + vpClaimAmount + vpKpiClaim + vpOthersAmount + vpVatAmount - vpWhtAmount;
   const tmsTotalAmountPayable = data.tmsTotal + tmsClaimAmount + tmsKpiClaim + tmsOthersAmount + tmsVatAmount - tmsWhtAmount;
 
-  // Waybill table renderer: VP submitted parent rows with expandable amount details.
+  // ── Renderers ──
+
   const renderWaybillTable = () => {
+    const showActions = isAwaitingComparison;
+    const showRemove = isPaymentPrep;
     return (
       <table className="data-table ap-waybill-table" style={{ width: '100%' }}>
         <thead>
@@ -752,7 +962,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
             const wVendorTotal = w.items.reduce((s, i) => s + i.vendorAmount, 0);
             const wTmsTotal = w.items.reduce((s, i) => s + i.tmsAmount, 0);
             const discrepancy = wVendorTotal - wTmsTotal;
-            const isMatch = discrepancy === 0;
+            const isMatch = discrepancy <= 0;
             const bucketTotals = getWaybillBucketTotals(w);
             const isExpanded = expandedWaybills.has(w.no);
             const times = getWaybillDisplayTimes(w, index);
@@ -770,10 +980,10 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                       ? { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
                       : { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
                     }>
-                      {isMatch ? 'Match' : 'Discrepancy'}
+                      {discrepancy === 0 ? 'Matched' : discrepancy < 0 ? 'Matched' : 'Mismatched'}
                     </span>
                   </td>
-                  <td className="num" style={{ color: isMatch ? '#389e0d' : discrepancy > 0 ? '#cf1322' : '#d46b08', fontWeight: 600 }}>
+                  <td className="num" style={{ color: discrepancy === 0 ? '#389e0d' : discrepancy > 0 ? '#cf1322' : '#d46b08', fontWeight: 600 }}>
                     {fmtDiff(discrepancy)}
                   </td>
                   <td style={{ fontSize: 12 }}>{times.positionTime}</td>
@@ -782,17 +992,24 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                   <td style={{ fontSize: 12 }}>{w.origin}</td>
                   <td style={{ fontSize: 12 }}>{w.destination}</td>
                   <td>
-                    {!isMatch ? (
+                    {showActions && !isMatch ? (
                       <button
                         className="btn-link ap-icon-link"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openWaybillDetail();
-                        }}
+                        onClick={(e) => { e.stopPropagation(); openWaybillDetail(); }}
                         title="Open waybill detail for price modification"
                       >
                         <ExternalLink size={14} />
                         Edit Price
+                      </button>
+                    ) : showRemove ? (
+                      <button
+                        className="btn-link ap-icon-link"
+                        style={{ color: '#ff4d4f' }}
+                        onClick={(e) => { e.stopPropagation(); showToast(`Waybill ${w.no} removed from statement.`); }}
+                        title="Remove waybill"
+                      >
+                        <Trash2 size={14} />
+                        Remove
                       </button>
                     ) : (
                       <span style={{ color: '#bbb', fontSize: 12 }}>—</span>
@@ -848,7 +1065,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     if (claimTickets.length === 0) {
       return <div className="empty">No claim tickets associated with this statement.</div>;
     }
-
+    const canRemove = isPaymentPrep || isAwaitingComparison;
     return (
       <table className="data-table ap-claim-ticket-table" style={{ width: '100%' }}>
         <thead>
@@ -861,7 +1078,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
             <th>Status</th>
             <th>Created Date</th>
             <th>Created By</th>
-            <th>Actions</th>
+            {canRemove && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -870,24 +1087,22 @@ function ApStatementDetail({ statementId, onBack }: Props) {
               <td style={{ fontWeight: 700, color: '#1f2937' }}>{ticket.ticketNo}</td>
               <td>{ticket.claimType}</td>
               <td>{ticket.customer}</td>
-              <td className="num" style={{ color: '#ff4d4f', fontWeight: 700 }}>
-                {fmt(ticket.claimAmount)}
-              </td>
+              <td className="num" style={{ color: '#ff4d4f', fontWeight: 700 }}>{fmt(ticket.claimAmount)}</td>
               <td>{ticket.claimReason}</td>
-              <td>
-                <span className="ap-claim-status">{ticket.status}</span>
-              </td>
+              <td><span className="ap-claim-status">{ticket.status}</span></td>
               <td>{ticket.createdDate}</td>
               <td>{ticket.createdBy}</td>
-              <td>
-                <button
-                  className="ap-trash-btn"
-                  title="Remove claim ticket"
-                  onClick={() => setClaimTickets(prev => prev.filter(item => item.ticketNo !== ticket.ticketNo))}
-                >
-                  <Trash2 size={15} />
-                </button>
-              </td>
+              {canRemove && (
+                <td>
+                  <button
+                    className="ap-trash-btn"
+                    title="Remove claim ticket"
+                    onClick={() => setClaimTickets(prev => prev.filter(item => item.ticketNo !== ticket.ticketNo))}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -895,7 +1110,6 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     );
   };
 
-  // Amount Summary for Confirmation/Comparison
   const renderAmountSummaryTable = () => {
     const summaryItem = (label: string, tmsAmount: number, vpAmount: number, strong = false) => {
       const diff = vpAmount - tmsAmount;
@@ -910,19 +1124,14 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     };
 
     const renderSummaryBlock = (
-      title: string,
-      tmsTotal: number,
-      vpTotal: number,
+      title: string, tmsTotal: number, vpTotal: number,
       rows: Array<{ label: string; tms: number; vp: number }>
     ) => (
       <div className="ap-summary-col">
         <div className="ap-summary-block-title">{title}</div>
         <div className="ap-summary-table">
           <div className="ap-summary-table-head">
-            <span>Item</span>
-            <span>TMS</span>
-            <span>VP</span>
-            <span>Diff</span>
+            <span>Item</span><span>TMS</span><span>VP</span><span>Diff</span>
           </div>
           {summaryItem(title, tmsTotal, vpTotal, true)}
           <div className="ap-summary-sublist">
@@ -934,16 +1143,14 @@ function ApStatementDetail({ statementId, onBack }: Props) {
 
     const twoCol: React.CSSProperties = { gridTemplateColumns: 'minmax(132px, 1.3fr) minmax(90px, 1fr)' };
     const renderSimpleSummaryBlock = (
-      title: string,
-      total: number,
+      title: string, total: number,
       rows: Array<{ label: string; amount: number }>
     ) => (
       <div className="ap-summary-col">
         <div className="ap-summary-block-title">{title}</div>
         <div className="ap-summary-table">
           <div className="ap-summary-table-head" style={twoCol}>
-            <span>Item</span>
-            <span>Amount</span>
+            <span>Item</span><span>Amount</span>
           </div>
           <div className="ap-summary-row is-strong" style={twoCol}>
             <span className="ap-summary-item-label">{title}</span>
@@ -966,17 +1173,10 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         <div className="ap-summary-total">
           <span>Total Amount Payable</span>
           <div className="ap-summary-total-values">
-            <span>
-              <b>TMS</b>
-              {fmt(tmsTotalAmountPayable)}
-            </span>
-            <span>
-              <b>VP</b>
-              {fmt(totalAmountPayable)}
-            </span>
+            <span><b>TMS</b>{fmt(tmsTotalAmountPayable)}</span>
+            <span><b>VP</b>{fmt(totalAmountPayable)}</span>
             <span className={`diff ${totalAmountPayable - tmsTotalAmountPayable === 0 ? 'match' : totalAmountPayable - tmsTotalAmountPayable > 0 ? 'up' : 'down'}`}>
-              <b>Diff</b>
-              {fmtDiff(totalAmountPayable - tmsTotalAmountPayable)}
+              <b>Diff</b>{fmtDiff(totalAmountPayable - tmsTotalAmountPayable)}
             </span>
           </div>
         </div>
@@ -991,28 +1191,16 @@ function ApStatementDetail({ statementId, onBack }: Props) {
               { label: 'Exception Fee', tms: tmsAmountSummary.exception, vp: vpAmountSummary.exception },
             ]
           )}
-          {renderSimpleSummaryBlock(
-            'Claim',
-            vpClaimAmount,
-            [
-              { label: 'KPI Claim', amount: vpKpiClaim },
-            ]
-          )}
-          {renderSummaryBlock(
-            'Others',
-            tmsOthersAmount,
-            vpOthersAmount,
-            [
-              { label: 'VAT', tms: tmsVatAmount, vp: vpVatAmount },
-              { label: 'WHT', tms: tmsWhtAmount, vp: vpWhtAmount },
-            ]
-          )}
+          {renderSimpleSummaryBlock('Claim', vpClaimAmount, [{ label: 'KPI Claim', amount: vpKpiClaim }])}
+          {renderSummaryBlock('Others', tmsOthersAmount, vpOthersAmount, [
+            { label: 'VAT', tms: tmsVatAmount, vp: vpVatAmount },
+            { label: 'WHT', tms: tmsWhtAmount, vp: vpWhtAmount },
+          ])}
         </div>
       </div>
     );
   };
 
-  // Invoice dialog
   const renderInvoiceDialog = () => {
     if (!showInvoiceDialog) return null;
     const isEdit = editingInvoice !== null;
@@ -1022,41 +1210,25 @@ function ApStatementDetail({ statementId, onBack }: Props) {
           <div style={{ borderLeft: '4px solid #00b96b', paddingLeft: 12, marginBottom: 20 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>{isEdit ? 'Edit Invoice' : 'Add Invoice'}</div>
           </div>
-
           {invoiceFormRows.map((row, idx) => (
             <div key={row.id} style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: 16, marginBottom: 12, position: 'relative' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Number</div>
-                  <input
-                    type="text"
-                    style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    placeholder="e.g. INV-001"
-                    value={row.no}
-                    onChange={e => updateFormRow(row.id, 'no', e.target.value)}
-                  />
+                  <input type="text" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
+                    placeholder="e.g. INV-001" value={row.no} onChange={e => updateFormRow(row.id, 'no', e.target.value)} />
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Date</div>
-                  <input
-                    type="date"
-                    style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    value={row.date}
-                    onChange={e => updateFormRow(row.id, 'date', e.target.value)}
-                  />
+                  <input type="date" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
+                    value={row.date} onChange={e => updateFormRow(row.id, 'date', e.target.value)} />
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Amount</div>
-                  <input
-                    type="text"
-                    style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    placeholder="e.g. 10,000.00"
-                    value={row.amount}
-                    onChange={e => updateFormRow(row.id, 'amount', e.target.value)}
-                  />
+                  <input type="text" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
+                    placeholder="e.g. 10,000.00" value={row.amount} onChange={e => updateFormRow(row.id, 'amount', e.target.value)} />
                 </div>
               </div>
-
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 12, color: '#888', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1064,45 +1236,27 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                     <span style={{ background: '#e6f4ff', color: '#1677ff', fontSize: 11, padding: '1px 6px', borderRadius: 4 }}>AI OCR</span>
                   </div>
                   {row.proofFileName ? (
-                    <div
-                      style={{ width: 80, height: 80, border: '1px solid #d9d9d9', borderRadius: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 11, color: '#555', background: '#f5f5f5', gap: 4 }}
-                      onClick={() => handleProofUpload(row.id)}
-                    >
+                    <div style={{ width: 80, height: 80, border: '1px solid #d9d9d9', borderRadius: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 11, color: '#555', background: '#f5f5f5', gap: 4 }}
+                      onClick={() => handleProofUpload(row.id)}>
                       <div style={{ width: 40, height: 40, background: '#d9d9d9', borderRadius: 4 }} />
                       <div style={{ maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.proofFileName}</div>
                     </div>
                   ) : (
-                    <div
-                      style={{ width: 80, height: 80, border: '1px dashed #d9d9d9', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 24, color: '#bbb' }}
-                      onClick={() => handleProofUpload(row.id)}
-                    >
-                      +
-                    </div>
+                    <div style={{ width: 80, height: 80, border: '1px dashed #d9d9d9', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 24, color: '#bbb' }}
+                      onClick={() => handleProofUpload(row.id)}>+</div>
                   )}
                 </div>
-
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {/* Remove button */}
-                  <button
-                    style={{ width: 32, height: 32, borderRadius: '50%', background: '#ff4d4f', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    onClick={() => removeFormRow(row.id)}
-                  >
-                    −
-                  </button>
-                  {/* Add row button — only on last row in add mode */}
+                  <button style={{ width: 32, height: 32, borderRadius: '50%', background: '#ff4d4f', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => removeFormRow(row.id)}>−</button>
                   {!isEdit && idx === invoiceFormRows.length - 1 && (
-                    <button
-                      style={{ width: 32, height: 32, borderRadius: '50%', background: '#00b96b', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      onClick={addFormRow}
-                    >
-                      +
-                    </button>
+                    <button style={{ width: 32, height: 32, borderRadius: '50%', background: '#00b96b', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      onClick={addFormRow}>+</button>
                   )}
                 </div>
               </div>
             </div>
           ))}
-
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
             <button className="btn-default" onClick={() => setShowInvoiceDialog(false)}>Cancel</button>
             <button className="btn-primary" onClick={handleInvoiceConfirm}>Confirm</button>
@@ -1111,6 +1265,8 @@ function ApStatementDetail({ statementId, onBack }: Props) {
       </div>
     );
   };
+
+  // ── MAIN RENDER ──
 
   return (
     <div>
@@ -1125,53 +1281,136 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         }>{data.source}</span>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {isAwaitingConfirmation && (
+          {/* Payment Preparation actions */}
+          {isPaymentPrep && (
             <>
-              <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowRejectDialog(true)}>
-                Reject &amp; Send Back
-              </button>
-              <button className="btn-primary" onClick={() => setShowConfirmDialog(true)}>
-                Confirm &amp; Start Comparison
-              </button>
+              <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowCancelDialog(true)}>Cancel</button>
+              <button className="btn-primary" onClick={() => {
+                setPaymentAmount(fmt(totalAmountPayable));
+                setShowConfirmPaymentDialog(true);
+              }}>Confirm &amp; Create Vendor Payment</button>
             </>
           )}
+          {/* Awaiting Comparison actions */}
           {isAwaitingComparison && (
             <>
               <button className="btn-default" onClick={handleRefresh} disabled={refreshing}>
                 {refreshing ? 'Refreshing…' : '↻ Refresh'}
               </button>
-              <button className="btn-primary" onClick={handleFinalise} disabled={!allReady}>
-                Confirm &amp; Create Vendor Payment
-              </button>
+              <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowRejectDialog(true)}>Reject</button>
+              <button className="btn-primary" onClick={() => {
+                setPaymentAmount(fmt(totalAmountPayable));
+                setShowConfirmPaymentDialog(true);
+              }} disabled={!allReady}>Confirm &amp; Create Vendor Payment</button>
               {!allReady && (
                 <span style={{ fontSize: 12, color: '#cf1322', marginLeft: 8 }}>Resolve all Mismatched / Missed items first.</span>
               )}
             </>
           )}
+          {/* Awaiting Re-bill actions */}
+          {isAwaitingRebill && (
+            <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowCancelDialog(true)}>Cancel</button>
+          )}
+          {/* Pending Payment actions */}
+          {isPendingPayment && (
+            <>
+              <button className="btn-default" onClick={() => { setApAppNo(`APA${Date.now().toString().slice(-7)}`); setApAppAmount(''); setShowAddApAppDialog(true); }}>
+                + Add AP Application
+              </button>
+              <button className="btn-default" style={{ color: '#d46b08', borderColor: '#ffd591' }} onClick={() => setShowWriteOffDialog(true)}>Write Off</button>
+              <button className="btn-default" onClick={() => showToast('Export completed.')}>
+                <Download size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Export
+              </button>
+            </>
+          )}
+          {/* Partially Payment actions */}
+          {isPartiallyPayment && (
+            <>
+              <button className="btn-default" onClick={() => { setApAppNo(`APA${Date.now().toString().slice(-7)}`); setApAppAmount(''); setShowAddApAppDialog(true); }}>
+                + Add AP Application
+              </button>
+              <button className="btn-default" style={{ color: '#d46b08', borderColor: '#ffd591' }} onClick={() => setShowWriteOffDialog(true)}>Write Off</button>
+            </>
+          )}
+          {/* Terminal states — Export only */}
+          {isReadOnly && (
+            <button className="btn-default" onClick={() => showToast('Export completed.')}>
+              <Download size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Export
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Action banners */}
-      {actionDone === 'confirmed' && (
-        <div className="alert" style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d', marginBottom: 16 }}>
-          ✓ Statement confirmed. You can now proceed with the blind comparison below.
+      {/* Terminal state banners */}
+      {isPaid && (
+        <div className="ap-terminal-banner paid">
+          <span className="banner-icon">✓</span>
+          <div>
+            <div>Payment Complete</div>
+            <div className="banner-detail">All amounts have been fully settled. Total paid: {data.currency} {fmt(statementPaidAmount)}</div>
+          </div>
         </div>
       )}
+      {isWrittenOff && (
+        <div className="ap-terminal-banner written-off">
+          <span className="banner-icon">⚠</span>
+          <div>
+            <div>Written Off</div>
+            <div className="banner-detail">
+              <strong>Reason:</strong> {data.writeOffReason || 'No reason provided'}<br />
+              <strong>Written off by:</strong> {data.writeOffBy || 'Unknown'} · <strong>Written off amount:</strong> {data.currency} {fmt(data.writeOffAmount || 0)}
+            </div>
+          </div>
+        </div>
+      )}
+      {isCanceled && (
+        <div className="ap-terminal-banner canceled">
+          <span className="banner-icon">✗</span>
+          <div>
+            <div>Statement Canceled</div>
+            <div className="banner-detail">
+              <strong>Reason:</strong> {data.cancelReason || 'No reason provided'}<br />
+              <strong>Canceled by:</strong> {data.cancelBy || 'Unknown'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Awaiting Re-bill banner */}
+      {isAwaitingRebill && data.rejectReason && (
+        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
+          <span style={{ fontSize: 16 }}>⚠</span>
+          <div>
+            <strong>Statement rejected and sent back to vendor.</strong>
+            <div style={{ marginTop: 4, fontSize: 13, color: '#555' }}>
+              <strong>Reject Reason:</strong> {data.rejectReason}
+            </div>
+            <div style={{ marginTop: 2, fontSize: 12, color: '#999' }}>
+              Waiting for vendor to revise and resubmit via Vendor Portal.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action done banners */}
       {actionDone === 'rejected' && (
         <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
-          ✗ Statement sent back to vendor for correction.
+          ✗ Statement rejected and sent back to vendor for correction.
         </div>
       )}
-      {actionDone === 'matched' && (
-        <div className="alert" style={{
-          background: mismatchCount > 0 ? '#fff1f0' : '#f6ffed',
-          border: `1px solid ${mismatchCount > 0 ? '#ffa39e' : '#b7eb8f'}`,
-          color: mismatchCount > 0 ? '#cf1322' : '#389e0d',
-          marginBottom: 16,
-        }}>
-          {mismatchCount > 0
-            ? `⚠ Comparison complete — ${mismatchCount} mismatch(es) found. Statement sent back to vendor.`
-            : `✓ All waybills matched. AP Application auto-generated and statement moved to Pending Payment.`}
+      {actionDone === 'canceled' && (
+        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
+          ✗ Statement has been canceled. All associated waybills and tickets have been released.
+        </div>
+      )}
+      {actionDone === 'written-off' && (
+        <div className="alert" style={{ background: '#fff7e6', border: '1px solid #ffd591', color: '#d46b08', marginBottom: 16 }}>
+          ⚠ Remaining balance has been written off. Statement is now closed.
+        </div>
+      )}
+      {actionDone === 'confirmed-payment' && (
+        <div className="alert" style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d', marginBottom: 16 }}>
+          ✓ Vendor Payment created successfully and pushed to HR system for processing.
         </div>
       )}
 
@@ -1198,24 +1437,35 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         </div>
       </div>
 
-      {/* Waybill / Comparison table */}
-      <div className="tms-card" style={{ marginBottom: 16 }}>
+      {/* Waybill / Claim ticket table */}
+      <div className={`tms-card${isReadOnly || isAwaitingRebill ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
         <div className="section-title" style={{ marginBottom: 4 }}>
-          Waybill List (Vendor-Submitted)
+          {isPaymentPrep ? 'Settlement Details' : 'Waybill List'}
         </div>
         <div className="ap-statement-tabs">
-          <button
-            className={`tab-btn ${activeStatementTab === 'waybill' ? 'active' : ''}`}
-            onClick={() => setActiveStatementTab('waybill')}
-          >
+          <button className={`tab-btn ${activeStatementTab === 'waybill' ? 'active' : ''}`}
+            onClick={() => setActiveStatementTab('waybill')}>
             Waybill List ({data.waybills.length})
           </button>
-          <button
-            className={`tab-btn ${activeStatementTab === 'claim' ? 'active' : ''}`}
-            onClick={() => setActiveStatementTab('claim')}
-          >
+          <button className={`tab-btn ${activeStatementTab === 'claim' ? 'active' : ''}`}
+            onClick={() => setActiveStatementTab('claim')}>
             Claim Ticket ({claimTickets.length})
           </button>
+          {/* Add buttons for Payment Preparation */}
+          {isPaymentPrep && (
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              {activeStatementTab === 'waybill' && (
+                <button className="btn-default" style={{ fontSize: 12 }} onClick={() => showToast('Add Waybill dialog would open here.')}>
+                  <Plus size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />Add Waybill
+                </button>
+              )}
+              {activeStatementTab === 'claim' && (
+                <button className="btn-default" style={{ fontSize: 12 }} onClick={() => showToast('Add Ticket dialog would open here.')}>
+                  <Plus size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />Add Ticket
+                </button>
+              )}
+            </div>
+          )}
         </div>
         {isAwaitingComparison && (
           <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
@@ -1234,14 +1484,17 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         {renderAmountSummaryTable()}
       </div>
 
-      {/* Invoice (Awaiting Confirmation / Awaiting Comparison) */}
-      {(isAwaitingConfirmation || isAwaitingComparison) && (
-        <div className="tms-card" style={{ marginBottom: 16 }}>
+      {/* Invoice section */}
+      {(canEditInvoice || isPendingPayment || isAwaitingRebill || isReadOnly) && (
+        <div className={`tms-card${isReadOnly || isAwaitingRebill ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
             <div className="section-title" style={{ margin: 0 }}>Invoice</div>
-            <button className="btn-default" style={{ marginLeft: 'auto', fontSize: 12 }} onClick={openAddInvoice}>
-              + Add Invoice
-            </button>
+            {canEditInvoice && (
+              <button className="btn-default" style={{ marginLeft: 'auto', fontSize: 12 }} onClick={openAddInvoice}>+ Add Invoice</button>
+            )}
+            {isPendingPayment && (
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#888' }}>Void Invoice available</span>
+            )}
           </div>
           {invoices.length === 0 ? (
             <div style={{ fontSize: 13, color: '#999' }}>No invoice uploaded.</div>
@@ -1265,13 +1518,23 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                     <td>
                       <span style={inv.status === 'Verified'
                         ? { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
+                        : inv.status === 'Voided'
+                        ? { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12, textDecoration: 'line-through' }
                         : { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
                       }>{inv.status}</span>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn-link" style={{ fontSize: 12 }} onClick={() => openEditInvoice(inv)}>Edit</button>
-                        <button className="btn-link" style={{ fontSize: 12, color: '#ff4d4f' }} onClick={() => setInvoices(prev => prev.filter(i => i.id !== inv.id))}>Delete</button>
+                        {canEditInvoice && inv.status !== 'Voided' && (
+                          <>
+                            <button className="btn-link" style={{ fontSize: 12 }} onClick={() => openEditInvoice(inv)}>Edit</button>
+                            <button className="btn-link" style={{ fontSize: 12, color: '#ff4d4f' }} onClick={() => setInvoices(prev => prev.filter(i => i.id !== inv.id))}>Delete</button>
+                          </>
+                        )}
+                        {isPendingPayment && inv.status !== 'Voided' && (
+                          <button className="btn-link" style={{ fontSize: 12, color: '#ff4d4f' }} onClick={() => handleVoidInvoice(inv.id)}>Void</button>
+                        )}
+                        {inv.status === 'Voided' && <span style={{ fontSize: 12, color: '#999' }}>Voided</span>}
                       </div>
                     </td>
                   </tr>
@@ -1283,19 +1546,16 @@ function ApStatementDetail({ statementId, onBack }: Props) {
       )}
 
       {/* Supporting Proof */}
-      <div className="tms-card" style={{ marginBottom: 16 }}>
+      <div className={`tms-card${isReadOnly ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <div className="section-title" style={{ margin: 0 }}>Supporting Proof</div>
-          <button
-            className="btn-default"
-            style={{ marginLeft: 'auto', fontSize: 12 }}
-            onClick={() => {
-              const name = mockProofNames[proofFiles.length % mockProofNames.length];
-              setProofFiles(prev => [...prev, name]);
-            }}
-          >
-            + Add Proof
-          </button>
+          {!isReadOnly && !isAwaitingRebill && (
+            <button className="btn-default" style={{ marginLeft: 'auto', fontSize: 12 }}
+              onClick={() => {
+                const name = mockProofNames[proofFiles.length % mockProofNames.length];
+                setProofFiles(prev => [...prev, name]);
+              }}>+ Add Proof</button>
+          )}
         </div>
         {proofFiles.length === 0 ? (
           <div style={{ fontSize: 13, color: '#999' }}>No proof uploaded.</div>
@@ -1303,31 +1563,86 @@ function ApStatementDetail({ statementId, onBack }: Props) {
           <div style={{ display: 'flex', flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
             {proofFiles.map((f, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                <span>📄</span>
+                <FileText size={14} color="#999" />
                 <span>{f}</span>
-                <a href="#" style={{ fontSize: 12, color: '#1677ff' }}>Download</a>
+                <a href="#" style={{ fontSize: 12, color: '#1677ff' }} onClick={e => e.preventDefault()}>Download</a>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Payment module (Partially Payment) */}
+      {/* Payment section — Pending Payment */}
+      {isPendingPayment && (linkedPayments.length > 0 || LINKED_PAYMENT[statementId]) && (() => {
+        const payments = linkedPayments.length > 0 ? linkedPayments : (LINKED_PAYMENT[statementId] || []);
+        return (
+          <div className="tms-card" style={{ marginBottom: 16 }}>
+            <div className="section-title" style={{ marginBottom: 12 }}>Payment</div>
+            {payments.map((payment, pi) => (
+              <div key={pi} style={{ marginBottom: pi < payments.length - 1 ? 16 : 0 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application No.</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#1677ff' }}>{payment.appNo}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application Type</div>
+                    <span style={{ background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{payment.appType}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Amount</div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{payment.amount}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Submitted At</div>
+                    <div style={{ fontSize: 13 }}>{payment.submittedAt}</div>
+                  </div>
+                </div>
+                {/* Progress stepper */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 16 }}>
+                  {(['Pending Review', 'Approved', 'Released'] as const).map((step, idx) => {
+                    const isCurrent = payment.status === step;
+                    const isPast = idx < ['Pending Review', 'Approved', 'Released'].indexOf(payment.status);
+                    return (
+                      <React.Fragment key={step}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#d9d9d9',
+                            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 13, fontWeight: 600,
+                          }}>{isPast ? '✓' : idx + 1}</div>
+                          <div style={{ fontSize: 12, color: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#aaa', whiteSpace: 'nowrap' }}>{step}</div>
+                        </div>
+                        {idx < 2 && <div style={{ flex: 1, height: 2, background: isPast ? '#00b96b' : '#e8e8e8', minWidth: 40, maxWidth: 80 }} />}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+                <div style={{ background: '#e6f4ff', border: '1px solid #91caff', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: '#0958d9', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span>ⓘ</span>
+                  <span>This application is currently "{payment.hrStatus}". TMS will be notified automatically once payment is released.</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
+      {/* Payment section — Partially Payment */}
       {isPartiallyPayment && PARTIAL_PAYMENT_DATA[statementId] && (() => {
         const pp = PARTIAL_PAYMENT_DATA[statementId];
         const unpaidTotal = pp.unpaidApplications.reduce((s, a) => s + a.amount, 0);
         return (
           <div className="tms-card" style={{ marginBottom: 16 }}>
             <div className="section-title" style={{ marginBottom: 16 }}>Payment</div>
-
-            {/* Paid amount tile */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
               <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
                 <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Paid Amount</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: '#389e0d' }}>{fmt(pp.paidAmount)}</div>
               </div>
               <div style={{ background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Remaining Unpaid</div>
+                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Outstanding Amount</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: '#d46b08' }}>{fmt(unpaidTotal)}</div>
               </div>
               <div style={{ background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
@@ -1335,7 +1650,6 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                 <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(data.vendorTotal)}</div>
               </div>
             </div>
-
             {/* Paid applications */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#389e0d', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1343,25 +1657,16 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                 Paid Vendor Payment Applications
               </div>
               <table className="data-table" style={{ width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th>Application No.</th>
-                    <th style={{ textAlign: 'right' }}>Amount</th>
-                    <th>Released At</th>
-                    <th>Payment Proof</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Amount</th><th>Released At</th><th>Payment Proof</th></tr></thead>
                 <tbody>
                   {pp.paidApplications.map(app => (
                     <tr key={app.appNo}>
                       <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
-                      <td style={{ textAlign: 'right', fontSize: 13, color: '#389e0d', fontWeight: 600 }}>
-                        {fmt(app.amount)}
-                      </td>
+                      <td style={{ textAlign: 'right', fontSize: 13, color: '#389e0d', fontWeight: 600 }}>{fmt(app.amount)}</td>
                       <td style={{ fontSize: 13 }}>{app.releasedAt}</td>
                       <td style={{ fontSize: 13 }}>
                         <a href="#" style={{ color: '#1677ff' }} onClick={e => e.preventDefault()}>
-                          📄 {app.proofFile}
+                          <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{app.proofFile}
                         </a>
                       </td>
                     </tr>
@@ -1369,34 +1674,20 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                 </tbody>
               </table>
             </div>
-
-            {/* Unpaid applications */}
+            {/* Pending applications */}
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#d46b08', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d46b08', display: 'inline-block' }} />
                 Pending Vendor Payment Applications
               </div>
               <table className="data-table" style={{ width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th>Application No.</th>
-                    <th style={{ textAlign: 'right' }}>Unpaid Amount</th>
-                    <th>Status</th>
-                    <th>Submitted At</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Unpaid Amount</th><th>Status</th><th>Submitted At</th></tr></thead>
                 <tbody>
                   {pp.unpaidApplications.map(app => (
                     <tr key={app.appNo}>
                       <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
-                      <td style={{ textAlign: 'right', fontSize: 13, color: '#d46b08', fontWeight: 600 }}>
-                        {fmt(app.amount)}
-                      </td>
-                      <td>
-                        <span style={{ background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>
-                          {app.status}
-                        </span>
-                      </td>
+                      <td style={{ textAlign: 'right', fontSize: 13, color: '#d46b08', fontWeight: 600 }}>{fmt(app.amount)}</td>
+                      <td><span style={{ background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{app.status}</span></td>
                       <td style={{ fontSize: 13 }}>{app.submittedAt}</td>
                     </tr>
                   ))}
@@ -1407,62 +1698,35 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         );
       })()}
 
-      {/* Vendor Payment Application (Pending Payment only) */}
-      {isPendingPayment && LINKED_PAYMENT[statementId] && (() => {
-        const payment = LINKED_PAYMENT[statementId];
+      {/* Payment section — Paid (terminal) */}
+      {isPaid && PAID_PAYMENT_DATA[statementId] && (() => {
+        const pp = PAID_PAYMENT_DATA[statementId];
         return (
           <div className="tms-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Vendor Payment Application</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application No.</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1677ff' }}>{payment.appNo}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application Type</div>
-                <span style={{ background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{payment.appType}</span>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Amount</div>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{payment.amount}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Submitted At</div>
-                <div style={{ fontSize: 13 }}>{payment.submittedAt}</div>
+            <div className="section-title" style={{ marginBottom: 16 }}>Payment</div>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+              <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
+                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Total Paid</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#389e0d' }}>{fmt(pp.paidAmount)}</div>
               </div>
             </div>
-
-            {/* Progress stepper */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 16 }}>
-              {(['Pending Review', 'Approved', 'Released'] as const).map((step, idx) => {
-                const isCurrent = payment.status === step;
-                const isPast = idx < ['Pending Review', 'Approved', 'Released'].indexOf(payment.status);
-                return (
-                  <React.Fragment key={step}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#d9d9d9',
-                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 600,
-                      }}>
-                        {isPast ? '✓' : idx + 1}
-                      </div>
-                      <div style={{ fontSize: 12, color: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#aaa', whiteSpace: 'nowrap' }}>{step}</div>
-                    </div>
-                    {idx < 2 && (
-                      <div style={{ flex: 1, height: 2, background: isPast ? '#00b96b' : '#e8e8e8', minWidth: 40, maxWidth: 80 }} />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-
-            {/* HR status info */}
-            <div style={{ background: '#e6f4ff', border: '1px solid #91caff', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: '#0958d9', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <span>ⓘ</span>
-              <span>This application is currently "{payment.hrStatus}". TMS will be notified automatically once payment is released.</span>
-            </div>
+            <table className="data-table" style={{ width: '100%' }}>
+              <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Amount</th><th>Released At</th><th>Release Proof</th></tr></thead>
+              <tbody>
+                {pp.apps.map(app => (
+                  <tr key={app.appNo}>
+                    <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
+                    <td style={{ textAlign: 'right', fontSize: 13, color: '#389e0d', fontWeight: 600 }}>{fmt(app.amount)}</td>
+                    <td style={{ fontSize: 13 }}>{app.releasedAt}</td>
+                    <td style={{ fontSize: 13 }}>
+                      <a href="#" style={{ color: '#1677ff' }} onClick={e => e.preventDefault()}>
+                        <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{app.proofFile}
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         );
       })()}
@@ -1484,6 +1748,161 @@ function ApStatementDetail({ statementId, onBack }: Props) {
         </div>
       </div>
 
+      {/* ── Dialogs ── */}
+
+      {/* Reject dialog (Awaiting Comparison) */}
+      {showRejectDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#cf1322' }}>Reject Statement</div>
+            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
+              Reject Reason <span style={{ color: '#ff4d4f' }}>*</span>
+            </label>
+            <textarea
+              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+              placeholder="Explain the issue so the vendor can correct and resubmit."
+              value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+            />
+            {!rejectReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn-default" onClick={() => setShowRejectDialog(false)}>Cancel</button>
+              <button style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: rejectReason.trim() ? 'pointer' : 'not-allowed', opacity: rejectReason.trim() ? 1 : 0.5 }}
+                onClick={handleReject}>Reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel dialog */}
+      {showCancelDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#cf1322' }}>Cancel Statement</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+              This will permanently cancel the statement. All associated waybills and tickets will be released and can be included in other statements.
+            </div>
+            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
+              Cancel Reason <span style={{ color: '#ff4d4f' }}>*</span>
+            </label>
+            <textarea
+              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+              placeholder="Explain why this statement is being canceled."
+              value={cancelReason} onChange={e => setCancelReason(e.target.value)}
+            />
+            {!cancelReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn-default" onClick={() => setShowCancelDialog(false)}>Back</button>
+              <button style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: cancelReason.trim() ? 'pointer' : 'not-allowed', opacity: cancelReason.trim() ? 1 : 0.5 }}
+                onClick={handleCancel}>Confirm Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Write Off dialog */}
+      {showWriteOffDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#d46b08' }}>Write Off Remaining Balance</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+              This will write off the remaining unpaid balance and mark the statement as terminated. This action cannot be undone.
+            </div>
+            <div style={{ background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span>Total Amount:</span><strong>{data.currency} {fmt(data.vendorTotal)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span>Paid Amount:</span><strong style={{ color: '#389e0d' }}>{data.currency} {fmt(statementPaidAmount)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ffd591', paddingTop: 4 }}>
+                <span>Write Off Amount:</span><strong style={{ color: '#d46b08' }}>{data.currency} {fmt(data.vendorTotal - statementPaidAmount)}</strong>
+              </div>
+            </div>
+            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
+              Write Off Reason <span style={{ color: '#ff4d4f' }}>*</span>
+            </label>
+            <textarea
+              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+              placeholder="Explain the reason for writing off the remaining balance."
+              value={writeOffReason} onChange={e => setWriteOffReason(e.target.value)}
+            />
+            {!writeOffReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn-default" onClick={() => setShowWriteOffDialog(false)}>Back</button>
+              <button style={{ background: '#d46b08', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: writeOffReason.trim() ? 'pointer' : 'not-allowed', opacity: writeOffReason.trim() ? 1 : 0.5 }}
+                onClick={handleWriteOff}>Confirm Write Off</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm & Create Vendor Payment dialog */}
+      {showConfirmPaymentDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 520, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Confirm & Create Vendor Payment</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 16 }}>
+              Review the payment details below. An AP Application will be created and pushed to the HR system for payment processing.
+            </div>
+            <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
+                <div><span style={{ color: '#888' }}>Vendor:</span> <strong>{data.vendor}</strong></div>
+                <div><span style={{ color: '#888' }}>Currency:</span> <strong>{data.currency}</strong></div>
+                <div><span style={{ color: '#888' }}>Waybills:</span> <strong>{data.waybills.length}</strong></div>
+                <div><span style={{ color: '#888' }}>Claim Tickets:</span> <strong>{claimTickets.length}</strong></div>
+              </div>
+            </div>
+            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
+              Payment Amount <span style={{ color: '#888', fontWeight: 400 }}>(editable)</span>
+            </label>
+            <input
+              type="text"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 15, fontWeight: 700, boxSizing: 'border-box' }}
+              value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)}
+            />
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+              Calculated total: {data.currency} {fmt(totalAmountPayable)}. You may adjust the payment amount if needed.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn-default" onClick={() => setShowConfirmPaymentDialog(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleConfirmPayment}>Create Vendor Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add AP Application dialog */}
+      {showAddApAppDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Add AP Application</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 16 }}>
+              Manually add a new HR payment application record for this statement.
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Application No.</label>
+              <input type="text" style={{ width: '100%', padding: '6px 10px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, boxSizing: 'border-box' }}
+                value={apAppNo} onChange={e => setApAppNo(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Amount</label>
+              <input type="text" style={{ width: '100%', padding: '6px 10px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, boxSizing: 'border-box' }}
+                placeholder="e.g. 25,000.00" value={apAppAmount} onChange={e => setApAppAmount(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn-default" onClick={() => setShowAddApAppDialog(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleAddApApp}
+                style={{ opacity: apAppNo.trim() && apAppAmount.trim() ? 1 : 0.5, cursor: apAppNo.trim() && apAppAmount.trim() ? 'pointer' : 'not-allowed' }}>
+                Add Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Add/Edit dialog */}
+      {renderInvoiceDialog()}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -1494,56 +1913,6 @@ function ApStatementDetail({ statementId, onBack }: Props) {
           {toast}
         </div>
       )}
-
-      {/* Confirm dialog */}
-      {showConfirmDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Confirm Statement</div>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 20 }}>
-              This will move the statement to <strong>Awaiting Comparison</strong> and unlock the blind comparison view.
-              The vendor's submitted amounts are now locked.
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button className="btn-default" onClick={() => setShowConfirmDialog(false)}>Cancel</button>
-              <button className="btn-primary" onClick={handleConfirm}>Confirm & Proceed</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reject dialog */}
-      {showRejectDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Send Back to Vendor</div>
-            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
-              Reject Reason <span style={{ color: '#ff4d4f' }}>*</span>
-            </label>
-            <textarea
-              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
-              placeholder="Explain the issue so the vendor can correct and resubmit."
-              value={rejectReason}
-              onChange={e => setRejectReason(e.target.value)}
-            />
-            {!rejectReason.trim() && (
-              <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>
-            )}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-              <button className="btn-default" onClick={() => setShowRejectDialog(false)}>Cancel</button>
-              <button
-                style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: rejectReason.trim() ? 'pointer' : 'not-allowed', opacity: rejectReason.trim() ? 1 : 0.5 }}
-                onClick={handleReject}
-              >
-                Send Back
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Invoice Add/Edit dialog */}
-      {renderInvoiceDialog()}
     </div>
   );
 }
