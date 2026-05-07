@@ -79,6 +79,8 @@ const Component = function VendorPortal() {
   const [statementView, setStatementView] = useState<StatementView>('list');
   const [openedStmtNo, setOpenedStmtNo] = useState('VS2604001');
   const [openedStmtStatus, setOpenedStmtStatus] = useState<StatementStatus>('Awaiting Comparison');
+  const [vpStatusOverrides, setVpStatusOverrides] = useState<Record<string, StatementStatus>>({});
+  const [submitSuccessNo, setSubmitSuccessNo] = useState<string | null>(null);
   // For edit (Awaiting Re-bill) flow
   const [editingStmtNo, setEditingStmtNo] = useState<string | undefined>(undefined);
   const [editingRejectReason, setEditingRejectReason] = useState<string | undefined>(undefined);
@@ -362,6 +364,14 @@ const Component = function VendorPortal() {
     setStatementView('list');
   };
 
+  const handleSubmitToTMS = (no: string) => {
+    // Update status to Awaiting Comparison; stay on current detail page
+    setVpStatusOverrides(prev => ({ ...prev, [no]: 'Awaiting Comparison' }));
+    setOpenedStmtStatus('Awaiting Comparison');
+    setSubmitSuccessNo(no);
+    setTimeout(() => setSubmitSuccessNo(null), 4000);
+  };
+
   // --- Render ---
   const renderUnbilledWaybills = () => {
     if (unbilledView === 'create') {
@@ -410,10 +420,19 @@ const Component = function VendorPortal() {
     switch (statementView) {
       case 'list':
         return (
-          <StatementList
-            onOpenDetail={handleOpenStatementDetail}
-            onEdit={handleEditStatement}
-          />
+          <>
+            {submitSuccessNo && (
+              <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '10px 16px', marginBottom: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: '#52c41a', fontSize: 16 }}>✓</span>
+                <span>Statement <strong>{submitSuccessNo}</strong> has been submitted to TMS and is now <strong>Awaiting Comparison</strong>.</span>
+              </div>
+            )}
+            <StatementList
+              onOpenDetail={handleOpenStatementDetail}
+              onEdit={handleEditStatement}
+              statusOverrides={vpStatusOverrides}
+            />
+          </>
         );
       case 'detail':
         return (
@@ -421,6 +440,7 @@ const Component = function VendorPortal() {
             no={openedStmtNo}
             status={openedStmtStatus}
             onBack={() => setStatementView('list')}
+            onSubmitToTMS={handleSubmitToTMS}
             onEdit={
               openedStmtStatus === 'Draft' || openedStmtStatus === 'Awaiting Re-bill'
                 ? () => handleEditStatement(openedStmtNo, openedStmtStatus)

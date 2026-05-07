@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 interface Props {
   onOpenDetail: (no: string, status: Status) => void;
   onEdit: (no: string, status: Status) => void;
+  statusOverrides?: Record<string, Status>;
 }
 
 export type Status =
@@ -158,7 +159,7 @@ const STATUS_OPTIONS: Status[] = [
   'Partially Payment', 'Paid', 'Written Off', 'Canceled',
 ];
 
-function StatementList({ onOpenDetail, onEdit }: Props) {
+function StatementList({ onOpenDetail, onEdit, statusOverrides = {} }: Props) {
   const [filterStatementNo, setFilterStatementNo] = useState('');
   const [filterSource, setFilterSource] = useState('');
   const [filterInvoiceNo, setFilterInvoiceNo] = useState('');
@@ -252,13 +253,14 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
         </thead>
         <tbody>
           {filtered.map(r => {
-            const isDraftOrRebill = r.status === 'Draft' || r.status === 'Awaiting Re-bill';
+            const effectiveStatus: Status = statusOverrides[r.no] ?? r.status;
+            const isDraftOrRebill = effectiveStatus === 'Draft' || effectiveStatus === 'Awaiting Re-bill';
             return (
               <tr key={r.no}>
                 <td>
                   <strong
                     style={{ color: '#1677ff', cursor: 'pointer' }}
-                    onClick={() => onOpenDetail(r.no, r.status)}
+                    onClick={() => onOpenDetail(r.no, effectiveStatus)}
                   >
                     {r.no}
                   </strong>
@@ -274,8 +276,8 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
                 <td style={{ textAlign: 'center', fontSize: 13, color: '#666' }}>{r.waybillCount}</td>
                 <td style={{ fontSize: 13, color: r.invoiceNo === '—' ? '#bbb' : '#333' }}>{r.invoiceNo}</td>
                 <td>
-                  <span style={{ ...BASE_BADGE, ...STATUS_STYLE[r.status] }}>{r.status}</span>
-                  {r.status === 'Awaiting Re-bill' && r.rejectReason && (
+                  <span style={{ ...BASE_BADGE, ...STATUS_STYLE[effectiveStatus] }}>{effectiveStatus}</span>
+                  {effectiveStatus === 'Awaiting Re-bill' && r.rejectReason && (
                     <div style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 220 }} title={r.rejectReason}>
                       {r.rejectReason.length > 55 ? r.rejectReason.slice(0, 55) + '…' : r.rejectReason}
                     </div>
@@ -283,7 +285,14 @@ function StatementList({ onOpenDetail, onEdit }: Props) {
                 </td>
                 <td style={{ fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{r.createdAt}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  <button className="btn-link" onClick={() => onOpenDetail(r.no, r.status)}>Details</button>
+                  {isDraftOrRebill ? (
+                    <span style={{ display: 'inline-flex', gap: 8 }}>
+                      <button className="btn-link" style={{ color: '#1677ff' }} onClick={() => onOpenDetail(r.no, effectiveStatus)}>Submit</button>
+                      <button className="btn-link" onClick={() => onOpenDetail(r.no, effectiveStatus)}>Edit</button>
+                    </span>
+                  ) : (
+                    <button className="btn-link" onClick={() => onOpenDetail(r.no, effectiveStatus)}>Details</button>
+                  )}
                 </td>
               </tr>
             );

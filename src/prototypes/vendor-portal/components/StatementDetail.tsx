@@ -6,6 +6,7 @@ interface Props {
   status: Status;
   onBack: () => void;
   onEdit?: () => void;
+  onSubmitToTMS?: (no: string) => void;
 }
 
 interface WaybillRow {
@@ -283,10 +284,24 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-function StatementDetail({ no, status, onBack, onEdit }: Props) {
+const ITEM_LABELS: Record<string, string> = {
+  basicAmount: 'Basic Amount',
+  additionalCharge: 'Additional Charge',
+  exceptionFee: 'Exception Fee',
+  reimbursement: 'Reimbursement',
+  claimDeduction: 'Claim Deduction',
+};
+const ITEM_KEYS = ['basicAmount', 'additionalCharge', 'exceptionFee', 'reimbursement', 'claimDeduction'] as const;
+type ItemKey = typeof ITEM_KEYS[number];
+
+function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
   const data = STATEMENT_DATA[no];
   const [activeTab, setActiveTab] = useState<'waybills' | 'tickets'>('waybills');
-  const [taxMode, setTaxMode] = useState<'inclusive' | 'exclusive'>('inclusive');
+  const [checkedItems, setCheckedItems] = useState<Record<ItemKey, boolean>>({
+    basicAmount: true, additionalCharge: true, exceptionFee: true, reimbursement: true, claimDeduction: true,
+  });
+  const [vatRate, setVatRate] = useState('0');
+  const [whtRate, setWhtRate] = useState('0');
 
   if (!data) {
     return (
@@ -306,9 +321,18 @@ function StatementDetail({ no, status, onBack, onEdit }: Props) {
   const {
     source, reconciliationPeriod, taxMark, totalAmountPayable, createDate,
     waybills, claimTickets, invoices, payments, operationLog, rejectReason,
-    waybillContractCost, vendorBasicAmount, prepaidAmount: prepAmt,
-    vendorExceptionFee, vendorAdditionalCharge, kpiClaim, vat, wht,
   } = data;
+
+  // ── Tax settings calculations ──────────────────────────────────────────────
+  const calcBasicAmount     = checkedItems.basicAmount     ? waybills.reduce((s, r) => s + r.basicAmount, 0)     : 0;
+  const calcAdditionalCharge= checkedItems.additionalCharge? waybills.reduce((s, r) => s + r.additionalCharge, 0): 0;
+  const calcExceptionFee    = checkedItems.exceptionFee    ? waybills.reduce((s, r) => s + r.exceptionFee, 0)    : 0;
+  const calcReimbursement   = checkedItems.reimbursement   ? waybills.reduce((s, r) => s + r.reimbursement, 0)   : 0;
+  const calcClaimDeduction  = checkedItems.claimDeduction  ? claimTickets.reduce((s, t) => s + t.claimAmount, 0) : 0;
+  const waybillSubtotal     = calcBasicAmount + calcAdditionalCharge + calcExceptionFee + calcReimbursement;
+  const vatAmount           = Math.round(waybillSubtotal * Number(vatRate) / 100);
+  const whtAmount           = Math.round(waybillSubtotal * Number(whtRate) / 100);
+  const calculatedTotal     = waybillSubtotal - calcClaimDeduction + vatAmount - whtAmount;
 
   const sectionStyle: React.CSSProperties = {
     background: '#fff',
@@ -475,84 +499,121 @@ function StatementDetail({ no, status, onBack, onEdit }: Props) {
         )}
       </div>
 
-      {/* ── Amount Summary ── */}
-      <div style={sectionStyle}>
-        <SectionTitle>Amount Summary</SectionTitle>
-
-        {/* Total row */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, fontSize: 13 }}>
-          <span style={{ color: '#666', marginRight: 8 }}>Total Amount Payable</span>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>{NUM_FMT(totalAmountPayable)}</span>
-          <div style={{ flex: 1 }} />
-          <span style={{ color: '#666', marginRight: 12 }}>Statement Tax Mark</span>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', marginRight: 16 }}>
-            <input type="radio" checked={taxMode === 'inclusive'} onChange={() => setTaxMode('inclusive')} />
-            Tax-inclusive
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-            <input type="radio" checked={taxMode === 'exclusive'} onChange={() => setTaxMode('exclusive')} />
-            Tax-exclusive
-          </label>
+      {/* ── Tax Settings & Settlement Items (editable only) ── */}
+      {isEditable && (
+        <div style={sectionStyle}>
+          <SectionTitle>Tax Settings &amp; Settlement Items</SectionTitle>
+          <div style={{ fontSize: 12, color: '#52c41a', marginBottom: 12 }}>
+            勾选本次需要结算的项目；未勾选的项目仍会在下方汇总区占位展示，但不参与 Total Amount Payable 计算。
+          </div>
+          <div style={{ fontSize: 13, color: '#333', marginBottom: 10 }}>Settlement Items in This Statement</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+            {ITEM_KEYS.map(key => (
+              <label
+                key={key}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '5px 14px',
+                  border: `1px solid ${checkedItems[key] ? '#1677ff' : '#d9d9d9'}`,
+                  borderRadius: 4, cursor: 'pointer', fontSize: 13,
+                  background: checkedItems[key] ? '#e6f4ff' : '#fff',
+                  color: checkedItems[key] ? '#1677ff' : '#333',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={checkedItems[key]}
+                  onChange={e => setCheckedItems(prev => ({ ...prev, [key]: e.target.checked }))}
+                  style={{ accentColor: '#1677ff' }}
+                />
+                {ITEM_LABELS[key]}
+              </label>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 13, marginBottom: 6 }}>VAT Rate</div>
+              <select
+                className="filter-select"
+                style={{ width: '100%', height: 36 }}
+                value={vatRate}
+                onChange={e => setVatRate(e.target.value)}
+              >
+                <option value="0">No VAT (0%)</option>
+                <option value="7">VAT 7%</option>
+                <option value="10">VAT 10%</option>
+                <option value="12">VAT 12%</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 13, marginBottom: 6 }}>WHT Rate</div>
+              <select
+                className="filter-select"
+                style={{ width: '100%', height: 36 }}
+                value={whtRate}
+                onChange={e => setWhtRate(e.target.value)}
+              >
+                <option value="0">No WHT (0%)</option>
+                <option value="1">WHT 1%</option>
+                <option value="2">WHT 2%</option>
+                <option value="5">WHT 5%</option>
+              </select>
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* 3-column grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', border: '1px solid #f0f0f0', borderRadius: 4, overflow: 'hidden', fontSize: 13 }}>
-          {/* ─ Column headers ─ */}
-          <div style={{ padding: '10px 16px', borderRight: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600 }}>Waybill Contract Cost</span>
-            <span style={{ fontWeight: 600 }}>{NUM_FMT(waybillContractCost)}</span>
+      {/* ── Total Summary Panel (editable only) ── */}
+      {isEditable && (
+        <div style={{
+          background: 'linear-gradient(160deg, #f6ffed 0%, #d9f7be 100%)',
+          border: '1px solid #b7eb8f', borderRadius: 8,
+          padding: '20px 24px', marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
+            {/* Left: amounts */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, color: '#52c41a', marginBottom: 4 }}>Total Amount Payable</div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: '#52c41a', marginBottom: 16 }}>
+                {calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 0 })} PHP
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13, maxWidth: 360 }}>
+                {[
+                  { label: 'Basic Amount',       val: calcBasicAmount },
+                  { label: 'Additional Charge',   val: calcAdditionalCharge },
+                  { label: 'Exception Fee',        val: calcExceptionFee },
+                  { label: 'Reimbursement',        val: calcReimbursement },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#5a5a5a' }}>{item.label}</span>
+                    <span style={{ color: '#5a5a5a' }}>{item.val.toLocaleString()}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #b7eb8f', paddingTop: 6, marginTop: 2, fontWeight: 700 }}>
+                  <span>Waybill Subtotal</span>
+                  <span>{waybillSubtotal.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+            {/* Right: actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn-default">Save as Draft</button>
+                <button
+                  className="btn-primary"
+                  style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                  onClick={() => onSubmitToTMS?.(no)}
+                >
+                  Submit to TMS
+                </button>
+              </div>
+              <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                {waybills.length} waybill{waybills.length !== 1 ? 's' : ''} · {claimTickets.length} claim(s) · {(invoices || []).length} invoice(s)
+              </div>
+            </div>
           </div>
-          <div style={{ padding: '10px 16px', borderRight: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600 }}>Claim</span>
-            <span style={{ fontWeight: 600 }}>{NUM_FMT(kpiClaim)}</span>
-          </div>
-          <div style={{ padding: '10px 16px', background: '#fafafa', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 600 }}>Others</span>
-            <span style={{ fontWeight: 600 }}>{NUM_FMT(vat + wht)}</span>
-          </div>
-
-          {/* ─ Row 1 ─ */}
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>Vendor Basic Amount</span>
-            <span>{NUM_FMT(vendorBasicAmount)}</span>
-          </div>
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>KPI Claim</span>
-            <span>{NUM_FMT(kpiClaim)}</span>
-          </div>
-          <div style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>VAT</span>
-            <span>{NUM_FMT(vat)}</span>
-          </div>
-
-          {/* ─ Row 2 ─ */}
-          <div style={{ padding: '4px 16px 4px 32px', borderRight: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#666' }}>PrePaid</span>
-            <span style={{ color: '#666' }}>{NUM_FMT(prepAmt)}</span>
-          </div>
-          <div style={{ padding: '4px 16px', borderRight: '1px solid #f0f0f0' }} />
-          <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>WHT</span>
-            <span style={{ color: wht < 0 ? '#cf1322' : undefined }}>{NUM_FMT(wht)}</span>
-          </div>
-
-          {/* ─ Row 3 ─ */}
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>Vendor Exception Fee</span>
-            <span>{NUM_FMT(vendorExceptionFee)}</span>
-          </div>
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0' }} />
-          <div style={{ padding: '8px 16px' }} />
-
-          {/* ─ Row 4 ─ */}
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0', borderTop: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#333' }}>Vendor Additional Charge</span>
-            <span>{NUM_FMT(vendorAdditionalCharge)}</span>
-          </div>
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #f0f0f0' }} />
-          <div style={{ padding: '8px 16px' }} />
         </div>
-      </div>
+      )}
 
       {/* ── Invoice ── */}
       {showInvoice && (
