@@ -1357,7 +1357,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
           <span className="banner-icon">✓</span>
           <div>
             <div>Payment Complete</div>
-            <div className="banner-detail">All amounts have been fully settled. Total paid: {data.currency} {fmt(statementPaidAmount)}</div>
+            <div className="banner-detail">All amounts have been fully settled. Total paid: {fmt(statementPaidAmount)}</div>
           </div>
         </div>
       )}
@@ -1368,7 +1368,7 @@ function ApStatementDetail({ statementId, onBack }: Props) {
             <div>Written Off</div>
             <div className="banner-detail">
               <strong>Reason:</strong> {data.writeOffReason || 'No reason provided'}<br />
-              <strong>Written off by:</strong> {data.writeOffBy || 'Unknown'} · <strong>Written off amount:</strong> {data.currency} {fmt(data.writeOffAmount || 0)}
+              <strong>Written off by:</strong> {data.writeOffBy || 'Unknown'} · <strong>Written off amount:</strong> {fmt(data.writeOffAmount || 0)}
             </div>
           </div>
         </div>
@@ -1819,13 +1819,13 @@ function ApStatementDetail({ statementId, onBack }: Props) {
             </div>
             <div style={{ background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span>Total Amount:</span><strong>{data.currency} {fmt(data.vendorTotal)}</strong>
+                <span>Total Amount:</span><strong>{fmt(data.vendorTotal)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span>Paid Amount:</span><strong style={{ color: '#389e0d' }}>{data.currency} {fmt(statementPaidAmount)}</strong>
+                <span>Paid Amount:</span><strong style={{ color: '#389e0d' }}>{fmt(statementPaidAmount)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ffd591', paddingTop: 4 }}>
-                <span>Write Off Amount:</span><strong style={{ color: '#d46b08' }}>{data.currency} {fmt(data.vendorTotal - statementPaidAmount)}</strong>
+                <span>Write Off Amount:</span><strong style={{ color: '#d46b08' }}>{fmt(data.vendorTotal - statementPaidAmount)}</strong>
               </div>
             </div>
             <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
@@ -2007,9 +2007,8 @@ function ApStatementDetail({ statementId, onBack }: Props) {
                 {sectionTitle('Amount Information')}
                 <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: '20px 24px' }}>
 
-                  {/* Currency + Payment Amount summary */}
+                  {/* Payment Amount summary */}
                   <div style={{ display: 'flex', gap: 40, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
-                    <span style={{ color: '#888' }}>Currency &nbsp;<strong style={{ color: '#333', fontSize: 14 }}>{data.currency}</strong></span>
                     <span style={{ color: '#888' }}>Payment Amount &nbsp;<strong style={{ color: '#00b96b', fontSize: 16 }}>{fmt(totalPayment)}</strong></span>
                   </div>
 

@@ -151,7 +151,7 @@ function SyncStatementSheetDialog({ onClose, onSynced }: Props) {
                   })}
                   <tr style={{ background: '#fafafa', fontWeight: 600 }}>
                     <td colSpan={5} style={{ textAlign: 'right' }}>Total Submitted Amount</td>
-                    <td className="num" style={{ color: '#00b96b' }}>{total.toLocaleString()} PHP</td>
+                    <td className="num" style={{ color: '#00b96b' }}>{total.toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>

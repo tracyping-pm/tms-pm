@@ -15,10 +15,10 @@ const MENU_MAIN = [
 ];
 
 const MENU_FIN = [
-  { key: 'prepaid-application', label: 'PrePaid Application' },
-  { key: 'unbilled-waybills', label: 'Unbilled Waybills' },
-  { key: 'claim-tickets', label: 'Claim Tickets' },
   { key: 'my-statements', label: 'My Statements' },
+  { key: 'prepaid-application', label: 'PrePaid Application' },
+  { key: 'unbilled-waybills', label: 'Billable' },
+  { key: 'claim-tickets', label: 'Claim Tickets' },
 ];
 
 function VendorPortalShell({ children, breadcrumb, activeMenu, onMenuChange }: Props) {

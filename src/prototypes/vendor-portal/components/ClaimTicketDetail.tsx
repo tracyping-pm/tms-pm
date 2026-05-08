@@ -62,7 +62,7 @@ function ClaimTicketDetail({ ticketNo, onBack, onDispute, returnLabel = '← Bac
           <div className="detail-item">
             <div className="detail-label">Claim Amount</div>
             <div className="detail-value" style={{ color: '#cf1322', fontWeight: 600 }}>
-              -{ticket.claimAmount.toLocaleString()} {ticket.currency}
+              -{ticket.claimAmount.toLocaleString()}
             </div>
           </div>
           <div className="detail-item">

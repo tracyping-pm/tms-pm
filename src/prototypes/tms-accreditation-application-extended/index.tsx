@@ -1,5 +1,5 @@
 /**
- * @name TMS Prepaid Application & AP Statement
+ * @name TMS
  *
  * V5/V6/V7 设计：
  * - Prepaid Application：VP 同步 + TMS 内部创建，FA 审核（Approve→自动调用 HR Payment API / Reject / Edit）

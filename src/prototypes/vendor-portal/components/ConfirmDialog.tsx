@@ -74,7 +74,7 @@ function ConfirmDialog({ statementNo, onClose, onConfirm }: Props) {
                       ))}
                       <tr style={{ background: '#fafafa', fontWeight: 600 }}>
                         <td colSpan={2} style={{ textAlign: 'right' }}>Invoice Total</td>
-                        <td className="num">{invoiceTotal.toLocaleString()} PHP</td>
+                        <td className="num">{invoiceTotal.toLocaleString()}</td>
                         <td colSpan={3}></td>
                       </tr>
                     </tbody>

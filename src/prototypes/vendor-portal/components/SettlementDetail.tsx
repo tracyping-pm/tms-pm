@@ -240,7 +240,7 @@ function ApplicationDetail({ apNo, status = 'Under Review', onBack, onOpenClaimT
                     <tr key={inv.id}>
                       <td>{inv.invoiceNo}</td>
                       <td>{inv.invoiceDate}</td>
-                      <td className="num">{inv.amount.toLocaleString()} {inv.currency}</td>
+                      <td className="num">{inv.amount.toLocaleString()}</td>
                       <td>
                         {inv.documentFileName ? (
                           <button className="btn-link" onClick={() => setViewingDoc(inv.documentFileName)}>

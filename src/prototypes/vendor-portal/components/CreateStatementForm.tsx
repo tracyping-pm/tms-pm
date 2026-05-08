@@ -465,8 +465,8 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
           <div className="alert alert-warn" style={{ marginBottom: 12 }}>
             <span>⚠</span>
             <span>
-              Total Invoice Amount (<strong>{totalInvoiceAmount.toLocaleString()} {invoiceCurrency}</strong>)
-              does not match Total Submitted Amount (<strong>{waybillSubtotal.toLocaleString()} PHP</strong>).
+              Total Invoice Amount (<strong>{totalInvoiceAmount.toLocaleString()}</strong>)
+              does not match Total Submitted Amount (<strong>{waybillSubtotal.toLocaleString()}</strong>).
               You can still submit, but please verify before proceeding.
             </span>
           </div>
@@ -934,8 +934,8 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
           </div>
           {(vatRate > 0 || whtRate > 0) && (
             <div style={{ fontSize: 13, color: '#666', alignSelf: 'flex-end', paddingBottom: 4 }}>
-              {vatRate > 0 && <span style={{ marginRight: 16 }}>VAT: +{vatAmount.toLocaleString()} PHP</span>}
-              {whtRate > 0 && <span style={{ color: '#cf1322' }}>WHT: −{whtAmount.toLocaleString()} PHP</span>}
+              {vatRate > 0 && <span style={{ marginRight: 16 }}>VAT: +{vatAmount.toLocaleString()}</span>}
+              {whtRate > 0 && <span style={{ color: '#cf1322' }}>WHT: −{whtAmount.toLocaleString()}</span>}
             </div>
           )}
         </div>
@@ -947,7 +947,7 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
           {/* Breakdown */}
           <div style={{ flex: 1 }}>
             <div className="summary-hero-label">Total Amount Payable</div>
-            <div className="summary-hero-value">{totalAmountPayable.toLocaleString()} PHP</div>
+            <div className="summary-hero-value">{totalAmountPayable.toLocaleString()}</div>
 
             <div className="summary-breakdown">
               {/* V4 — 始终展示 4 个运单结算项；未勾选项置灰 + 删除线，且不参与 Subtotal */}
@@ -1100,11 +1100,11 @@ function CreateStatementForm({ prefillWaybills, mode, onBack, onSubmit, editStat
               <div style={{ background: '#fafafa', borderRadius: 6, padding: 12, fontSize: 13 }}>
                 {[
                   ['Waybills', rows.length],
-                  ['Waybill Subtotal', `${waybillSubtotal.toLocaleString()} PHP`],
-                  ...(claimDeduction > 0 ? [['Claim Deductions', `−${claimDeduction.toLocaleString()} PHP`]] : []),
-                  ...(vatRate > 0 ? [[`VAT (${vatRate}%)`, `+${vatAmount.toLocaleString()} PHP`]] : []),
-                  ...(whtRate > 0 ? [[`WHT (${whtRate}%)`, `−${whtAmount.toLocaleString()} PHP`]] : []),
-                  ['Total Amount Payable', `${totalAmountPayable.toLocaleString()} PHP`],
+                  ['Waybill Subtotal', waybillSubtotal.toLocaleString()],
+                  ...(claimDeduction > 0 ? [['Claim Deductions', `−${claimDeduction.toLocaleString()}`]] : []),
+                  ...(vatRate > 0 ? [[`VAT (${vatRate}%)`, `+${vatAmount.toLocaleString()}`]] : []),
+                  ...(whtRate > 0 ? [[`WHT (${whtRate}%)`, `−${whtAmount.toLocaleString()}`]] : []),
+                  ['Total Amount Payable', totalAmountPayable.toLocaleString()],
                   ['Invoices', invoices.length],
                 ].map(([label, val], i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -1211,15 +1211,10 @@ function AddInvoiceDialog({ onClose, onAdd, waybillSubtotal, currency }: AddInvo
           <div className="form-row">
             <div className="form-field">
               <label className="form-label req">Invoice Amount *</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input className="form-input" type="number" style={{ flex: 1 }} placeholder="0.00" value={invoiceAmount} onChange={e => setInvoiceAmount(e.target.value)} />
-                <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px', background: '#fafafa', border: '1px solid #d9d9d9', borderRadius: 4, fontSize: 13, color: '#666' }}>
-                  {currency}
-                </div>
-              </div>
+              <input className="form-input" type="number" style={{ width: '100%' }} placeholder="0.00" value={invoiceAmount} onChange={e => setInvoiceAmount(e.target.value)} />
               {invoiceAmount && waybillSubtotal > 0 && Math.abs(parseFloat(invoiceAmount) - waybillSubtotal) > 0.01 && (
                 <div className="form-help" style={{ color: '#d48806' }}>
-                  ⚠ Amount differs from waybill total ({waybillSubtotal.toLocaleString()} PHP)
+                  ⚠ Amount differs from waybill total ({waybillSubtotal.toLocaleString()})
                 </div>
               )}
             </div>

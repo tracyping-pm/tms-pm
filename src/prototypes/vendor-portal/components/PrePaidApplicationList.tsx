@@ -1,96 +1,171 @@
-import React, { useState } from 'react';
-
-export type PrePaidStatus = 'Pending Review' | 'Approved' | 'Rejected' | 'Paid';
-
-interface PrePaidApplication {
-  applicationNo: string;
-  applicationDate: string;
-  waybillNos: string[];
-  prepaidAmount: number;
-  vatAmount: number;
-  totalAmount: number;
-  currency: string;
-  status: PrePaidStatus;
-  rejectReason?: string;
-}
+import React, { useEffect, useState } from 'react';
+import {
+  type SyncedApplication,
+  type SyncedAppStatus,
+  type OperationLogEntry,
+  formatDateTime,
+  getAllApplications,
+  upsertApplication,
+} from '../../../common/prepaidApplicationSync';
 
 interface Props {
   onCreate: () => void;
-  onViewDetail: (app: PrePaidApplication) => void;
+  onEdit: (app: SyncedApplication) => void;
+  onDetail: (app: SyncedApplication) => void;
+  /** Bumped externally to force a re-read from localStorage (e.g. after Save/Submit). */
+  refreshKey?: number;
 }
 
-const SAMPLE_DATA: PrePaidApplication[] = [
-  {
-    applicationNo: 'PPA2604001',
-    applicationDate: '2026-04-10',
-    waybillNos: ['WB2604010', 'WB2604011'],
-    prepaidAmount: 12000.00,
-    vatAmount: 1440.00,
-    totalAmount: 12960.00,
-    currency: 'PHP',
-    status: 'Paid',
-  },
-  {
-    applicationNo: 'PPA2604002',
-    applicationDate: '2026-04-18',
-    waybillNos: ['WB2604020'],
-    prepaidAmount: 8500.00,
-    vatAmount: 1020.00,
-    totalAmount: 9265.00,
-    currency: 'PHP',
-    status: 'Approved',
-  },
-  {
-    applicationNo: 'PPA2604003',
-    applicationDate: '2026-04-20',
-    waybillNos: ['WB2604021', 'WB2604022', 'WB2604023'],
-    prepaidAmount: 25000.00,
-    vatAmount: 3000.00,
-    totalAmount: 27250.00,
-    currency: 'PHP',
-    status: 'Pending Review',
-  },
-  {
-    applicationNo: 'PPA2604004',
-    applicationDate: '2026-04-15',
-    waybillNos: ['WB2604018'],
-    prepaidAmount: 6000.00,
-    vatAmount: 720.00,
-    totalAmount: 6480.00,
-    currency: 'PHP',
-    status: 'Rejected',
-    rejectReason: 'Prepaid amount exceeds 80% of the basic freight for WB2604018. Please reduce the amount and resubmit.',
-  },
+type Source = 'Self-Created' | 'TMS-Synced';
+
+// Sample seed used to populate localStorage on first load if empty.
+function buildSeedApplications(): SyncedApplication[] {
+  return [
+    {
+      applicationNo: 'PPA2604002',
+      vendorName: 'Coca-Cola Bottlers PH Inc.',
+      source: 'Vendor Portal',
+      appType: 'Prepaid Application',
+      status: 'Awaiting Confirmation',
+      taxMark: 'VAT-ex',
+      currency: 'PHP',
+      waybills: [
+        { no: 'WB2604020', positionTime: '2026-04-16 12:45', unloadingTime: '2026-04-16 08:30', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC', prePaidAmount: 8500 },
+      ],
+      claimTickets: [],
+      paymentItems: [],
+      deductionItems: [],
+      totalAmountPayable: 8500,
+      bankName: 'BPI',
+      payeeAccount: '1234-5678-90',
+      payeeName: 'Coca-Cola Bottlers PH Inc.',
+      payeeType: 'External Vendor',
+      proofFiles: ['proof_PPA2604002.pdf'],
+      createdAt: '2026-04-18T14:30:00.000Z',
+      submittedAt: '2026-04-18T14:30:00.000Z',
+      operationLogs: [
+        { time: '2026-04-18T14:15:00.000Z', actor: 'Vendor', action: 'Saved as Draft', note: '' },
+        { time: '2026-04-18T14:30:00.000Z', actor: 'Vendor', action: 'Submitted', note: 'Awaiting TMS review' },
+      ] as OperationLogEntry[],
+    },
+    {
+      applicationNo: 'PPA2604001',
+      vendorName: 'Coca-Cola Bottlers PH Inc.',
+      source: 'Vendor Portal',
+      appType: 'Prepaid Application',
+      status: 'Paid',
+      taxMark: 'VAT-ex',
+      currency: 'PHP',
+      waybills: [
+        { no: 'WB2604010', positionTime: '2026-04-12 09:00', unloadingTime: '2026-04-12 14:00', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus', prePaidAmount: 6000 },
+        { no: 'WB2604011', positionTime: '2026-04-13 10:00', unloadingTime: '2026-04-13 13:00', truckType: '6-Wheeler',  origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig', prePaidAmount: 6000 },
+      ],
+      claimTickets: [],
+      paymentItems: [
+        { type: 'Basic Amount',     netAmount: 12000, vatRate: 0, vatAmount: 0, whtRate: 0, whtAmount: 0 },
+      ],
+      deductionItems: [],
+      totalAmountPayable: 12000,
+      bankName: 'BPI',
+      payeeAccount: '1234-5678-90',
+      payeeName: 'Coca-Cola Bottlers PH Inc.',
+      payeeType: 'External Vendor',
+      proofFiles: ['proof_PPA2604001.pdf'],
+      createdAt: '2026-04-10T08:30:00.000Z',
+      submittedAt: '2026-04-10T08:30:00.000Z',
+      reviewedAt: '2026-04-11T10:00:00.000Z',
+      paidAt: '2026-04-12T16:00:00.000Z',
+      operationLogs: [
+        { time: '2026-04-10T08:30:00.000Z', actor: 'Vendor', action: 'Submitted', note: '' },
+        { time: '2026-04-11T10:00:00.000Z', actor: 'TMS Reviewer', action: 'Approved', note: 'HR Payment request triggered' },
+        { time: '2026-04-12T16:00:00.000Z', actor: 'HR System', action: 'Payment Released', note: 'APA2604001 — Payment completed' },
+      ] as OperationLogEntry[],
+    },
+    {
+      applicationNo: 'PPA2604004',
+      vendorName: 'Coca-Cola Bottlers PH Inc.',
+      source: 'Vendor Portal',
+      appType: 'Prepaid Application',
+      status: 'Rejected',
+      taxMark: 'VAT-ex',
+      currency: 'PHP',
+      waybills: [
+        { no: 'WB2604018', positionTime: '2026-04-14 09:00', unloadingTime: '2026-04-14 13:00', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba', prePaidAmount: 6000 },
+      ],
+      claimTickets: [],
+      paymentItems: [],
+      deductionItems: [],
+      totalAmountPayable: 6000,
+      bankName: 'BDO',
+      payeeAccount: '9876-5432-10',
+      payeeName: 'Coca-Cola Bottlers PH Inc.',
+      payeeType: 'External Vendor',
+      proofFiles: [],
+      rejectReason: 'Prepaid amount exceeds 80% of basic freight for WB2604018. Please reduce amount and resubmit.',
+      createdAt: '2026-04-15T11:20:00.000Z',
+      submittedAt: '2026-04-15T11:20:00.000Z',
+      reviewedAt: '2026-04-16T08:00:00.000Z',
+      operationLogs: [
+        { time: '2026-04-15T11:20:00.000Z', actor: 'Vendor', action: 'Submitted', note: '' },
+        { time: '2026-04-16T08:00:00.000Z', actor: 'TMS Reviewer', action: 'Rejected', note: 'Prepaid amount exceeds 80% of basic freight for WB2604018. Please reduce amount and resubmit.' },
+      ] as OperationLogEntry[],
+    },
+  ];
+}
+
+const STATUS_STYLE: Record<SyncedAppStatus, React.CSSProperties> = {
+  'Draft':                 { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' },
+  'Awaiting Confirmation': { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
+  'Pending Payment':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
+  'Paid':                  { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
+  'Rejected':              { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+  'Payment Rejected':      { background: '#fff1f0', color: '#a8071a', border: '1px solid #ff7875' },
+};
+
+const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
+  'Self-Created': { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3' },
+  'TMS-Synced':   { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' },
+};
+
+const BADGE_BASE: React.CSSProperties = {
+  borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap',
+};
+
+const STATUS_OPTIONS: SyncedAppStatus[] = [
+  'Draft', 'Awaiting Confirmation', 'Pending Payment', 'Paid', 'Rejected', 'Payment Rejected',
 ];
 
-function getStatusBadgeStyle(status: PrePaidStatus): React.CSSProperties {
-  const base: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' };
-  switch (status) {
-    case 'Pending Review':
-      return { ...base, background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' };
-    case 'Approved':
-      return { ...base, background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' };
-    case 'Rejected':
-      return { ...base, background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' };
-    case 'Paid':
-      return { ...base, background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' };
-  }
-}
+const EDITABLE_STATUSES = new Set<SyncedAppStatus>(['Draft', 'Rejected', 'Payment Rejected']);
 
-function formatAmount(amount: number, _currency: string) {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2 });
-}
+function PrePaidApplicationList({ onCreate, onEdit, onDetail, refreshKey }: Props) {
+  const [apps, setApps] = useState<SyncedApplication[]>([]);
+  const [filterAppNo, setFilterAppNo] = useState('');
+  const [filterSource, setFilterSource] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
-function PrePaidApplicationList({ onCreate, onViewDetail }: Props) {
-  const [filterStatus, setFilterStatus] = useState<PrePaidStatus | ''>('');
-  const [keyword, setKeyword] = useState('');
+  // Load from localStorage on mount and on refreshKey change. Seed if empty.
+  useEffect(() => {
+    let current = getAllApplications();
+    if (current.length === 0) {
+      buildSeedApplications().forEach(upsertApplication);
+      current = getAllApplications();
+    }
+    setApps(current);
+  }, [refreshKey]);
 
-  const filtered = SAMPLE_DATA.filter(a => {
+  const filtered = apps.filter(a => {
+    if (filterAppNo && !a.applicationNo.toLowerCase().includes(filterAppNo.toLowerCase())) return false;
+    const sourceLabel: Source = a.source === 'Vendor Portal' ? 'Self-Created' : 'TMS-Synced';
+    if (filterSource && sourceLabel !== filterSource) return false;
     if (filterStatus && a.status !== filterStatus) return false;
-    if (keyword && !a.applicationNo.toLowerCase().includes(keyword.toLowerCase()) &&
-      !a.waybillNos.some(w => w.toLowerCase().includes(keyword.toLowerCase()))) return false;
     return true;
   });
+
+  const handleReset = () => {
+    setFilterAppNo('');
+    setFilterSource('');
+    setFilterStatus('');
+  };
 
   return (
     <div className="vp-card">
@@ -98,108 +173,100 @@ function PrePaidApplicationList({ onCreate, onViewDetail }: Props) {
         <div>
           <div className="section-title">PrePaid Applications</div>
           <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
-            Apply for advance payment on in-progress waybills.
+            Apply for advance payment on in-progress waybills. Drafts can be edited; submissions are sent to TMS for review.
           </div>
         </div>
-        <button className="btn-primary" onClick={onCreate}>
-          + Create Application
-        </button>
       </div>
 
       {/* Filters */}
-      <div className="filter-row" style={{ marginTop: 12 }}>
+      <div className="filter-row" style={{ flexWrap: 'wrap', gap: '8px 12px', marginTop: 12, marginBottom: 12 }}>
         <input
           className="filter-input"
-          placeholder="Application No. / Waybill No."
-          value={keyword}
-          onChange={e => setKeyword(e.target.value)}
+          placeholder="Application Number"
+          value={filterAppNo}
+          onChange={e => setFilterAppNo(e.target.value)}
+          style={{ width: 200 }}
         />
-        <select
-          className="filter-select"
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value as PrePaidStatus | '')}
-        >
-          <option value="">All Statuses</option>
-          <option value="Pending Review">Pending Review</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-          <option value="Paid">Paid</option>
+        <select className="filter-select" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+          <option value="">Source: All</option>
+          <option value="Self-Created">Self-Created</option>
+          <option value="TMS-Synced">TMS-Synced</option>
         </select>
-        <button className="btn-default" onClick={() => { setKeyword(''); setFilterStatus(''); }}>Reset</button>
+        <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option value="">Status: All</option>
+          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button className="btn-default" onClick={handleReset}>Reset</button>
+          <button className="btn-primary">Search</button>
+          <button className="btn-primary" onClick={onCreate}>+ Create PrePaid Application</button>
+        </div>
       </div>
 
-      <table className="data-table" style={{ marginTop: 12 }}>
+      {/* Table */}
+      <table className="data-table">
         <thead>
           <tr>
-            <th>Application No.</th>
-            <th>Application Date</th>
-            <th>Associated Waybills</th>
-            <th style={{ textAlign: 'right' }}>PrePaid Amount</th>
-            <th style={{ textAlign: 'right' }}>VAT Amount</th>
-            <th style={{ textAlign: 'right' }}>Total Amount</th>
+            <th>Application Number</th>
+            <th>Source</th>
+            <th style={{ textAlign: 'right' }}>Payable Amount</th>
             <th>Status</th>
-            <th>Action</th>
+            <th>Creation Time</th>
+            <th>Operation</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map(app => (
-            <tr key={app.applicationNo}>
-              <td>
-                <strong style={{ color: '#00b96b', cursor: 'pointer' }} onClick={() => onViewDetail(app)}>
-                  {app.applicationNo}
-                </strong>
-              </td>
-              <td>{app.applicationDate}</td>
-              <td style={{ fontSize: 12 }}>
-                {app.waybillNos.join(', ')}
-              </td>
-              <td style={{ textAlign: 'right' }}>{formatAmount(app.prepaidAmount, app.currency)}</td>
-              <td style={{ textAlign: 'right' }}>{formatAmount(app.vatAmount, app.currency)}</td>
-              <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatAmount(app.totalAmount, app.currency)}</td>
-              <td>
-                <span style={getStatusBadgeStyle(app.status)}>{app.status}</span>
-                {app.status === 'Approved' && (
-                  <div style={{ fontSize: 11, color: '#0958d9', marginTop: 4 }}>
-                    HR Payment Request triggered
-                  </div>
-                )}
-                {app.status === 'Rejected' && (
-                  <div style={{ fontSize: 11, color: '#cf1322', marginTop: 4, maxWidth: 200 }}
-                    title={app.rejectReason}>
-                    ⚠ {app.rejectReason?.slice(0, 50)}…
-                  </div>
-                )}
-              </td>
-              <td>
-                {app.status === 'Rejected' ? (
-                  <button className="btn-primary" style={{ fontSize: 12 }} onClick={onCreate}>
-                    Resubmit
-                  </button>
-                ) : (
-                  <button className="btn-default" style={{ fontSize: 12 }} onClick={() => onViewDetail(app)}>
-                    View
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
+          {filtered.map((a: SyncedApplication) => {
+            const sourceLabel: Source = a.source === 'Vendor Portal' ? 'Self-Created' : 'TMS-Synced';
+            const editable = EDITABLE_STATUSES.has(a.status);
+            return (
+              <tr key={a.applicationNo}>
+                <td>
+                  <strong style={{ color: '#1677ff', cursor: 'pointer' }}
+                    onClick={() => editable ? onEdit(a) : onDetail(a)}>
+                    {a.applicationNo}
+                  </strong>
+                </td>
+                <td><span style={{ ...BADGE_BASE, ...SOURCE_STYLE[sourceLabel] }}>{sourceLabel}</span></td>
+                <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                  {a.totalAmountPayable.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </td>
+                <td>
+                  <span style={{ ...BADGE_BASE, ...STATUS_STYLE[a.status] }}>{a.status}</span>
+                  {a.rejectReason && (a.status === 'Rejected' || a.status === 'Payment Rejected') && (
+                    <div style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 220 }} title={a.rejectReason}>
+                      ⚠ {a.rejectReason.length > 50 ? a.rejectReason.slice(0, 50) + '…' : a.rejectReason}
+                    </div>
+                  )}
+                </td>
+                <td style={{ fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{formatDateTime(a.createdAt)}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  {editable ? (
+                    <button className="btn-link" onClick={() => onEdit(a)}>Edit</button>
+                  ) : (
+                    <button className="btn-link" onClick={() => onDetail(a)}>Detail</button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
           {filtered.length === 0 && (
-            <tr><td colSpan={8} className="empty">No prepaid applications found.</td></tr>
+            <tr><td colSpan={6} className="empty">No applications found.</td></tr>
           )}
         </tbody>
       </table>
 
-      <div className="pagination">
-        <button className="page-btn">&lt;</button>
-        <button className="page-btn active">1</button>
-        <button className="page-btn">&gt;</button>
-        <span style={{ marginLeft: 12, fontSize: 12, color: '#999' }}>
-          Total {filtered.length} · 20/page
-        </span>
+      {/* Pagination */}
+      <div className="pagination" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 12, color: '#666' }}>{filtered.length} Application(s)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button className="page-btn">&lt;</button>
+          <button className="page-btn active">1</button>
+          <button className="page-btn">&gt;</button>
+        </div>
       </div>
     </div>
   );
 }
 
 export default PrePaidApplicationList;
-export type { PrePaidApplication };

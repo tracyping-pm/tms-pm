@@ -187,7 +187,7 @@ function CreatePrepaidForm({ onBack, onSubmit }: Props) {
                 <td style={{ fontSize: 12 }}>{w.vendor}</td>
                 <td>{w.truckType}</td>
                 <td style={{ fontSize: 11, color: '#666' }}>{w.origin} → {w.destination}</td>
-                <td style={{ textAlign: 'right' }}>{w.currency} {w.basicAmount.toLocaleString()}</td>
+                <td style={{ textAlign: 'right' }}>{w.basicAmount.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
@@ -196,10 +196,7 @@ function CreatePrepaidForm({ onBack, onSubmit }: Props) {
         {selectedWaybills.size > 0 && (
           <div style={{ marginTop: 10, padding: '8px 12px', background: '#f0f5ff', borderRadius: 6, fontSize: 13, display: 'flex', gap: 24 }}>
             <span><strong>{selectedWaybills.size}</strong> selected</span>
-            <span>Total Basic: <strong>
-              {[...new Set(ALL_WAYBILLS.filter(w => selectedWaybills.has(w.no)).map(w => w.currency))].join('/')}
-              {' '}{totalBasic.toLocaleString()}
-            </strong></span>
+            <span>Total Basic: <strong>{totalBasic.toLocaleString()}</strong></span>
             {detectedVendor && <span>Vendor: <strong>{detectedVendor}</strong></span>}
           </div>
         )}

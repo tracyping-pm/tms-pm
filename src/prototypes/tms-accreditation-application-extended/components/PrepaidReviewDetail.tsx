@@ -1,9 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { AppStatus } from './ApplicationList';
+import {
+  getApplication,
+  nowIso,
+  formatDateTime,
+  updateApplicationStatus,
+  appendLog,
+  type SyncedApplication,
+  type OperationLogEntry,
+} from '../../../common/prepaidApplicationSync';
 
 interface Props {
   appNo: string;
   onBack: () => void;
+}
+
+/** Map a VP-synced application into the local ApplicationData shape used by this view. */
+function syncedToApplicationData(s: SyncedApplication): ApplicationData {
+  return {
+    appNo: s.applicationNo,
+    source: 'Vendor Portal',
+    vendor: s.vendorName,
+    submittedAt: (s.submittedAt || s.createdAt).slice(0, 16).replace('T', ' '),
+    status:
+      s.status === 'Awaiting Confirmation' ? 'Pending Review'
+      : s.status === 'Pending Payment'      ? 'Approved'
+      : s.status === 'Paid'                 ? 'Paid'
+      : s.status === 'Rejected'             ? 'Rejected'
+      : s.status === 'Payment Rejected'     ? 'Payment Rejected'
+      : 'Pending Review',
+    waybills: s.waybills.map(w => ({
+      no: w.no,
+      status: 'In Transit',
+      basicAmount: w.prePaidAmount > 0 ? Math.round(w.prePaidAmount * 1.4) : 0,
+      allocatedPrepaid: w.prePaidAmount,
+      handlingFee: 0,
+      utilization: w.prePaidAmount > 0 ? Math.round((w.prePaidAmount / (w.prePaidAmount * 1.4)) * 1000) / 10 : 0,
+    })),
+    prepaidAmount: s.totalAmountPayable,
+    vatRate: 0,
+    vatAmount: 0,
+    whtRate: 0,
+    whtAmount: 0,
+    totalPayable: s.totalAmountPayable,
+    currency: s.currency,
+    bankName: s.bankName || '—',
+    bankAccount: s.payeeAccount || '—',
+    proofFile: s.proofFiles[0] || '',
+    remark: s.remark || '',
+    rejectReason: s.rejectReason || s.hrRejectReason,
+    isSynced: true,
+  };
 }
 
 interface WaybillRow {
@@ -34,6 +81,7 @@ interface ApplicationData {
   proofFile: string;
   remark: string;
   rejectReason?: string;
+  isSynced?: boolean;
 }
 
 const APP_DATA: Record<string, ApplicationData> = {
@@ -128,10 +176,12 @@ const FALLBACK: ApplicationData = {
 };
 
 const STATUS_STYLE: Record<AppStatus, React.CSSProperties> = {
-  'Pending Review': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
-  'Approved':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
-  'Rejected':       { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
-  'Paid':           { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
+  'Pending Review':   { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
+  'Approved':         { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
+  'Rejected':         { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+  'Paid':             { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
+  'Sync Failed':      { background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2' },
+  'Payment Rejected': { background: '#fff1f0', color: '#a8071a', border: '1px solid #ff7875' },
 };
 
 const badge = (status: AppStatus) => ({
@@ -140,21 +190,49 @@ const badge = (status: AppStatus) => ({
 });
 
 function PrepaidReviewDetail({ appNo, onBack }: Props) {
-  const data = APP_DATA[appNo] || FALLBACK;
+  // Resolve data: try synced VP-submitted record first, then mock APP_DATA, then FALLBACK.
+  const [data, setData] = useState<ApplicationData>(() => {
+    const synced = getApplication(appNo);
+    if (synced) return syncedToApplicationData(synced);
+    return APP_DATA[appNo] || FALLBACK;
+  });
+  const [operationLogs, setOperationLogs] = useState<OperationLogEntry[]>(() => {
+    return getApplication(appNo)?.operationLogs || [];
+  });
+
+  const refreshLogs = () => setOperationLogs(getApplication(appNo)?.operationLogs || []);
+
+  // Re-resolve when appNo changes
+  useEffect(() => {
+    const synced = getApplication(appNo);
+    if (synced) { setData(syncedToApplicationData(synced)); setOperationLogs(synced.operationLogs || []); }
+    else setData(APP_DATA[appNo] || FALLBACK);
+  }, [appNo]);
 
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showHrRejectDialog, setShowHrRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [hrRejectReason, setHrRejectReason] = useState('');
   const [editAmount, setEditAmount] = useState(String(data.prepaidAmount));
   const [editVatRate, setEditVatRate] = useState(String(data.vatRate));
-  const [actionDone, setActionDone] = useState<'approved' | 'rejected' | 'edited' | null>(null);
+  const [actionDone, setActionDone] = useState<'approved' | 'rejected' | 'edited' | 'hr-paid' | 'hr-rejected' | null>(null);
   const [currentStatus, setCurrentStatus] = useState<AppStatus>(data.status);
+
+  // Sync currentStatus with data when data changes
+  useEffect(() => { setCurrentStatus(data.status); }, [data.status]);
 
   const handleApprove = () => {
     setShowApproveConfirm(false);
     setCurrentStatus('Approved');
     setActionDone('approved');
+    if (data.isSynced) {
+      const now = nowIso();
+      updateApplicationStatus(appNo, { status: 'Pending Payment', reviewedAt: now });
+      appendLog(appNo, { time: now, actor: 'TMS Reviewer', action: 'Approved', note: 'HR Payment request triggered' });
+      refreshLogs();
+    }
   };
 
   const handleReject = () => {
@@ -162,14 +240,49 @@ function PrepaidReviewDetail({ appNo, onBack }: Props) {
     setShowRejectDialog(false);
     setCurrentStatus('Rejected');
     setActionDone('rejected');
+    if (data.isSynced) {
+      const now = nowIso();
+      updateApplicationStatus(appNo, { status: 'Rejected', rejectReason: rejectReason.trim(), reviewedAt: now });
+      appendLog(appNo, { time: now, actor: 'TMS Reviewer', action: 'Rejected', note: rejectReason.trim() });
+      refreshLogs();
+    }
   };
 
   const handleEdit = () => {
     setShowEditDialog(false);
     setActionDone('edited');
+    if (data.isSynced) {
+      const now = nowIso();
+      appendLog(appNo, { time: now, actor: 'TMS Reviewer', action: 'Prepaid Amount Edited', note: `Amount → ${editAmount}` });
+      refreshLogs();
+    }
   };
 
-  const fmt = (n: number) => `${data.currency} ${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  const handleHrPay = () => {
+    setCurrentStatus('Paid');
+    setActionDone('hr-paid');
+    if (data.isSynced) {
+      const now = nowIso();
+      updateApplicationStatus(appNo, { status: 'Paid', paidAt: now });
+      appendLog(appNo, { time: now, actor: 'HR System', action: 'Payment Released', note: 'Payment completed' });
+      refreshLogs();
+    }
+  };
+
+  const handleHrReject = () => {
+    if (!hrRejectReason.trim()) return;
+    setShowHrRejectDialog(false);
+    setCurrentStatus('Payment Rejected');
+    setActionDone('hr-rejected');
+    if (data.isSynced) {
+      const now = nowIso();
+      updateApplicationStatus(appNo, { status: 'Payment Rejected', hrRejectReason: hrRejectReason.trim(), paidAt: now });
+      appendLog(appNo, { time: now, actor: 'HR System', action: 'Payment Rejected', note: hrRejectReason.trim() });
+      refreshLogs();
+    }
+  };
+
+  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2 });
 
   const isReviewable = currentStatus === 'Pending Review';
 
@@ -191,6 +304,13 @@ function PrepaidReviewDetail({ appNo, onBack }: Props) {
             <button className="btn-primary" onClick={() => setShowApproveConfirm(true)}>Approve</button>
           </div>
         )}
+        {currentStatus === 'Approved' && (
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#888' }}>Mock HR Result:</span>
+            <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => { setHrRejectReason(''); setShowHrRejectDialog(true); }}>HR Reject</button>
+            <button className="btn-primary" style={{ background: '#52c41a', borderColor: '#52c41a' }} onClick={handleHrPay}>HR Pay</button>
+          </div>
+        )}
       </div>
 
       {/* Action result banner */}
@@ -207,6 +327,16 @@ function PrepaidReviewDetail({ appNo, onBack }: Props) {
       {actionDone === 'edited' && (
         <div className="alert" style={{ background: '#e6f4ff', border: '1px solid #91caff', color: '#0958d9', marginBottom: 16 }}>
           ✎ Amounts updated. Changes recorded in the operation log.
+        </div>
+      )}
+      {actionDone === 'hr-paid' && (
+        <div className="alert" style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d', marginBottom: 16 }}>
+          ✓ HR has released the payment. Application marked as <strong>Paid</strong>.
+        </div>
+      )}
+      {actionDone === 'hr-rejected' && (
+        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
+          ✗ HR rejected the payment. Application marked as <strong>Payment Rejected</strong>.
         </div>
       )}
 
@@ -304,25 +434,20 @@ function PrepaidReviewDetail({ appNo, onBack }: Props) {
         </div>
       </div>
 
-      {/* Operation log placeholder */}
+      {/* Operation Log */}
       <div className="tms-card">
         <div className="section-title" style={{ marginBottom: 12 }}>Operation Log</div>
-        <div style={{ fontSize: 13, color: '#888' }}>
-          {data.submittedAt} — Application submitted by {data.source === 'Vendor Portal' ? data.vendor : 'TMS Internal'}
-        </div>
-        {actionDone === 'approved' && (
-          <div style={{ fontSize: 13, color: '#389e0d', marginTop: 6 }}>
-            {new Date().toLocaleString()} — Approved by Zhang Jialei · HR Payment request triggered
-          </div>
-        )}
-        {actionDone === 'rejected' && (
-          <div style={{ fontSize: 13, color: '#cf1322', marginTop: 6 }}>
-            {new Date().toLocaleString()} — Rejected by Zhang Jialei · Reason: {rejectReason || '(recorded)'}
-          </div>
-        )}
-        {actionDone === 'edited' && (
-          <div style={{ fontSize: 13, color: '#0958d9', marginTop: 6 }}>
-            {new Date().toLocaleString()} — Amount edited by Zhang Jialei · Prepaid Amount → PHP {editAmount}
+        {operationLogs.length === 0 ? (
+          <div style={{ fontSize: 13, color: '#bbb' }}>No records.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {operationLogs.map((log, i) => (
+              <div key={i} style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: i < operationLogs.length - 1 ? '1px solid #f0f0f0' : 'none', alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 12, color: '#999', whiteSpace: 'nowrap', minWidth: 140 }}>{formatDateTime(log.time)}</div>
+                <div style={{ fontSize: 12, color: '#595959', minWidth: 90 }}>{log.actor}</div>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{log.action}{log.note ? <span style={{ fontWeight: 400, color: '#666', marginLeft: 6 }}>— {log.note}</span> : ''}</div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -380,13 +505,48 @@ function PrepaidReviewDetail({ appNo, onBack }: Props) {
         </div>
       )}
 
+      {/* HR Reject dialog (mock HR rejection) */}
+      {showHrRejectDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Mock HR Reject</div>
+            <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#614700' }}>
+              ℹ This simulates the HR system rejecting the payment. The application status will move to <strong>Payment Rejected</strong>.
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
+                HR Reject Reason <span style={{ color: '#ff4d4f' }}>*</span>
+              </label>
+              <textarea
+                style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+                placeholder="e.g. Bank account verification failed."
+                value={hrRejectReason}
+                onChange={e => setHrRejectReason(e.target.value)}
+              />
+              {!hrRejectReason.trim() && (
+                <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn-default" onClick={() => setShowHrRejectDialog(false)}>Cancel</button>
+              <button
+                style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: hrRejectReason.trim() ? 'pointer' : 'not-allowed', opacity: hrRejectReason.trim() ? 1 : 0.5 }}
+                onClick={handleHrReject}
+              >
+                Confirm HR Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit dialog */}
       {showEditDialog && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
             <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Edit Application</div>
             <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Prepaid Amount ({data.currency})</label>
+              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Prepaid Amount</label>
               <input
                 type="number"
                 className="filter-input"

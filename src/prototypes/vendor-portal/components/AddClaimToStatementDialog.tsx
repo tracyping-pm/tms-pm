@@ -93,7 +93,7 @@ function AddClaimToStatementDialog({ vendorName, alreadyPicked, onClose, onConfi
         <div className="modal-footer">
           <span style={{ fontSize: 13, color: '#666', marginRight: 'auto' }}>
             Selected <strong>{picked.size}</strong> · Deduction Subtotal{' '}
-            <strong style={{ color: '#ff4d4f' }}>− {total.toLocaleString()} PHP</strong>
+            <strong style={{ color: '#ff4d4f' }}>− {total.toLocaleString()}</strong>
           </span>
           <button className="btn-default" onClick={onClose}>Cancel</button>
           <button

@@ -21,8 +21,10 @@ import React, { useState } from 'react';
 import VendorPortalShell from './components/VendorPortalShell';
 
 // PrePaid Application
-import PrePaidApplicationList, { type PrePaidApplication } from './components/PrePaidApplicationList';
+import PrePaidApplicationList from './components/PrePaidApplicationList';
 import PrePaidApplicationForm from './components/PrePaidApplicationForm';
+import PrePaidApplicationDetail from './components/PrePaidApplicationDetail';
+import { type SyncedApplication } from '../../common/prepaidApplicationSync';
 
 // Unbilled Waybills
 import UnbilledWaybillsList, { type CreateMode } from './components/UnbilledWaybillsList';
@@ -50,7 +52,7 @@ type Dialog = 'claim-dispute' | null;
 
 const MENU_LABEL: Record<Menu, string> = {
   'prepaid-application': 'PrePaid Application',
-  'unbilled-waybills': 'Unbilled Waybills',
+  'unbilled-waybills': 'Billable',
   'claim-tickets': 'Claim Tickets',
   'my-statements': 'My Statements',
 };
@@ -60,8 +62,9 @@ const Component = function VendorPortal() {
 
   // PrePaid Application
   const [prepaidView, setPrepaidView] = useState<PrepaidView>('list');
-  const [viewedPrepaidApp, setViewedPrepaidApp] = useState<PrePaidApplication | null>(null);
-  const [proofPreviewMsg, setProofPreviewMsg] = useState('');
+  const [viewedPrepaidApp, setViewedPrepaidApp] = useState<SyncedApplication | null>(null);
+  const [editingPrepaidApp, setEditingPrepaidApp] = useState<SyncedApplication | null>(null);
+  const [prepaidRefreshKey, setPrepaidRefreshKey] = useState(0);
 
   // Unbilled Waybills
   const [unbilledView, setUnbilledView] = useState<UnbilledView>('list');
@@ -108,211 +111,30 @@ const Component = function VendorPortal() {
     if (prepaidView === 'create') {
       return (
         <PrePaidApplicationForm
-          onBack={() => setPrepaidView('list')}
-          onSubmit={() => setPrepaidView('list')}
+          initialApp={editingPrepaidApp || undefined}
+          onBack={() => { setEditingPrepaidApp(null); setPrepaidView('list'); }}
+          onSaved={() => {
+            setEditingPrepaidApp(null);
+            setPrepaidRefreshKey(k => k + 1);
+            setPrepaidView('list');
+          }}
         />
       );
     }
     if (prepaidView === 'detail' && viewedPrepaidApp) {
-      const app = viewedPrepaidApp;
-      const statusColors: Record<string, React.CSSProperties> = {
-        'Pending Review': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
-        'Approved': { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
-        'Rejected': { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
-        'Paid': { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
-      };
-      const badge = { borderRadius: 4, padding: '3px 10px', fontSize: 13, ...(statusColors[app.status] || {}) };
-
-      // Waybill transport status mock mapping
-      const waybillStatusMap: Record<string, string> = {
-        WB2604010: 'Delivered',
-        WB2604011: 'Delivered',
-        WB2604020: 'In Transit',
-        WB2604021: 'In Transit',
-        WB2604022: 'Planning',
-        WB2604023: 'Pending',
-      };
-      const getWaybillStatusBadge = (wbNo: string) => {
-        const s = waybillStatusMap[wbNo] || 'In Transit';
-        const base: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 11, whiteSpace: 'nowrap' };
-        switch (s) {
-          case 'Delivered': return <span style={{ ...base, background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' }}>Delivered</span>;
-          case 'In Transit': return <span style={{ ...base, background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' }}>In Transit</span>;
-          case 'Planning': return <span style={{ ...base, background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' }}>Planning</span>;
-          case 'Pending': return <span style={{ ...base, background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' }}>Pending</span>;
-          default: return <span style={{ ...base, background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' }}>{s}</span>;
-        }
-      };
-
-      // Payment stepper
-      const STEPS = ['Pending Review', 'Approved', 'Paid'];
-      const stepIndex = STEPS.indexOf(app.status);
-      const isRejected = app.status === 'Rejected';
-      // For rejected, highlight step 0 (Pending Review) as current
-      const currentStep = isRejected ? 0 : stepIndex;
-
-      // Mock proof files for paid apps
-      const proofFiles = app.status === 'Paid'
-        ? [
-            { name: 'payment_voucher_001.pdf', icon: '📄' },
-            { name: 'bank_receipt.jpg', icon: '🖼' },
-            { name: 'approval_memo.pdf', icon: '📄' },
-          ]
-        : [];
-      const previewMsg = proofPreviewMsg;
-      const setPreviewMsg = setProofPreviewMsg;
-
       return (
-        <div>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <button className="btn-default" onClick={() => { setViewedPrepaidApp(null); setPrepaidView('list'); }}>← Back</button>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{app.applicationNo}</h2>
-            <span style={badge}>{app.status}</span>
-          </div>
-
-          {app.status === 'Approved' && (
-            <div className="alert" style={{ background: '#e6f4ff', border: '1px solid #91caff', color: '#0958d9', marginBottom: 16 }}>
-              <strong>Payment Request Auto-generated:</strong> A <em>Vendor Payment</em> request has been automatically created in the HR system. You will be notified once payment is released.
-            </div>
-          )}
-          {app.status === 'Rejected' && app.rejectReason && (
-            <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
-              <strong>Rejected:</strong> {app.rejectReason}
-            </div>
-          )}
-
-          {/* Card 1: Application Information */}
-          <div className="vp-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Application Information</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              {[
-                { label: 'Application No.', value: app.applicationNo },
-                { label: 'Application Date', value: app.applicationDate },
-                { label: 'Status', value: <span style={{ ...badge, fontSize: 12 }}>{app.status}</span> },
-                { label: 'Associated Waybills', value: app.waybillNos.join(', ') },
-                { label: 'PrePaid Amount', value: app.prepaidAmount.toLocaleString('en-US', { minimumFractionDigits: 2 }) },
-                { label: 'Total Amount', value: <strong>{app.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> },
-              ].map((item, i) => (
-                <div key={i}>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{item.label}</div>
-                  <div style={{ fontSize: 14 }}>{item.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 2: Associated Waybills */}
-          <div className="vp-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Associated Waybills</div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Waybill No.</th>
-                  <th>Transport Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {app.waybillNos.map(wbNo => (
-                  <tr key={wbNo}>
-                    <td><strong>{wbNo}</strong></td>
-                    <td>{getWaybillStatusBadge(wbNo)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Card 3: Submitted Proof */}
-          <div className="vp-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Submitted Proof</div>
-            {proofFiles.length > 0 ? (
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {proofFiles.map(f => (
-                  <div
-                    key={f.name}
-                    onClick={() => setPreviewMsg('Preview not available in prototype')}
-                    style={{
-                      width: 100, borderRadius: 8, border: '1px solid #e8e8e8',
-                      background: '#fafafa', padding: 12, textAlign: 'center', cursor: 'pointer',
-                    }}
-                  >
-                    <div style={{ fontSize: 28, marginBottom: 6 }}>{f.icon}</div>
-                    <div style={{ fontSize: 11, color: '#666', wordBreak: 'break-all' }}>{f.name}</div>
-                  </div>
-                ))}
-                {previewMsg && (
-                  <div style={{ width: '100%', marginTop: 8, fontSize: 12, color: '#888' }}>{previewMsg}</div>
-                )}
-              </div>
-            ) : (
-              <div style={{ fontSize: 13, color: '#bbb', padding: '12px 0' }}>No proof submitted.</div>
-            )}
-          </div>
-
-          {/* Card 4: Payment Status */}
-          <div className="vp-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 20 }}>Payment Status</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-              {STEPS.map((step, idx) => {
-                const isDone = !isRejected && stepIndex > idx;
-                const isCurrent = currentStep === idx && !isRejected;
-                const isCurrentRejected = isRejected && idx === 0;
-                const circleStyle: React.CSSProperties = {
-                  width: 32, height: 32, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 600, flexShrink: 0,
-                  background: isDone ? '#00b96b' : (isCurrent || isCurrentRejected) ? '#00b96b' : '#f0f0f0',
-                  color: (isDone || isCurrent || isCurrentRejected) ? '#fff' : '#bbb',
-                  border: `2px solid ${isDone ? '#00b96b' : (isCurrent || isCurrentRejected) ? '#00b96b' : '#e0e0e0'}`,
-                };
-                const labelStyle: React.CSSProperties = {
-                  fontSize: 12, marginTop: 6, textAlign: 'center',
-                  color: (isDone || isCurrent || isCurrentRejected) ? '#00b96b' : '#bbb',
-                  fontWeight: (isCurrent || isCurrentRejected) ? 600 : 400,
-                };
-                return (
-                  <React.Fragment key={step}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={circleStyle}>{isDone ? '✓' : idx + 1}</div>
-                      <div style={labelStyle}>{step}</div>
-                    </div>
-                    {idx < STEPS.length - 1 && (
-                      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
-                        <div style={{
-                          height: 2, width: '100%',
-                          background: (!isRejected && stepIndex > idx) ? '#00b96b' : '#e0e0e0',
-                        }} />
-                        {isRejected && idx === 0 && (
-                          <div style={{
-                            position: 'absolute', top: -14,
-                            background: '#fff1f0', border: '1px solid #ffa39e',
-                            borderRadius: 12, padding: '2px 10px',
-                            fontSize: 12, color: '#cf1322', fontWeight: 600, whiteSpace: 'nowrap',
-                          }}>
-                            ✕ Rejected
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
-
-          {app.status === 'Rejected' && (
-            <div style={{ textAlign: 'right' }}>
-              <button className="btn-primary" onClick={() => setPrepaidView('create')}>Resubmit Application</button>
-            </div>
-          )}
-        </div>
+        <PrePaidApplicationDetail
+          app={viewedPrepaidApp}
+          onBack={() => { setViewedPrepaidApp(null); setPrepaidView('list'); }}
+        />
       );
     }
     return (
       <PrePaidApplicationList
-        onCreate={() => setPrepaidView('create')}
-        onViewDetail={(app) => { setViewedPrepaidApp(app); setPrepaidView('detail'); }}
+        refreshKey={prepaidRefreshKey}
+        onCreate={() => { setEditingPrepaidApp(null); setPrepaidView('create'); }}
+        onEdit={(app) => { setEditingPrepaidApp(app); setPrepaidView('create'); }}
+        onDetail={(app) => { setViewedPrepaidApp(app); setPrepaidView('detail'); }}
       />
     );
   };

@@ -106,7 +106,7 @@ const PROOFS: ProofEntry[] = [
 
 const COMMUNICATION_RECORDS: CommunicationRecord[] = [
   { id: 'cr1', timestamp: '2026-04-16 17:10', actor: 'VP', action: 'Submitted', note: 'Billing statement for April 1–15 period. 4 waybills included.' },
-  { id: 'cr2', timestamp: '2026-04-17 09:30', actor: 'TMS', action: 'Rejected', note: 'WB2604002 has unresolved price discrepancy. Exception fee of 1,200 PHP needs clarification. Please provide supporting documents or adjust the amount.' },
+  { id: 'cr2', timestamp: '2026-04-17 09:30', actor: 'TMS', action: 'Rejected', note: 'WB2604002 has unresolved price discrepancy. Exception fee of 1,200 needs clarification. Please provide supporting documents or adjust the amount.' },
   { id: 'cr3', timestamp: '2026-04-18 14:20', actor: 'VP', action: 'Resubmitted', note: 'Added Proof documents for detention and exception fees. Amounts remain the same — please review attachments.' },
 ];
 
@@ -188,7 +188,7 @@ function SettlementReviewDetail({ apNo, onBack }: Props) {
           <div><div className="tms-kpi-label">Time Type</div><div style={{ fontSize: 13 }}>Position Time</div></div>
           <div><div className="tms-kpi-label">Items</div><div style={{ fontSize: 13 }}>Paid / Basic / Additional / Exception / Claim</div></div>
           <div><div className="tms-kpi-label">Tax Mark</div><div style={{ fontSize: 13 }}>VAT-ex (from profile)</div></div>
-          <div><div className="tms-kpi-label">Total Amount</div><div style={{ fontSize: 16, fontWeight: 600, color: '#00b96b' }}>{totalAmountPayable.toLocaleString()} PHP</div></div>
+          <div><div className="tms-kpi-label">Total Amount</div><div style={{ fontSize: 16, fontWeight: 600, color: '#00b96b' }}>{totalAmountPayable.toLocaleString()}</div></div>
         </div>
       </div>
 
@@ -245,7 +245,7 @@ function SettlementReviewDetail({ apNo, onBack }: Props) {
               {INVOICES.map((inv, i) => (
                 <tr key={i}>
                   <td style={{ color: '#1890ff', fontWeight: 500 }}>{inv.invoiceNo}</td>
-                  <td className="num" style={{ fontWeight: 600 }}>{inv.invoiceAmount.toLocaleString()} PHP</td>
+                  <td className="num" style={{ fontWeight: 600 }}>{inv.invoiceAmount.toLocaleString()}</td>
                   <td>{inv.invoiceDate}</td>
                   <td>
                     <span style={{ color: '#1890ff', fontSize: 12, cursor: 'pointer' }}>📎 {inv.attachmentName}</span>
@@ -313,33 +313,33 @@ function SettlementReviewDetail({ apNo, onBack }: Props) {
         <div style={{ background: '#fafafa', borderRadius: 6, padding: 14, border: '1px solid #f0f0f0' }}>
           <div className="summary-bd-row" style={isIncluded('basic') ? {} : greyText}>
             <span>Basic Amount {isIncluded('basic') ? '' : '(excluded)'}</span>
-            <span>{itemTotals.basic.toLocaleString()} PHP</span>
+            <span>{itemTotals.basic.toLocaleString()}</span>
           </div>
           <div className="summary-bd-row" style={isIncluded('additional') ? {} : greyText}>
             <span>Additional Charge {isIncluded('additional') ? '' : '(excluded)'}</span>
-            <span>{itemTotals.additional.toLocaleString()} PHP</span>
+            <span>{itemTotals.additional.toLocaleString()}</span>
           </div>
           <div className="summary-bd-row" style={isIncluded('exception') ? {} : greyText}>
             <span>Exception Fee {isIncluded('exception') ? '' : '(excluded)'}</span>
-            <span>{itemTotals.exception.toLocaleString()} PHP</span>
+            <span>{itemTotals.exception.toLocaleString()}</span>
           </div>
           <div className="summary-bd-row" style={isIncluded('reimbursement') ? {} : greyText}>
             <span>Reimbursement {isIncluded('reimbursement') ? '' : '(excluded)'}</span>
-            <span>{itemTotals.reimbursement.toLocaleString()} PHP</span>
+            <span>{itemTotals.reimbursement.toLocaleString()}</span>
           </div>
           <div className="summary-bd-row" style={{ fontWeight: 600, borderTop: '1px solid #e8e8e8', paddingTop: 6, marginTop: 4 }}>
             <span>Waybill Subtotal</span>
-            <span>{waybillSubtotal.toLocaleString()} PHP</span>
+            <span>{waybillSubtotal.toLocaleString()}</span>
           </div>
           {claimDeduction > 0 && (
             <div className="summary-bd-row" style={isIncluded('claim') ? { color: '#cf1322' } : greyText}>
               <span>Claim Deductions {isIncluded('claim') ? '' : '(excluded)'}</span>
-              <span>−{claimDeduction.toLocaleString()} PHP</span>
+              <span>−{claimDeduction.toLocaleString()}</span>
             </div>
           )}
           <div className="summary-bd-row" style={{ fontWeight: 700, fontSize: 15, color: '#00b96b', borderTop: '2px solid #00b96b', paddingTop: 8, marginTop: 6 }}>
             <span>Total Amount Payable</span>
-            <span>{totalAmountPayable.toLocaleString()} PHP</span>
+            <span>{totalAmountPayable.toLocaleString()}</span>
           </div>
         </div>
       </div>

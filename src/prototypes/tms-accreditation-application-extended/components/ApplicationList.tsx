@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  type SyncedApplication,
+  type SyncedAppStatus,
+  getTmsVisibleApplications,
+} from '../../../common/prepaidApplicationSync';
 
 interface Props {
   onOpenDetail: (appNo: string) => void;
@@ -7,6 +12,35 @@ interface Props {
 
 export type AppStatus = 'Pending Review' | 'Approved' | 'Rejected' | 'Paid' | 'Sync Failed' | 'Payment Rejected';
 type Source = 'Vendor Portal' | 'Internal';
+
+/** Map VP-synced status → TMS-side display status. */
+function mapSyncStatus(s: SyncedAppStatus): AppStatus {
+  switch (s) {
+    case 'Awaiting Confirmation': return 'Pending Review';
+    case 'Pending Payment': return 'Approved';
+    case 'Paid': return 'Paid';
+    case 'Rejected': return 'Rejected';
+    case 'Payment Rejected': return 'Payment Rejected';
+    default: return 'Pending Review';
+  }
+}
+
+function syncedToRow(s: SyncedApplication): Row {
+  return {
+    appNo: s.applicationNo,
+    appType: 'Prepaid Application',
+    source: 'Vendor Portal',
+    vendor: s.vendorName,
+    waybillNos: s.waybills.map(w => w.no),
+    prepaidAmount: s.totalAmountPayable,
+    vatAmount: 0,
+    totalAmount: s.totalAmountPayable,
+    currency: s.currency,
+    submittedAt: (s.submittedAt || s.createdAt).slice(0, 16).replace('T', ' '),
+    status: mapSyncStatus(s.status),
+    rejectReason: s.rejectReason || s.hrRejectReason,
+  };
+}
 
 interface Row {
   appNo: string;
@@ -190,8 +224,8 @@ const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
   'Internal':      { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
 };
 
-function fmt(n: number, cur: string) {
-  return `${cur} ${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+function fmt(n: number, _cur?: string) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
 function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
@@ -200,7 +234,27 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
   const [filterType, setFilterType] = useState('');
   const [keyword, setKeyword] = useState('');
 
-  const filtered = SAMPLE.filter(r => {
+  // Pull VP-synced applications from localStorage on mount, merge with mock SAMPLE.
+  // VP-synced rows take precedence over any mock entry with the same appNo.
+  const [syncedRows, setSyncedRows] = useState<Row[]>(() => getTmsVisibleApplications().map(syncedToRow));
+  useEffect(() => {
+    const refresh = () => setSyncedRows(getTmsVisibleApplications().map(syncedToRow));
+    refresh();
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
+
+  const merged: Row[] = (() => {
+    const syncedNos = new Set(syncedRows.map(r => r.appNo));
+    const sampleFiltered = SAMPLE.filter(r => !syncedNos.has(r.appNo));
+    return [...syncedRows, ...sampleFiltered];
+  })();
+
+  const filtered = merged.filter(r => {
     if (filterSource && r.source !== filterSource) return false;
     if (filterStatus && r.status !== filterStatus) return false;
     if (filterType && r.appType !== filterType) return false;
@@ -210,17 +264,17 @@ function ApplicationList({ onOpenDetail, onCreateNew }: Props) {
     return true;
   });
 
-  const pendingCount = SAMPLE.filter(r => r.status === 'Pending Review').length;
-  const approvedCount = SAMPLE.filter(r => r.status === 'Approved').length;
-  const paidCount = SAMPLE.filter(r => r.status === 'Paid').length;
-  const vpCount = SAMPLE.filter(r => r.source === 'Vendor Portal').length;
+  const pendingCount = merged.filter(r => r.status === 'Pending Review').length;
+  const approvedCount = merged.filter(r => r.status === 'Approved').length;
+  const paidCount = merged.filter(r => r.status === 'Paid').length;
+  const vpCount = merged.filter(r => r.source === 'Vendor Portal').length;
 
   return (
     <>
       <div className="tms-kpi-row">
         <div className="tms-kpi">
           <div className="tms-kpi-label">Total Applications</div>
-          <div className="tms-kpi-value">{SAMPLE.length}</div>
+          <div className="tms-kpi-value">{merged.length}</div>
         </div>
         <div className="tms-kpi">
           <div className="tms-kpi-label">Pending Review</div>

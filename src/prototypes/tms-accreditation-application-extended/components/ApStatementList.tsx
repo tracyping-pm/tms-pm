@@ -163,8 +163,8 @@ const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
   'Internal':      { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
 };
 
-function fmt(n: number, cur: string) {
-  return `${cur} ${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+function fmt(n: number, _cur?: string) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
 const STATUS_OPTIONS: Status[] = [

@@ -288,7 +288,6 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
               <th>Invoice No.</th>
               <th>Invoice Date</th>
               <th className="num">Amount</th>
-              <th>Currency</th>
               <th>Document</th>
               <th>Remark</th>
               <th>Operate</th>
@@ -300,14 +299,13 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
                 <td>{inv.invoiceNo}</td>
                 <td>{inv.invoiceDate}</td>
                 <td className="num" style={{ fontWeight: 500 }}>{inv.amount.toLocaleString()}</td>
-                <td>{inv.currency}</td>
                 <td>{inv.documentFileName ? <span>📎 {inv.documentFileName}</span> : <span style={{ color: '#999' }}>—</span>}</td>
                 <td style={{ fontSize: 12, color: '#666' }}>{inv.remark || '—'}</td>
                 <td><button className="btn-link" style={{ color: '#ff4d4f' }} onClick={() => removeInvoice(inv.id)}>Remove</button></td>
               </tr>
             ))}
             {invoices.length === 0 && (
-              <tr><td colSpan={7} className="empty">No invoices added yet.</td></tr>
+              <tr><td colSpan={6} className="empty">No invoices added yet.</td></tr>
             )}
           </tbody>
         </table>
@@ -317,7 +315,7 @@ function SettlementCreate({ onBack, onSubmit, prefillWaybills = [] }: Props) {
         <div className="summary-hero-top">
           <div>
             <div className="summary-hero-label">Total Settlement Amount</div>
-            <div className="summary-hero-value">{grandTotal.toLocaleString()} PHP</div>
+            <div className="summary-hero-value">{grandTotal.toLocaleString()}</div>
             <div className="summary-hero-sub">VAT-ex (from vendor profile) · {selected.size} waybills · {selectedClaims.length} claims · {invoices.length} invoice(s)</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

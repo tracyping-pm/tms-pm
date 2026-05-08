@@ -724,7 +724,6 @@ function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
             <div style={{ fontSize: 11, color: '#52c41a', fontWeight: 600, marginBottom: 2 }}>Total Amount Payable</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#389e0d', whiteSpace: 'nowrap' }}>
               {calculatedTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              <span style={{ fontSize: 12, fontWeight: 500, marginLeft: 4, color: '#52c41a' }}>PHP</span>
             </div>
           </div>
 

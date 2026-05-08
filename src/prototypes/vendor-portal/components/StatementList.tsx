@@ -268,7 +268,7 @@ function StatementList({ onOpenDetail, onEdit, statusOverrides = {} }: Props) {
                 <td><span style={SOURCE_STYLE[r.source]}>{r.source}</span></td>
                 <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 13 }}>
                   {r.totalSubmittedAmount > 0
-                    ? `${r.currency} ${r.totalSubmittedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                    ? `${r.totalSubmittedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
                     : <span style={{ color: '#bbb' }}>—</span>
                   }
                 </td>
