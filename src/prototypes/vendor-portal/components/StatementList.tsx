@@ -4,6 +4,7 @@ interface Props {
   onOpenDetail: (no: string, status: Status) => void;
   onEdit: (no: string, status: Status) => void;
   statusOverrides?: Record<string, Status>;
+  extraRows?: Row[];
 }
 
 export type Status =
@@ -159,14 +160,16 @@ const STATUS_OPTIONS: Status[] = [
   'Partially Payment', 'Paid', 'Written Off', 'Canceled',
 ];
 
-function StatementList({ onOpenDetail, onEdit, statusOverrides = {} }: Props) {
+function StatementList({ onOpenDetail, onEdit, statusOverrides = {}, extraRows = [] }: Props) {
   const [filterStatementNo, setFilterStatementNo] = useState('');
   const [filterSource, setFilterSource] = useState('');
   const [filterInvoiceNo, setFilterInvoiceNo] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
 
-  const filtered = SAMPLE.filter(r => {
+  const ALL_ROWS = [...extraRows, ...SAMPLE];
+
+  const filtered = ALL_ROWS.filter(r => {
     if (filterStatementNo && !r.no.toLowerCase().includes(filterStatementNo.toLowerCase())) return false;
     if (filterSource && r.source !== filterSource) return false;
     if (filterInvoiceNo && !r.invoiceNo.toLowerCase().includes(filterInvoiceNo.toLowerCase())) return false;

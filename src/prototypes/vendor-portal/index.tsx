@@ -29,7 +29,10 @@ import { type SyncedApplication } from '../../common/prepaidApplicationSync';
 // Unbilled Waybills
 import UnbilledWaybillsList, { type CreateMode } from './components/UnbilledWaybillsList';
 
-// Create Statement Form (V2)
+// Create Statement Form — Billable Waybills flow (new)
+import BillableCreateStatementForm, { type NewStatementData } from './components/BillableCreateStatementForm';
+
+// Create Statement Form — My Statements edit/resubmit flow (kept)
 import CreateStatementForm from './components/CreateStatementForm';
 
 // Claim Tickets
@@ -38,7 +41,7 @@ import ClaimTicketDetail from './components/ClaimTicketDetail';
 import DisputeClaimDialog from './components/DisputeClaimDialog';
 
 // My Statements
-import StatementList, { type Status as StatementStatus } from './components/StatementList';
+import StatementList, { type Status as StatementStatus, type StatementRow } from './components/StatementList';
 import StatementDetailView from './components/StatementDetail';
 
 type Menu = 'prepaid-application' | 'unbilled-waybills' | 'claim-tickets' | 'my-statements';
@@ -52,7 +55,7 @@ type Dialog = 'claim-dispute' | null;
 
 const MENU_LABEL: Record<Menu, string> = {
   'prepaid-application': 'PrePaid Application',
-  'unbilled-waybills': 'Billable',
+  'unbilled-waybills': 'Billable Waybills',
   'claim-tickets': 'Claim Tickets',
   'my-statements': 'My Statements',
 };
@@ -72,6 +75,8 @@ const Component = function VendorPortal() {
   const [createMode, setCreateMode] = useState<CreateMode>('system-price');
   // waybills that have been submitted (show as Statement Pending in list)
   const [pendingWaybills, setPendingWaybills] = useState<string[]>([]);
+  // Statements created from Billable Waybills flow (synced to My Statements list)
+  const [extraStatements, setExtraStatements] = useState<StatementRow[]>([]);
 
   // Claim Tickets
   const [claimView, setClaimView] = useState<ClaimView>('list');
@@ -146,11 +151,37 @@ const Component = function VendorPortal() {
     setUnbilledView('create');
   };
 
+  const handleBillableStatementCreate = (data: NewStatementData) => {
+    // Mark waybills as Statement Pending in Billable Waybills list
+    setPendingWaybills(prev => [...new Set([...prev, ...data.waybillNos])]);
+    setSelectedWaybills([]);
+    setUnbilledView('list');
+    // Add new statement to My Statements list
+    const newRow: StatementRow = {
+      no: data.statementNo,
+      source: 'Self-Created',
+      totalSubmittedAmount: data.isDraft ? 0 : data.totalSubmittedAmount,
+      currency: 'PHP',
+      statementType: data.statementType,
+      waybillCount: data.waybillNos.length,
+      invoiceNo: '—',
+      status: data.isDraft ? 'Draft' : 'Awaiting Comparison',
+      createdAt: data.createdAt.slice(0, 16).replace('T', ' '),
+    };
+    setExtraStatements(prev => [newRow, ...prev]);
+    // Navigate to My Statements
+    setMenu('my-statements');
+    setStatementView('list');
+    if (!data.isDraft) {
+      setSubmitSuccessNo(data.statementNo);
+      setTimeout(() => setSubmitSuccessNo(null), 4000);
+    }
+  };
+
   const handleStatementSubmit = (waybillNos: string[]) => {
     setPendingWaybills(prev => [...new Set([...prev, ...waybillNos])]);
     setSelectedWaybills([]);
     setUnbilledView('list');
-    // Navigate to My Statements after submit
     setMenu('my-statements');
     setStatementView('list');
   };
@@ -198,11 +229,10 @@ const Component = function VendorPortal() {
   const renderUnbilledWaybills = () => {
     if (unbilledView === 'create') {
       return (
-        <CreateStatementForm
-          prefillWaybills={selectedWaybills}
-          mode={createMode}
+        <BillableCreateStatementForm
+          prefillWaybillNos={selectedWaybills}
           onBack={() => { setSelectedWaybills([]); setUnbilledView('list'); }}
-          onSubmit={handleStatementSubmit}
+          onSubmit={handleBillableStatementCreate}
         />
       );
     }
@@ -253,6 +283,7 @@ const Component = function VendorPortal() {
               onOpenDetail={handleOpenStatementDetail}
               onEdit={handleEditStatement}
               statusOverrides={vpStatusOverrides}
+              extraRows={extraStatements}
             />
           </>
         );

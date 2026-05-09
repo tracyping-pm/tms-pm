@@ -17,7 +17,7 @@ const MENU_MAIN = [
 const MENU_FIN = [
   { key: 'my-statements', label: 'My Statements' },
   { key: 'prepaid-application', label: 'PrePaid Application' },
-  { key: 'unbilled-waybills', label: 'Billable' },
+  { key: 'unbilled-waybills', label: 'Billable Waybills' },
   { key: 'claim-tickets', label: 'Claim Tickets' },
 ];
 
