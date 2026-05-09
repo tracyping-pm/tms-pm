@@ -323,8 +323,8 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
           ← Back to Billable Waybills
         </button>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-default" onClick={handleSave}>Save</button>
-          <button className="btn-primary" onClick={() => setShowConfirm(true)}>Submit</button>
+          <button className="btn-default" onClick={handleSave}>Save as Draft</button>
+          <button className="btn-primary" onClick={() => setShowConfirm(true)}>Submit to TMS</button>
         </div>
       </div>
 
@@ -811,7 +811,7 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
       {showConfirm && (
         <div className="dialog-overlay">
           <div className="dialog" style={{ maxWidth: 460 }}>
-            <div className="dialog-header">Confirm Submission</div>
+            <div className="dialog-header">Confirm Submission to TMS</div>
             <div className="dialog-body">
               <p style={{ margin: '0 0 14px', fontSize: 14, color: '#444' }}>
                 Once submitted, you will <strong>not be able to modify</strong> this statement.
@@ -851,7 +851,7 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
             </div>
             <div className="dialog-footer">
               <button className="btn-default" onClick={() => setShowConfirm(false)}>Cancel</button>
-              <button className="btn-primary" onClick={handleConfirmSubmit}>Confirm &amp; Submit</button>
+              <button className="btn-primary" onClick={handleConfirmSubmit}>Confirm &amp; Submit to TMS</button>
             </div>
           </div>
         </div>

@@ -101,6 +101,7 @@ const Component = function VendorPortal() {
   const [openedStmtStatus, setOpenedStmtStatus] = useState<StatementStatus>('Awaiting Comparison');
   const [vpStatusOverrides, setVpStatusOverrides] = useState<Record<string, StatementStatus>>({});
   const [submitSuccessNo, setSubmitSuccessNo] = useState<string | null>(null);
+  const [draftSuccessNo, setDraftSuccessNo] = useState<string | null>(null);
   // For edit (Awaiting Re-bill) flow
   const [editingStmtNo, setEditingStmtNo] = useState<string | undefined>(undefined);
   const [editingRejectReason, setEditingRejectReason] = useState<string | undefined>(undefined);
@@ -164,15 +165,17 @@ const Component = function VendorPortal() {
   };
 
   const handleBillableStatementCreate = (data: NewStatementData) => {
-    // Mark waybills as Statement Pending in Billable Waybills list
-    setPendingWaybills(prev => [...new Set([...prev, ...data.waybillNos])]);
+    if (!data.isDraft) {
+      // Only submitted statements move waybills into Statement Pending.
+      setPendingWaybills(prev => [...new Set([...prev, ...data.waybillNos])]);
+    }
     setSelectedWaybills([]);
     setUnbilledView('list');
     // Add new statement to My Statements list
     const newRow: StatementRow = {
       no: data.statementNo,
       source: 'Self-Created',
-      totalSubmittedAmount: data.isDraft ? 0 : data.totalSubmittedAmount,
+      totalSubmittedAmount: data.totalSubmittedAmount,
       currency: 'PHP',
       statementType: data.statementType,
       waybillCount: data.waybillNos.length,
@@ -221,7 +224,10 @@ const Component = function VendorPortal() {
     // Navigate to My Statements
     setMenu('my-statements');
     setStatementView('list');
-    if (!data.isDraft) {
+    if (data.isDraft) {
+      setDraftSuccessNo(data.statementNo);
+      setTimeout(() => setDraftSuccessNo(null), 4000);
+    } else {
       setSubmitSuccessNo(data.statementNo);
       setTimeout(() => setSubmitSuccessNo(null), 4000);
     }
@@ -343,6 +349,12 @@ const Component = function VendorPortal() {
               <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6, padding: '10px 16px', marginBottom: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ color: '#52c41a', fontSize: 16 }}>✓</span>
                 <span>Statement <strong>{submitSuccessNo}</strong> has been submitted to TMS and is now <strong>Awaiting Comparison</strong>.</span>
+              </div>
+            )}
+            {draftSuccessNo && (
+              <div style={{ background: '#f5f5f5', border: '1px solid #d9d9d9', borderRadius: 6, padding: '10px 16px', marginBottom: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: '#595959', fontSize: 16 }}>✓</span>
+                <span>Statement <strong>{draftSuccessNo}</strong> has been created in <strong>Draft</strong> status.</span>
               </div>
             )}
             <StatementList

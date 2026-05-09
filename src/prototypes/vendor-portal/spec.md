@@ -203,7 +203,9 @@ index.tsx（顶层状态机：menu → 子视图）
 - **Total Amount Payable**（最终应付金额）
 
 ### 底部操作
-- `Save as Draft` + `Submit to TMS`（无强制校验，均可点击）
+- `Save as Draft`：立即在 **My Statements** 中创建一条新记录，状态为 `Draft`
+- `Submit to TMS`：立即在 **My Statements** 中创建一条新记录，状态为 `Awaiting Comparison`
+- 两种操作都会基于当前表单内容生成一条新的 My Statement 数据
 - 提交确认弹窗：展示完整金额汇总 + Invoice 不一致 Warning
 
 ### 编辑模式（mode='edit'，Awaiting Re-bill）
