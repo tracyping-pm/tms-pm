@@ -320,20 +320,7 @@ function PrePaidApplicationForm({ initialApp, onBack, onSaved }: Props) {
 
       {/* Payee Information */}
       <div style={sectionStyle}>
-        <div style={sectionTitleStyle}>
-          <span style={sectionBar} />
-          <span style={sectionLabel}>Payee Information</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 16, fontSize: 13 }}>
-          <div>
-            <div style={{ color: '#999', marginBottom: 4 }}>Payee Type</div>
-            <div>{app.payeeType || 'External Vendor'}</div>
-          </div>
-          <div>
-            <div style={{ color: '#999', marginBottom: 4 }}>Payee Name</div>
-            <div>{app.payeeName || VENDOR_NAME}</div>
-          </div>
-        </div>
+        
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, fontSize: 13 }}>
           <div>
             <div style={{ color: '#555', marginBottom: 4 }}>
