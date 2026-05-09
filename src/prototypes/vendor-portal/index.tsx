@@ -17,6 +17,7 @@
 import './style.css';
 
 import React, { useState } from 'react';
+import { getAllApplications } from '../../common/prepaidApplicationSync';
 
 import VendorPortalShell from './components/VendorPortalShell';
 
@@ -28,6 +29,12 @@ import { type SyncedApplication } from '../../common/prepaidApplicationSync';
 
 // Unbilled Waybills
 import UnbilledWaybillsList, { type CreateMode } from './components/UnbilledWaybillsList';
+import {
+  buildEffectiveWaybills,
+  deriveWaybillStatus,
+  type Waybill,
+  SHEET_SYNC_OVERRIDES,
+} from './data/waybills';
 
 // Create Statement Form — Billable Waybills flow (new)
 import BillableCreateStatementForm, { type NewStatementData } from './components/BillableCreateStatementForm';
@@ -42,7 +49,7 @@ import DisputeClaimDialog from './components/DisputeClaimDialog';
 
 // My Statements
 import StatementList, { type Status as StatementStatus, type StatementRow } from './components/StatementList';
-import StatementDetailView from './components/StatementDetail';
+import StatementDetailView, { type MockData as StatementMockData } from './components/StatementDetail';
 
 type Menu = 'prepaid-application' | 'unbilled-waybills' | 'claim-tickets' | 'my-statements';
 
@@ -75,8 +82,13 @@ const Component = function VendorPortal() {
   const [createMode, setCreateMode] = useState<CreateMode>('system-price');
   // waybills that have been submitted (show as Statement Pending in list)
   const [pendingWaybills, setPendingWaybills] = useState<string[]>([]);
+  // Sheet sync overrides — lifted here so Billable Waybills list and the
+  // Add Waybill modal in BillableCreateStatementForm see the same prices.
+  const [syncedOverrides, setSyncedOverrides] = useState<Record<string, Partial<Waybill>>>({});
   // Statements created from Billable Waybills flow (synced to My Statements list)
   const [extraStatements, setExtraStatements] = useState<StatementRow[]>([]);
+  // Full snapshot per user-created statementNo, used by StatementDetail when no built-in mock matches.
+  const [extraStatementData, setExtraStatementData] = useState<Record<string, StatementMockData>>({});
 
   // Claim Tickets
   const [claimView, setClaimView] = useState<ClaimView>('list');
@@ -169,6 +181,43 @@ const Component = function VendorPortal() {
       createdAt: data.createdAt.slice(0, 16).replace('T', ' '),
     };
     setExtraStatements(prev => [newRow, ...prev]);
+    // Persist a snapshot so the Detail page can render the user-created statement.
+    const snapshot: StatementMockData = {
+      source: 'Self-Created',
+      reconciliationPeriod: data.reconciliationPeriod,
+      taxMark: data.taxMark,
+      totalAmountPayable: data.totalSubmittedAmount,
+      createDate: data.createdAt.slice(0, 10),
+      waybills: data.waybills.map(w => ({
+        no: w.no,
+        waybillAmount: w.basicAmount + w.additionalCharge + w.exceptionFee + w.reimbursement,
+        basicAmount: w.basicAmount,
+        prepaidAmount: 0,
+        additionalCharge: w.additionalCharge,
+        exceptionFee: w.exceptionFee,
+        reimbursement: w.reimbursement,
+        positionTime: w.positionTime,
+        unloadingTime: w.unloadingTime,
+        truckType: w.truckType,
+        origin: w.origin,
+        destination: w.destination,
+      })),
+      claimTickets: data.claims.map(c => ({
+        ticketNo: c.no,
+        claimType: c.type,
+        relatedWaybill: c.waybillNo,
+        claimAmount: c.amount,
+      })),
+      waybillContractCost: data.waybillContractCost,
+      vendorBasicAmount: data.totals.basic,
+      prepaidAmount: data.prepaidTotal,
+      vendorExceptionFee: data.totals.exception,
+      vendorAdditionalCharge: data.totals.additional,
+      kpiClaim: data.claimTotal,
+      vat: data.vatAmount,
+      wht: data.whtAmount,
+    };
+    setExtraStatementData(prev => ({ ...prev, [data.statementNo]: snapshot }));
     // Navigate to My Statements
     setMenu('my-statements');
     setStatementView('list');
@@ -227,10 +276,25 @@ const Component = function VendorPortal() {
 
   // --- Render ---
   const renderUnbilledWaybills = () => {
+    const prepaidAmountMap: Record<string, number> = {};
+    const submittedApplications = getAllApplications().filter(app => app.status !== 'Draft');
+    for (const app of submittedApplications) {
+      for (const wb of app.waybills) {
+        if (wb.prePaidAmount > 0) {
+          prepaidAmountMap[wb.no] = (prepaidAmountMap[wb.no] || 0) + wb.prePaidAmount;
+        }
+      }
+    }
+
+    const billableWaybills = buildEffectiveWaybills(syncedOverrides, prepaidAmountMap).filter(
+      waybill => deriveWaybillStatus(waybill, pendingWaybills) === 'Billable'
+    );
+
     if (unbilledView === 'create') {
       return (
         <BillableCreateStatementForm
           prefillWaybillNos={selectedWaybills}
+          billableWaybills={billableWaybills}
           onBack={() => { setSelectedWaybills([]); setUnbilledView('list'); }}
           onSubmit={handleBillableStatementCreate}
         />
@@ -240,6 +304,8 @@ const Component = function VendorPortal() {
       <UnbilledWaybillsList
         onGenerateStatement={handleGenerateStatement}
         pendingWaybills={pendingWaybills}
+        syncedOverrides={syncedOverrides}
+        onApplySyncOverrides={() => setSyncedOverrides(SHEET_SYNC_OVERRIDES)}
       />
     );
   };
@@ -294,6 +360,7 @@ const Component = function VendorPortal() {
             status={openedStmtStatus}
             onBack={() => setStatementView('list')}
             onSubmitToTMS={handleSubmitToTMS}
+            extraData={extraStatementData[openedStmtNo]}
             onEdit={
               openedStmtStatus === 'Draft' || openedStmtStatus === 'Awaiting Re-bill'
                 ? () => handleEditStatement(openedStmtNo, openedStmtStatus)

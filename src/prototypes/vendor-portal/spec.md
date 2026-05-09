@@ -176,6 +176,8 @@ index.tsx（顶层状态机：menu → 子视图）
 **Waybill List Tab**
 - 每行输入：`Basic Amount` / `Additional Charge` / `Exception Fee` / **`Reimbursement`**（V3 新增）
 - 行尾实时计算 Subtotal
+- `+ Add Waybill` 弹窗与 **Billable Waybills** 列表共用同一份运单数据源（含 Sheet Sync / PrePaid 回填后的最新结果）
+- 创建 Statement 时，弹窗中**仅允许添加状态为 `Billable` 的 waybill**；`Pending` / `Statement Pending` / `Settled` 不可被加入
 - 工具栏：`↓ Download Template` + `↑ Upload Excel`
 
 **Claim Tickets Tab（V3 新增）**

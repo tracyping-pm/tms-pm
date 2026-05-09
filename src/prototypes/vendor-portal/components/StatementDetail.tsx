@@ -7,6 +7,8 @@ interface Props {
   onBack: () => void;
   onEdit?: () => void;
   onSubmitToTMS?: (no: string) => void;
+  /** Fallback data when `no` is not in the built-in mock map (e.g. user-created statements). */
+  extraData?: MockData;
 }
 
 interface WaybillRow {
@@ -55,7 +57,7 @@ interface OperationLogEntry {
   subLine?: string;
 }
 
-interface MockData {
+export interface MockData {
   source: 'Self-Created' | 'TMS-Synced';
   reconciliationPeriod: string;
   taxMark: string;
@@ -294,8 +296,8 @@ const ITEM_LABELS: Record<string, string> = {
 const ITEM_KEYS = ['basicAmount', 'additionalCharge', 'exceptionFee', 'reimbursement', 'claimDeduction'] as const;
 type ItemKey = typeof ITEM_KEYS[number];
 
-function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS }: Props) {
-  const data = STATEMENT_DATA[no];
+function StatementDetail({ no, status, onBack, onEdit, onSubmitToTMS, extraData }: Props) {
+  const data = STATEMENT_DATA[no] ?? extraData;
   const [activeTab, setActiveTab] = useState<'waybills' | 'tickets'>('waybills');
   const [checkedItems, setCheckedItems] = useState<Record<ItemKey, boolean>>({
     basicAmount: true, additionalCharge: true, exceptionFee: true, reimbursement: true, claimDeduction: true,

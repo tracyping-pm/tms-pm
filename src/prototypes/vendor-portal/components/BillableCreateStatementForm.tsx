@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { getAllApplications } from '../../../common/prepaidApplicationSync';
+import { CLAIM_TICKETS } from '../data/claimTickets';
+import { type Waybill } from '../data/waybills';
 
 // ─── Exported Types ────────────────────────────────────────────────────────────
 
@@ -11,12 +13,26 @@ export interface NewStatementData {
   totalSubmittedAmount: number;
   createdAt: string;
   isDraft?: boolean;
+  // Full snapshot for the detail page
+  waybills: WaybillData[];
+  claims: ClaimData[];
+  taxMark: 'Tax-inclusive' | 'Tax-exclusive';
+  vatRate: number;
+  whtRate: number;
+  vatAmount: number;
+  whtAmount: number;
+  totals: { basic: number; additional: number; exception: number; reimbursement: number };
+  prepaidTotal: number;
+  claimTotal: number;
+  waybillContractCost: number;
 }
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   prefillWaybillNos: string[];
+  /** Pool of waybills available for selection — parent must pre-filter to Billable status. */
+  billableWaybills: Waybill[];
   onBack: () => void;
   onSubmit: (data: NewStatementData) => void;
 }
@@ -52,16 +68,27 @@ interface WaybillData {
   reimbursement: number;
 }
 
-const ALL_WAYBILLS: WaybillData[] = [
-  { no: 'WB2604011', positionTime: '2026-04-11 09:00', unloadingTime: '2026-04-10 15:30', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus / DC', destination: 'PH-NCR-Taguig', basicAmount: 14500, additionalCharge: 800, exceptionFee: 0, reimbursement: 0 },
-  { no: 'WB2604012', positionTime: '2026-04-12 17:00', unloadingTime: '2026-04-11 09:00', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig', basicAmount: 13300, additionalCharge: 0, exceptionFee: 0, reimbursement: 0 },
-  { no: 'WB2604013', positionTime: '2026-04-13 11:15', unloadingTime: '2026-04-12 17:00', truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila / Port Area', basicAmount: 15000, additionalCharge: 1200, exceptionFee: 500, reimbursement: 0 },
-  { no: 'WB2604014', positionTime: '2026-04-14 08:30', unloadingTime: '2026-04-13 11:15', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba / Plant 2', basicAmount: 12000, additionalCharge: 0, exceptionFee: 0, reimbursement: 0 },
-  { no: 'WB2604015', positionTime: '2026-04-15 14:00', unloadingTime: '2026-04-14 08:30', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area', basicAmount: 13300, additionalCharge: 0, exceptionFee: 0, reimbursement: 0 },
-  { no: 'WB2604016', positionTime: '2026-04-16 10:45', unloadingTime: '2026-04-15 14:00', truckType: '6-Wheeler', origin: 'PH-NCR-Quezon City', destination: 'PH-Bulacan-Meycauayan', basicAmount: 11800, additionalCharge: 500, exceptionFee: 0, reimbursement: 0 },
-];
+/** Adapt a shared Waybill (with nullable amounts) to the local WaybillData shape.
+ *  Caller should ensure the input is a Billable row (basicAmount populated). */
+function toWaybillData(w: Waybill): WaybillData {
+  return {
+    no: w.no,
+    positionTime: w.positionTime,
+    unloadingTime: w.unloadingTime,
+    truckType: w.truckType,
+    origin: w.origin,
+    destination: w.destination,
+    basicAmount: w.basicAmount ?? 0,
+    additionalCharge: w.additionalCharge ?? 0,
+    exceptionFee: w.exceptionFee ?? 0,
+    reimbursement: w.reimbursement ?? 0,
+  };
+}
 
 // ─── Claim Ticket Data ─────────────────────────────────────────────────────────
+// Sourced from the shared VP Claim Ticket list (../data/claimTickets).
+// Business rule: only tickets with deductionForVendor = 'For Deduction' can be
+// attached to a statement (S38).
 
 interface ClaimData {
   no: string;
@@ -72,11 +99,16 @@ interface ClaimData {
   createdAt: string;
 }
 
-const ALL_CLAIMS: ClaimData[] = [
-  { no: 'PHCT26041501AB', type: 'KPI Claim',    amount: 2000, currency: 'PHP', waybillNo: 'WB2604015', createdAt: '2026-04-20' },
-  { no: 'PHCT26041601BC', type: 'Damage Claim', amount: 3500, currency: 'PHP', waybillNo: 'WB2604016', createdAt: '2026-04-21' },
-  { no: 'PHCT26041201CD', type: 'KPI Claim',    amount: 1500, currency: 'PHP', waybillNo: 'WB2604012', createdAt: '2026-04-22' },
-];
+const ALL_CLAIMS: ClaimData[] = CLAIM_TICKETS
+  .filter(t => t.deductionForVendor === 'For Deduction')
+  .map(t => ({
+    no: t.ticketNo,
+    type: t.claimTypeL2,
+    amount: t.claimAmount,
+    currency: t.currency,
+    waybillNo: t.relatedWaybill || '—',
+    createdAt: t.creationTime.slice(0, 10),
+  }));
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -100,7 +132,7 @@ const CARD_STYLE: React.CSSProperties = { background: '#fff', border: '1px solid
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-function BillableCreateStatementForm({ onBack, onSubmit }: Props) {
+function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBack, onSubmit }: Props) {
   // Section 1
   const [statementType, setStatementType] = useState<'Standard' | 'Standalone'>('Standard');
   const [reconciliationPeriod, setReconciliationPeriod] = useState('Apr 2026');
@@ -109,7 +141,13 @@ function BillableCreateStatementForm({ onBack, onSubmit }: Props) {
   const [activeTab, setActiveTab] = useState<'waybill' | 'claim'>('waybill');
 
   // Section 2: Added items
-  const [addedWaybills, setAddedWaybills] = useState<WaybillData[]>([]);
+  const [addedWaybills, setAddedWaybills] = useState<WaybillData[]>(() => {
+    if (prefillWaybillNos.length === 0) return [];
+    const prefillSet = new Set(prefillWaybillNos);
+    return billableWaybills
+      .filter(w => prefillSet.has(w.no))
+      .map(toWaybillData);
+  });
   const [addedClaims, setAddedClaims] = useState<ClaimData[]>([]);
 
   // Waybill modal
@@ -185,8 +223,9 @@ function BillableCreateStatementForm({ onBack, onSubmit }: Props) {
   // ─── Waybill modal helpers ────────────────────────────────────────────────────
 
   const addedWaybillNos = new Set(addedWaybills.map((w: WaybillData) => w.no));
-  const availableWaybills = ALL_WAYBILLS.filter((w: WaybillData) => !addedWaybillNos.has(w.no));
-  const truckTypeOptions = Array.from(new Set(ALL_WAYBILLS.map(w => w.truckType)));
+  const normalizedBillableWaybills = billableWaybills.map(toWaybillData);
+  const availableWaybills = normalizedBillableWaybills.filter((w: WaybillData) => !addedWaybillNos.has(w.no));
+  const truckTypeOptions = Array.from(new Set(normalizedBillableWaybills.map(w => w.truckType)));
 
   const filteredModalWaybills = availableWaybills.filter(w => {
     if (modalWaybillFilter && !w.no.toLowerCase().includes(modalWaybillFilter.toLowerCase())) return false;
@@ -246,31 +285,32 @@ function BillableCreateStatementForm({ onBack, onSubmit }: Props) {
 
   // ─── Submit ───────────────────────────────────────────────────────────────────
 
-  const handleSave = () => {
-    const data: NewStatementData = {
-      statementNo: generateStatementNo(),
-      statementType,
-      reconciliationPeriod,
-      waybillNos: addedWaybills.map(w => w.no),
-      totalSubmittedAmount: totalAmountPayable,
-      createdAt: new Date().toISOString(),
-      isDraft: true,
-    };
-    onSubmit(data);
-  };
+  const buildSnapshot = (isDraft: boolean): NewStatementData => ({
+    statementNo: generateStatementNo(),
+    statementType,
+    reconciliationPeriod,
+    waybillNos: addedWaybills.map(w => w.no),
+    totalSubmittedAmount: totalAmountPayable,
+    createdAt: new Date().toISOString(),
+    isDraft,
+    waybills: addedWaybills,
+    claims: addedClaims,
+    taxMark,
+    vatRate,
+    whtRate,
+    vatAmount,
+    whtAmount,
+    totals,
+    prepaidTotal,
+    claimTotal,
+    waybillContractCost,
+  });
+
+  const handleSave = () => onSubmit(buildSnapshot(true));
 
   const handleConfirmSubmit = () => {
-    const data: NewStatementData = {
-      statementNo: generateStatementNo(),
-      statementType,
-      reconciliationPeriod,
-      waybillNos: addedWaybills.map(w => w.no),
-      totalSubmittedAmount: totalAmountPayable,
-      createdAt: new Date().toISOString(),
-      isDraft: false,
-    };
     setShowConfirm(false);
-    onSubmit(data);
+    onSubmit(buildSnapshot(false));
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────────

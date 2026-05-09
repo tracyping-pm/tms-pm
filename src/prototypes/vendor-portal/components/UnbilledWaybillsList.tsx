@@ -1,120 +1,36 @@
 import React, { useMemo, useState } from 'react';
 import { getAllApplications } from '../../../common/prepaidApplicationSync';
+import {
+  type Waybill,
+  type WaybillStatus,
+  buildEffectiveWaybills,
+  deriveWaybillStatus,
+} from '../data/waybills';
 
 export type CreateMode = 'system-price' | 'upload';
 
 interface Props {
   onGenerateStatement: (waybillNos: string[], mode: CreateMode) => void;
   pendingWaybills?: string[];
+  /** Sync overrides — lifted to parent so other views see the same prices. */
+  syncedOverrides: Record<string, Partial<Waybill>>;
+  onApplySyncOverrides: () => void;
 }
-
-type WaybillStatus = 'Pending Price Supplement' | 'Billable' | 'Statement Pending' | 'Settled';
-
-interface Waybill {
-  no: string;
-  positionTime: string;
-  unloadingTime: string;
-  truckType: string;
-  origin: string;
-  destination: string;
-  waybillAmount: number | null;
-  basicAmount: number | null;
-  prepaidAmount: number | null;
-  additionalCharge: number | null;
-  exceptionFee: number | null;
-  reimbursement: number | null;
-  baseStatus: WaybillStatus;  // 'Settled' for pre-settled rows; others derived from amounts
-  createdAt: string;
-}
-
-const BASE_WAYBILLS: Waybill[] = [
-  {
-    no: 'WB2604009', positionTime: '2026-04-09 11:00', unloadingTime: '2026-04-08 16:30',
-    truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus / DC',
-    waybillAmount: 16800, basicAmount: 16800, prepaidAmount: null, additionalCharge: 900, exceptionFee: 0, reimbursement: 0,
-    baseStatus: 'Settled', createdAt: '2026/3/28 09:00:00',
-  },
-  {
-    no: 'WB2604010', positionTime: '2026-04-10 15:30', unloadingTime: '2026-04-09 11:00',
-    truckType: '6-Wheeler', origin: 'PH-Cavite-Imus / DC', destination: 'PH-NCR-Taguig',
-    waybillAmount: 13300, basicAmount: 13300, prepaidAmount: null, additionalCharge: 0, exceptionFee: 0, reimbursement: 0,
-    baseStatus: 'Settled', createdAt: '2026/3/28 09:00:00',
-  },
-  {
-    no: 'WB2604011', positionTime: '2026-04-11 09:00', unloadingTime: '2026-04-10 15:30',
-    truckType: '6-Wheeler', origin: 'PH-Cavite-Imus / DC', destination: 'PH-NCR-Taguig',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/1 10:00:00',
-  },
-  {
-    no: 'WB2604012', positionTime: '2026-04-12 17:00', unloadingTime: '2026-04-11 09:00',
-    truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/1 10:00:00',
-  },
-  {
-    no: 'WB2604013', positionTime: '2026-04-13 11:15', unloadingTime: '2026-04-12 17:00',
-    truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila / Port Area',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/10 09:00:00',
-  },
-  {
-    no: 'WB2604014', positionTime: '2026-04-14 08:30', unloadingTime: '2026-04-13 11:15',
-    truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba / Plant 2',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/10 09:00:00',
-  },
-  {
-    no: 'WB2604015', positionTime: '2026-04-15 14:00', unloadingTime: '2026-04-14 08:30',
-    truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/10 09:00:00',
-  },
-  {
-    no: 'WB2604016', positionTime: '2026-04-16 10:45', unloadingTime: '2026-04-15 14:00',
-    truckType: '6-Wheeler', origin: 'PH-NCR-Quezon City', destination: 'PH-Bulacan-Meycauayan',
-    waybillAmount: null, basicAmount: null, prepaidAmount: null, additionalCharge: null, exceptionFee: null, reimbursement: null,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/10 09:00:00',
-  },
-  {
-    no: 'WB2604017', positionTime: '2026-04-17 07:30', unloadingTime: '2026-04-16 10:45',
-    truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC',
-    waybillAmount: 15500, basicAmount: 15500, prepaidAmount: null, additionalCharge: 0, exceptionFee: 0, reimbursement: 200,
-    baseStatus: 'Pending Price Supplement', createdAt: '2026/4/12 14:00:00',
-  },
-];
 
 const TRUCK_TYPES = ['4-Wheeler', '6-Wheeler', '10-Wheeler'];
-const ALL_STATUSES: WaybillStatus[] = ['Pending Price Supplement', 'Billable', 'Statement Pending', 'Settled'];
+const ALL_STATUSES: WaybillStatus[] = ['Pending', 'Billable', 'Statement Pending', 'Settled'];
 
 const SHEET_URL = 'https://docs.google.com/spreadsheets/u/2/d/1iDas0CR5--hfrgfVVmGK6_mTOQace_LmG2Yp3KBpB6A/edit?pli=1&gid=0#gid=0';
 
-// Amounts that "Sync from Sheet" will apply
-const SHEET_SYNC_OVERRIDES: Record<string, Partial<Waybill>> = {
-  WB2604011: { waybillAmount: 15300, basicAmount: 14500, additionalCharge: 800, exceptionFee: 0, reimbursement: 0 },
-  WB2604012: { waybillAmount: 13300, basicAmount: 13300, additionalCharge: 0,   exceptionFee: 0, reimbursement: 0 },
-  WB2604013: { waybillAmount: 16700, basicAmount: 15000, additionalCharge: 1200, exceptionFee: 500, reimbursement: 0 },
-  WB2604014: { waybillAmount: 12000, basicAmount: 12000, additionalCharge: 0,   exceptionFee: 0, reimbursement: 0 },
-  WB2604015: { waybillAmount: 13300, basicAmount: 13300, additionalCharge: 0,   exceptionFee: 0, reimbursement: 0 },
-  WB2604016: { waybillAmount: 12300, basicAmount: 11800, additionalCharge: 500, exceptionFee: 0, reimbursement: 0 },
-};
-
-function deriveStatus(w: Waybill, pendingWaybills: string[]): WaybillStatus {
-  if (w.baseStatus === 'Settled') return 'Settled';
-  if (pendingWaybills.includes(w.no)) return 'Statement Pending';
-  if (w.basicAmount !== null) return 'Billable';
-  return 'Pending Price Supplement';
-}
-
 const STATUS_STYLE: Record<WaybillStatus, React.CSSProperties> = {
-  'Pending Price Supplement': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
+  'Pending': { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
   'Billable':                 { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
   'Statement Pending':        { background: '#f5f5f5', color: '#888',    border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
   'Settled':                  { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
 };
 
 const STATUS_STAT_COLOR: Record<WaybillStatus, { bg: string; color: string; border: string }> = {
-  'Pending Price Supplement': { bg: '#fffbe6', color: '#d48806', border: '#ffe58f' },
+  'Pending': { bg: '#fffbe6', color: '#d48806', border: '#ffe58f' },
   'Billable':                 { bg: '#f0fcf4', color: '#00b96b', border: '#87e8a3' },
   'Statement Pending':        { bg: '#f5f5f5', color: '#595959', border: '#e0e0e0' },
   'Settled':                  { bg: '#e6f4ff', color: '#0958d9', border: '#91caff' },
@@ -125,16 +41,15 @@ function fmtAmt(v: number | null): React.ReactNode {
   return v.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
-function UnbilledWaybillsList({ onGenerateStatement, pendingWaybills = [] }: Props) {
+function UnbilledWaybillsList({ onGenerateStatement, pendingWaybills = [], syncedOverrides, onApplySyncOverrides }: Props) {
   const [filterNo, setFilterNo] = useState('');
   const [filterUnloadTime, setFilterUnloadTime] = useState('');
   const [filterTruckType, setFilterTruckType] = useState('');
   // Multi-select status filter: Settled unchecked by default
   const [filterStatuses, setFilterStatuses] = useState<Set<WaybillStatus>>(
-    new Set(['Pending Price Supplement', 'Billable', 'Statement Pending'])
+    new Set(['Pending', 'Billable', 'Statement Pending'])
   );
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done'>('idle');
-  const [syncedOverrides, setSyncedOverrides] = useState<Record<string, Partial<Waybill>>>({});
   const [syncToast, setSyncToast] = useState(false);
 
   // Read prepaid amounts from submitted applications
@@ -151,23 +66,19 @@ function UnbilledWaybillsList({ onGenerateStatement, pendingWaybills = [] }: Pro
     return map;
   }, [syncState]);
 
-  // Merge all data
-  const waybills: Waybill[] = BASE_WAYBILLS.map(w => ({
-    ...w,
-    prepaidAmount: prepaidAmountMap[w.no] ?? null,
-    ...syncedOverrides[w.no],
-  }));
+  // Build current effective list using shared helper.
+  const waybills: Waybill[] = buildEffectiveWaybills(syncedOverrides, prepaidAmountMap);
 
   // Derive effective status for each waybill
   const waybillsWithStatus = waybills.map(w => ({
     ...w,
-    status: deriveStatus(w, pendingWaybills),
+    status: deriveWaybillStatus(w, pendingWaybills),
   }));
 
   // Counts per status (for stats bar)
   const statusCounts = useMemo(() => {
     const counts: Record<WaybillStatus, number> = {
-      'Pending Price Supplement': 0, 'Billable': 0, 'Statement Pending': 0, 'Settled': 0,
+      'Pending': 0, 'Billable': 0, 'Statement Pending': 0, 'Settled': 0,
     };
     waybillsWithStatus.forEach(w => { counts[w.status]++; });
     return counts;
@@ -203,7 +114,7 @@ function UnbilledWaybillsList({ onGenerateStatement, pendingWaybills = [] }: Pro
     setSyncState('syncing');
     setTimeout(() => {
       setSyncState('done');
-      setSyncedOverrides(SHEET_SYNC_OVERRIDES);
+      onApplySyncOverrides();
       setSyncToast(true);
       setTimeout(() => {
         setSyncState('idle');
