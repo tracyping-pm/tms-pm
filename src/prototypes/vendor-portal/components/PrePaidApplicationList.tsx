@@ -149,6 +149,41 @@ function PrePaidApplicationList({ onCreate, onEdit, onDetail, refreshKey }: Prop
     if (current.length === 0) {
       buildSeedApplications().forEach(upsertApplication);
       current = getAllApplications();
+    } else {
+      // Backfill operationLogs for legacy records persisted before logs were introduced.
+      const seedByNo = new Map(buildSeedApplications().map(s => [s.applicationNo, s]));
+      let migrated = false;
+      current.forEach(a => {
+        if (!a.operationLogs || a.operationLogs.length === 0) {
+          const seedLogs = seedByNo.get(a.applicationNo)?.operationLogs;
+          if (seedLogs && seedLogs.length > 0) {
+            upsertApplication({ ...a, operationLogs: seedLogs });
+            migrated = true;
+          } else {
+            // Synthesize from existing timestamps so user-created records get a log too.
+            const synth: OperationLogEntry[] = [];
+            if (a.submittedAt) synth.push({ time: a.submittedAt, actor: 'Vendor', action: 'Submitted' });
+            else synth.push({ time: a.createdAt, actor: 'Vendor', action: 'Saved as Draft' });
+            if (a.reviewedAt && (a.status === 'Pending Payment' || a.status === 'Paid')) {
+              synth.push({ time: a.reviewedAt, actor: 'TMS Reviewer', action: 'Approved' });
+            }
+            if (a.reviewedAt && a.status === 'Rejected') {
+              synth.push({ time: a.reviewedAt, actor: 'TMS Reviewer', action: 'Rejected', note: a.rejectReason });
+            }
+            if (a.paidAt && a.status === 'Paid') {
+              synth.push({ time: a.paidAt, actor: 'HR System', action: 'Payment Released' });
+            }
+            if (a.paidAt && a.status === 'Payment Rejected') {
+              synth.push({ time: a.paidAt, actor: 'HR System', action: 'Payment Rejected', note: a.hrRejectReason });
+            }
+            if (synth.length > 0) {
+              upsertApplication({ ...a, operationLogs: synth });
+              migrated = true;
+            }
+          }
+        }
+      });
+      if (migrated) current = getAllApplications();
     }
     setApps(current);
   }, [refreshKey]);

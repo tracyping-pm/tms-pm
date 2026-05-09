@@ -69,19 +69,6 @@ function PrePaidApplicationDetail({ app, onBack }: Props) {
         <button className="btn-link" style={{ fontSize: 13 }} onClick={onBack}>← Back to PrePaid Applications</button>
       </div>
 
-      {/* Header bar */}
-      <div style={{
-        background: '#fff', border: '1px solid #f0f0f0', borderRadius: 6,
-        padding: '12px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12,
-      }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: '#333', marginRight: 4 }}>{app.applicationNo}</span>
-        <span style={{ ...BADGE_BASE, ...STATUS_BADGE[app.status] }}>{app.status}</span>
-        <span style={{ ...BADGE_BASE, ...sourceBadge }}>
-          {app.source === 'Vendor Portal' ? 'Self-Created' : 'TMS-Synced'}
-        </span>
-        <div style={{ flex: 1 }} />
-      </div>
-
       {/* Reject reason banner */}
       {(app.status === 'Rejected' || app.status === 'Payment Rejected') &&
        (app.rejectReason || app.hrRejectReason) && (
@@ -97,6 +84,19 @@ function PrePaidApplicationDetail({ app, onBack }: Props) {
           </div>
         </div>
       )}
+
+      {/* Header bar */}
+      <div style={{
+        background: '#fff', border: '1px solid #f0f0f0', borderRadius: 6,
+        padding: '12px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12,
+      }}>
+        <span style={{ fontWeight: 600, fontSize: 14, color: '#333', marginRight: 4 }}>{app.applicationNo}</span>
+        <span style={{ ...BADGE_BASE, ...STATUS_BADGE[app.status] }}>{app.status}</span>
+        <span style={{ ...BADGE_BASE, ...sourceBadge }}>
+          {app.source === 'Vendor Portal' ? 'Self-Created' : 'TMS-Synced'}
+        </span>
+        <div style={{ flex: 1 }} />
+      </div>
 
       {/* Application Information */}
       <div style={sectionStyle}>
