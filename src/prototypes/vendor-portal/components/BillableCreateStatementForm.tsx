@@ -323,8 +323,8 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
           ← Back to Billable Waybills
         </button>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-default" onClick={handleSave}>Save as Draft</button>
-          <button className="btn-primary" onClick={() => setShowConfirm(true)}>Submit to TMS</button>
+          <button className="btn-default" onClick={handleSave}>Save</button>
+          <button className="btn-primary" onClick={() => setShowConfirm(true)}>Submit</button>
         </div>
       </div>
 
@@ -851,7 +851,7 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
             </div>
             <div className="dialog-footer">
               <button className="btn-default" onClick={() => setShowConfirm(false)}>Cancel</button>
-              <button className="btn-primary" onClick={handleConfirmSubmit}>Confirm &amp; Submit to TMS</button>
+              <button className="btn-primary" onClick={handleConfirmSubmit}>Confirm &amp; Submit</button>
             </div>
           </div>
         </div>

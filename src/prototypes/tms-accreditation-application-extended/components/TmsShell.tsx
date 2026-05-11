@@ -19,8 +19,10 @@ const MENU_PROCUREMENT = [
 ];
 
 const MENU_FIN = [
-  { key: 'ap-statement', label: 'AP Statement' },
-  { key: 'ar-statement', label: 'AR Statement' },
+  { key: 'ar-dashboard',  label: 'AR Dashboard' },
+  { key: 'ar-statement',  label: 'AR Statement' },
+  { key: 'ap-statement',  label: 'AP Statement' },
+  { key: 'payment-application', label: 'Payment Application' },
 ];
 
 const CLICKABLE = new Set(['accreditation', 'ap-statement']);

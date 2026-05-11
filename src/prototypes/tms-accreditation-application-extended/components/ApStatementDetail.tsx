@@ -1,1118 +1,606 @@
 import React, { useState } from 'react';
-import { ExternalLink, Trash2, Download, Plus, FileText, X } from 'lucide-react';
 
-interface Props {
-  statementId: string;
-  onBack: () => void;
-}
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
-type Status =
-  | 'Payment Preparation'
+type ApStatus =
+  | 'Under Payment Preparation'
   | 'Awaiting Comparison'
-  | 'Awaiting Re-bill'
+  | 'Awaiting Rebill'
   | 'Pending Payment'
   | 'Partially Payment'
   | 'Paid'
   | 'Written Off'
   | 'Canceled';
 
-interface SettlementItem {
+type Source = 'Vendor Portal' | 'Intelal';
+
+interface WaybillItem {
   name: string;
-  vendorAmount: number;
   tmsAmount: number;
+  vpAmount: number;
 }
 
 interface WaybillRow {
   no: string;
+  positionTime: string;
+  unloadingTime: string;
   truckType: string;
   origin: string;
   destination: string;
-  positionTime?: string;
-  unloadingTime?: string;
-  items: SettlementItem[];
+  items: WaybillItem[];
 }
 
-interface StatementData {
-  id: string;
-  vendor: string;
-  source: 'Vendor Portal' | 'Internal';
-  status: Status;
+interface ClaimRow {
+  no: string;
+  type: string;
+  amount: number;
   currency: string;
-  createdAt: string;
-  createdBy?: string;
-  taxMark?: string;
-  totalInvoiceAmount?: number;
-  paidAmount?: number;
-  waybills: WaybillRow[];
-  vendorTotal: number;
-  tmsTotal: number;
-  rejectReason?: string;
-  cancelReason?: string;
-  cancelBy?: string;
-  writeOffReason?: string;
-  writeOffBy?: string;
-  writeOffAmount?: number;
+  waybillNo: string;
 }
 
-type CompareResult = 'Matched' | 'Matched (Vendor Discount)' | 'Mismatched' | 'Missed';
-type StatementDetailTab = 'waybill' | 'claim';
+interface InvoiceRow {
+  no: string;
+  amount: number;
+  date: string;
+  proof: string;
+}
 
-const WAYBILL_DETAIL_URL = 'https://rc.gaia.inteluck.com/project/waybill/detail/2530248';
-
-interface ClaimTicketRow {
-  ticketNo: string;
-  claimType: string;
-  customer: string;
-  claimAmount: number;
-  allocatableAmount: number;
-  currency: string;
-  claimReason: string;
+interface PaymentRow {
+  payableAmount: number;
   status: string;
-  createdDate: string;
-  createdBy: string;
-}
-
-function computeItemResult(item: SettlementItem): CompareResult {
-  const v = item.vendorAmount;
-  const t = item.tmsAmount;
-  if (t === 0 && v > 0) return 'Missed';
-  if (v > t) return 'Mismatched';
-  if (v < t) return 'Matched (Vendor Discount)';
-  return 'Matched';
-}
-
-// ── Mock Data ──────────────────────────────────────────────
-
-const STATEMENT_DATA: Record<string, StatementData> = {
-  // 1. Payment Preparation — FA internal draft
-  AP2026040007: {
-    id: 'AP2026040007',
-    vendor: 'Laguna Logistics Corp.',
-    source: 'Internal',
-    status: 'Payment Preparation',
-    currency: 'PHP',
-    createdAt: '2026-04-25',
-    createdBy: 'Zhang Jialei',
-    waybills: [
-      {
-        no: 'WB2604050', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 12500, tmsAmount: 12500 },
-          { name: 'Additional Charge', vendorAmount: 800, tmsAmount: 800 },
-        ],
-      },
-      {
-        no: 'WB2604051', truckType: '6-Wheeler', origin: 'PH-Laguna-Calamba', destination: 'PH-NCR-Taguig',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 8200, tmsAmount: 8200 },
-        ],
-      },
-      {
-        no: 'WB2604052', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Batangas',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 14300, tmsAmount: 14300 },
-          { name: 'Additional Charge', vendorAmount: 1400, tmsAmount: 1400 },
-        ],
-      },
-    ],
-    vendorTotal: 37200,
-    tmsTotal: 37200,
-  },
-  // 2. Awaiting Comparison — VP submitted, TMS comparing
-  AP2026040003: {
-    id: 'AP2026040003',
-    vendor: 'Bangkok Express Logistics',
-    source: 'Vendor Portal',
-    status: 'Awaiting Comparison',
-    currency: 'THB',
-    createdAt: '2026-04-18',
-    waybills: [
-      {
-        no: 'WB2604040', truckType: '10-Wheeler', origin: 'TH-Bangkok / Suvarnabhumi', destination: 'TH-Chonburi / Laem Chabang',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 28000, tmsAmount: 28000 },
-          { name: 'Additional Charge', vendorAmount: 2000, tmsAmount: 2000 },
-        ],
-      },
-      {
-        no: 'WB2604041', truckType: '6-Wheeler', origin: 'TH-Chonburi', destination: 'TH-Bangkok',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 18000, tmsAmount: 16500 },
-          { name: 'Additional Charge', vendorAmount: 1500, tmsAmount: 1500 },
-        ],
-      },
-      {
-        no: 'WB2604042', truckType: '10-Wheeler', origin: 'TH-Bangkok', destination: 'TH-Rayong',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 30000, tmsAmount: 32000 },
-        ],
-      },
-      {
-        no: 'WB2604043', truckType: '4-Wheeler', origin: 'TH-Chonburi', destination: 'TH-Samut Prakan',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 12000, tmsAmount: 12000 },
-          { name: 'Additional Charge', vendorAmount: 800, tmsAmount: 800 },
-        ],
-      },
-      {
-        no: 'WB2604044', truckType: '10-Wheeler', origin: 'TH-Bangkok / Port', destination: 'TH-Chonburi',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 42000, tmsAmount: 42000 },
-          { name: 'Additional Charge', vendorAmount: 3000, tmsAmount: 3000 },
-        ],
-      },
-      {
-        no: 'WB2604045', truckType: '6-Wheeler', origin: 'TH-Rayong', destination: 'TH-Bangkok',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 17700, tmsAmount: 17700 },
-        ],
-      },
-    ],
-    vendorTotal: 157000,
-    tmsTotal: 157500,
-  },
-  // 2b. Awaiting Comparison with more mismatches
-  AP2026040002: {
-    id: 'AP2026040002',
-    vendor: 'Cebu Trans Lines',
-    source: 'Vendor Portal',
-    status: 'Awaiting Comparison',
-    currency: 'PHP',
-    createdAt: '2026-04-23',
-    waybills: [
-      {
-        no: 'WB2604060', truckType: '10-Wheeler', origin: 'PH-Cebu / Port', destination: 'PH-Cebu / DC',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 22000, tmsAmount: 20000 },
-          { name: 'Additional Charge', vendorAmount: 1500, tmsAmount: 1500 },
-        ],
-      },
-      {
-        no: 'WB2604061', truckType: '6-Wheeler', origin: 'PH-Cebu', destination: 'PH-Lapu-Lapu',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 15000, tmsAmount: 15000 },
-        ],
-      },
-      {
-        no: 'WB2604062', truckType: '4-Wheeler', origin: 'PH-Cebu / Terminal', destination: 'PH-Cebu / Mandaue',
-        items: [
-          { name: 'Additional Charge', vendorAmount: 3500, tmsAmount: 0 },
-        ],
-      },
-    ],
-    vendorTotal: 42000,
-    tmsTotal: 36500,
-  },
-  // 3. Awaiting Re-bill — rejected
-  AP2026040004: {
-    id: 'AP2026040004',
-    vendor: 'Manila Freight Co.',
-    source: 'Vendor Portal',
-    status: 'Awaiting Re-bill',
-    currency: 'PHP',
-    createdAt: '2026-04-20',
-    rejectReason: 'Vendor overcharged on WB2604055 Additional Charge by PHP 2,000. Please review and resubmit.',
-    waybills: [
-      {
-        no: 'WB2604055', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Bulacan',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 11000, tmsAmount: 11000 },
-          { name: 'Additional Charge', vendorAmount: 4500, tmsAmount: 2500 },
-        ],
-      },
-      {
-        no: 'WB2604056', truckType: '6-Wheeler', origin: 'PH-Bulacan', destination: 'PH-NCR-Quezon City',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 8520, tmsAmount: 8520 },
-        ],
-      },
-    ],
-    vendorTotal: 24020,
-    tmsTotal: 22020,
-  },
-  // 4. Pending Payment — pushed to HR
-  AP2026040006: {
-    id: 'AP2026040006',
-    vendor: 'Coca-Cola Bottlers PH Inc.',
-    source: 'Internal',
-    status: 'Pending Payment',
-    currency: 'PHP',
-    createdAt: '2026-04-15',
-    createdBy: 'Zhang Jialei',
-    waybills: [
-      {
-        no: 'WB2604070', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 15000, tmsAmount: 15000 },
-          { name: 'Additional Charge', vendorAmount: 1200, tmsAmount: 1200 },
-        ],
-      },
-      {
-        no: 'WB2604071', truckType: '6-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 12000, tmsAmount: 12000 },
-          { name: 'Fuel Surcharge', vendorAmount: 600, tmsAmount: 600 },
-        ],
-      },
-      {
-        no: 'WB2604072', truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 14000, tmsAmount: 14000 },
-          { name: 'Exception Fee', vendorAmount: 1700, tmsAmount: 1700 },
-        ],
-      },
-    ],
-    vendorTotal: 44500,
-    tmsTotal: 44500,
-  },
-  // 5. Partially Payment
-  AP2026040005: {
-    id: 'AP2026040005',
-    vendor: 'SMC Logistics',
-    source: 'Internal',
-    status: 'Partially Payment',
-    currency: 'PHP',
-    createdAt: '2026-04-22',
-    createdBy: 'Zhang Jialei',
-    waybills: [
-      {
-        no: 'WB2604080', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Bulacan / Sta. Maria',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 14000, tmsAmount: 14000 },
-          { name: 'Additional Charge', vendorAmount: 1800, tmsAmount: 1800 },
-        ],
-      },
-      {
-        no: 'WB2604081', truckType: '6-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Quezon City',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 11000, tmsAmount: 11000 },
-          { name: 'Fuel Surcharge', vendorAmount: 700, tmsAmount: 700 },
-        ],
-      },
-      {
-        no: 'WB2604082', truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Laguna / Calamba',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 16500, tmsAmount: 16500 },
-        ],
-      },
-      {
-        no: 'WB2604083', truckType: '4-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Makati',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 9800, tmsAmount: 9800 },
-          { name: 'Exception Fee', vendorAmount: 2200, tmsAmount: 2200 },
-        ],
-      },
-      {
-        no: 'WB2604084', truckType: '6-Wheeler', origin: 'PH-Batangas', destination: 'PH-NCR-Manila',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 13000, tmsAmount: 13000 },
-          { name: 'Additional Charge', vendorAmount: 1200, tmsAmount: 1200 },
-        ],
-      },
-      {
-        no: 'WB2604085', truckType: '10-Wheeler', origin: 'PH-NCR-Taguig', destination: 'PH-Rizal / Antipolo',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 12500, tmsAmount: 12500 },
-          { name: 'Fuel Surcharge', vendorAmount: 800, tmsAmount: 800 },
-        ],
-      },
-      {
-        no: 'WB2604086', truckType: '4-Wheeler', origin: 'PH-NCR-Parañaque', destination: 'PH-Cavite-Bacoor',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 14500, tmsAmount: 14500 },
-          { name: 'Additional Charge', vendorAmount: 1000, tmsAmount: 1000 },
-        ],
-      },
-    ],
-    vendorTotal: 99000,
-    tmsTotal: 99000,
-  },
-  // 6. Paid — terminal
-  AP2026040001: {
-    id: 'AP2026040001',
-    vendor: 'JG Summit Freight',
-    source: 'Internal',
-    status: 'Paid',
-    currency: 'PHP',
-    createdAt: '2026-04-14',
-    createdBy: 'Zhang Jialei',
-    waybills: [
-      {
-        no: 'WB2604010', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 18000, tmsAmount: 18000 },
-          { name: 'Additional Charge', vendorAmount: 1200, tmsAmount: 1200 },
-        ],
-      },
-      {
-        no: 'WB2604011', truckType: '6-Wheeler', origin: 'PH-Laguna-Calamba', destination: 'PH-NCR-Manila',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 14000, tmsAmount: 14000 },
-        ],
-      },
-      {
-        no: 'WB2604012', truckType: '10-Wheeler', origin: 'PH-Batangas', destination: 'PH-NCR-Taguig',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 20000, tmsAmount: 20000 },
-        ],
-      },
-    ],
-    vendorTotal: 53200,
-    tmsTotal: 53200,
-  },
-  // 7. Written Off — terminal
-  AP2026040008: {
-    id: 'AP2026040008',
-    vendor: 'Pacific Logistics Inc.',
-    source: 'Internal',
-    status: 'Written Off',
-    currency: 'PHP',
-    createdAt: '2026-04-10',
-    createdBy: 'Zhang Jialei',
-    writeOffReason: 'Vendor became unreachable. Remaining balance PHP 14,000 written off per finance approval.',
-    writeOffBy: 'Li Wei',
-    writeOffAmount: 14000,
-    waybills: [
-      {
-        no: 'WB2604090', truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Pampanga / Clark',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 18000, tmsAmount: 18000 },
-          { name: 'Additional Charge', vendorAmount: 1500, tmsAmount: 1500 },
-        ],
-      },
-      {
-        no: 'WB2604091', truckType: '6-Wheeler', origin: 'PH-Bulacan', destination: 'PH-NCR-Quezon City',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 12500, tmsAmount: 12500 },
-        ],
-      },
-    ],
-    vendorTotal: 32000,
-    tmsTotal: 32000,
-    paidAmount: 18000,
-  },
-  // 8. Canceled — terminal
-  AP2026040009: {
-    id: 'AP2026040009',
-    vendor: 'Metro Transport Corp.',
-    source: 'Internal',
-    status: 'Canceled',
-    currency: 'PHP',
-    createdAt: '2026-04-08',
-    createdBy: 'Zhang Jialei',
-    cancelReason: 'Duplicate statement created in error. All waybills released back to pool.',
-    cancelBy: 'Zhang Jialei',
-    waybills: [
-      {
-        no: 'WB2604095', truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Bacoor',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 9500, tmsAmount: 9500 },
-        ],
-      },
-      {
-        no: 'WB2604096', truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Makati',
-        items: [
-          { name: 'Basic Freight', vendorAmount: 6000, tmsAmount: 6000 },
-        ],
-      },
-    ],
-    vendorTotal: 15500,
-    tmsTotal: 15500,
-  },
-};
-
-const FALLBACK: StatementData = {
-  id: '',
-  vendor: 'Unknown Vendor',
-  source: 'Internal',
-  status: 'Pending Payment',
-  currency: 'PHP',
-  createdAt: '2026-04-01',
-  createdBy: 'Zhang Jialei',
-  taxMark: 'VAT-ex',
-  waybills: [],
-  vendorTotal: 0,
-  tmsTotal: 0,
-};
-
-const STATUS_STYLE: Record<Status, React.CSSProperties> = {
-  'Payment Preparation':   { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
-  'Awaiting Comparison':   { background: '#f0f5ff', color: '#2f54eb', border: '1px solid #adc6ff' },
-  'Awaiting Re-bill':      { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
-  'Pending Payment':       { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
-  'Partially Payment':     { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
-  'Paid':                  { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
-  'Written Off':           { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' },
-  'Canceled':              { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
-};
-
-function fmt(n: number) { return n.toLocaleString('en-US', { minimumFractionDigits: 2 }); }
-
-function fmtDiff(n: number) {
-  if (n === 0) return '0.00';
-  return `${n > 0 ? '+' : '-'}${fmt(Math.abs(n))}`;
-}
-
-type SummaryBucket = 'basic' | 'additional' | 'exception';
-
-const POSITION_TIMES = [
-  '2026-04-16 08:30', '2026-04-16 10:10', '2026-04-17 09:25',
-  '2026-04-17 13:40', '2026-04-18 07:50', '2026-04-18 15:20', '2026-04-19 11:05',
-];
-
-const UNLOADING_TIMES = [
-  '2026-04-16 12:45', '2026-04-16 14:35', '2026-04-17 13:10',
-  '2026-04-17 18:05', '2026-04-18 11:25', '2026-04-18 19:15', '2026-04-19 15:30',
-];
-
-function getItemBucket(name: string): SummaryBucket {
-  const lower = name.toLowerCase();
-  if (lower.includes('exception')) return 'exception';
-  if (lower.includes('basic') || lower.includes('freight')) return 'basic';
-  return 'additional';
-}
-
-function getWaybillBucketTotals(waybill: WaybillRow) {
-  return waybill.items.reduce<Record<SummaryBucket, { vendor: number; tms: number }>>((acc, item) => {
-    const bucket = getItemBucket(item.name);
-    acc[bucket].vendor += item.vendorAmount;
-    acc[bucket].tms += item.tmsAmount;
-    return acc;
-  }, {
-    basic: { vendor: 0, tms: 0 },
-    additional: { vendor: 0, tms: 0 },
-    exception: { vendor: 0, tms: 0 },
-  });
-}
-
-function getWaybillDisplayTimes(waybill: WaybillRow, index: number) {
-  return {
-    positionTime: waybill.positionTime || POSITION_TIMES[index % POSITION_TIMES.length],
-    unloadingTime: waybill.unloadingTime || UNLOADING_TIMES[index % UNLOADING_TIMES.length],
-  };
-}
-
-interface InvoiceRecord {
-  id: string;
-  clientEntity: string;
-  no: string;
-  amount: string;
-  date: string;
-  status: 'Verified' | 'Pending Verification' | 'Voided';
-  proofFileName?: string;
-}
-
-const INITIAL_INVOICES: Record<string, InvoiceRecord[]> = {
-  AP2026040003: [{ id: '1', clientEntity: 'Bangkok Express TH', no: 'INV-TH-2604003', amount: '156,000.00', date: '2026-04-17', status: 'Verified', proofFileName: 'inv_bkk_apr.pdf' }],
-  AP2026040002: [{ id: '2', clientEntity: 'Cebu Trans PH', no: 'INV-PH-2604002', amount: '38,500.00', date: '2026-04-22', status: 'Pending Verification' }],
-  AP2026040006: [{ id: '3', clientEntity: 'Coca-Cola PH', no: 'INV-PH-2604006', amount: '44,500.00', date: '2026-04-15', status: 'Verified', proofFileName: 'inv_coke_apr.pdf' }],
-  AP2026040001: [{ id: '4', clientEntity: 'JG Summit PH', no: 'INV-PH-2604001', amount: '53,200.00', date: '2026-04-14', status: 'Verified', proofFileName: 'inv_jg_apr.pdf' }],
-};
-
-const PROOF_DATA: Record<string, string[]> = {
-  AP2026040003: ['waybill_summary_BKK_Apr.pdf', 'delivery_photos.zip'],
-};
-
-const CLAIM_TICKET_DATA: Record<string, ClaimTicketRow[]> = {
-  AP2026040007: [
-    {
-      ticketNo: 'PHCT26040506KL',
-      claimType: 'Toll Fee',
-      customer: 'Laguna DC - Laguna Logistics',
-      claimAmount: 450,
-      allocatableAmount: 450,
-      currency: 'PHP',
-      claimReason: 'Toll fee variance during transit',
-      status: 'Approved',
-      createdDate: '2026-04-25',
-      createdBy: 'Inteluck Finance',
-    },
-  ],
-  AP2026040003: [
-    {
-      ticketNo: 'THCT26041801BK',
-      claimType: 'KPI Claim',
-      customer: 'Bangkok DC - Bangkok Express',
-      claimAmount: 1200,
-      allocatableAmount: 1200,
-      currency: 'THB',
-      claimReason: 'Late delivery over agreed SLA',
-      status: 'Approved',
-      createdDate: '2026-04-18',
-      createdBy: 'TMS Claim Team',
-    },
-    {
-      ticketNo: 'THCT26041802BK',
-      claimType: 'Shortage',
-      customer: 'Chonburi Hub - Bangkok Express',
-      claimAmount: 800,
-      allocatableAmount: 800,
-      currency: 'THB',
-      claimReason: 'Cargo shortage confirmed by customer',
-      status: 'Approved',
-      createdDate: '2026-04-18',
-      createdBy: 'TMS Claim Team',
-    },
-  ],
-  AP2026040002: [
-    {
-      ticketNo: 'PHCT26042301CB',
-      claimType: 'Damage',
-      customer: 'Customer A - Cebu Trans',
-      claimAmount: 2500,
-      allocatableAmount: 2500,
-      currency: 'PHP',
-      claimReason: 'Cargo damage during transit',
-      status: 'Approved',
-      createdDate: '2026-04-23',
-      createdBy: 'Admin',
-    },
-  ],
-};
-
-interface InvoiceFormRow {
-  id: string;
-  clientEntity: string;
-  no: string;
-  date: string;
-  amount: string;
-  proofFileName: string;
-  proofOcrDone: boolean;
+  applicationNo: string;
+  proof: string;
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNo: string;
 }
 
 interface LogEntry {
-  color: string;
   time: string;
-  desc: string;
-  actor: string;
+  action: string;
+  operator: string;
+  detail?: string;
 }
 
-const STATIC_LOGS: Record<string, LogEntry[]> = {
-  AP2026040007: [
-    { color: '#00b96b', time: '2026-04-25 09:20', desc: 'Statement created (Payment Preparation)', actor: 'Zhang Jialei' },
-  ],
-  AP2026040003: [
-    { color: '#00b96b', time: '2026-04-19 11:05', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
-    { color: '#1677ff', time: '2026-04-18 16:00', desc: 'Vendor submitted statement', actor: 'Bangkok Express Logistics (VP)' },
-  ],
-  AP2026040002: [
-    { color: '#00b96b', time: '2026-04-24 10:30', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
-    { color: '#1677ff', time: '2026-04-23 14:55', desc: 'Vendor submitted statement', actor: 'Cebu Trans Lines (VP)' },
-  ],
-  AP2026040004: [
-    { color: '#cf1322', time: '2026-04-21 14:20', desc: 'Statement rejected — Vendor overcharged on WB2604055 Additional Charge by PHP 2,000', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-20 16:00', desc: 'Status changed → Awaiting Comparison', actor: 'System' },
-    { color: '#1677ff', time: '2026-04-20 10:30', desc: 'Vendor submitted statement', actor: 'Manila Freight Co. (VP)' },
-  ],
-  AP2026040006: [
-    { color: '#0958d9', time: '2026-04-16 09:30', desc: 'AP Application APA2604001 created and pushed to HR', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-15 17:00', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-15 10:00', desc: 'Statement created (Internal)', actor: 'Zhang Jialei' },
-  ],
-  AP2026040005: [
-    { color: '#d48806', time: '2026-04-24 15:30', desc: 'Partial payment released — APA2604005A (PHP 45,000.00)', actor: 'HR System' },
-    { color: '#0958d9', time: '2026-04-23 09:00', desc: 'AP Application APA2604005B submitted for remaining balance', actor: 'Zhang Jialei' },
-    { color: '#0958d9', time: '2026-04-22 16:00', desc: 'AP Application APA2604005A created and pushed to HR', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-22 14:00', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' },
-  ],
-  AP2026040001: [
-    { color: '#389e0d', time: '2026-04-18 10:00', desc: 'Full payment released — APA2604010 (PHP 53,200.00)', actor: 'HR System' },
-    { color: '#0958d9', time: '2026-04-15 09:00', desc: 'AP Application APA2604010 created and pushed to HR', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-14 15:00', desc: 'Statement created and confirmed', actor: 'Zhang Jialei' },
-  ],
-  AP2026040008: [
-    { color: '#d46b08', time: '2026-04-18 14:00', desc: 'Remaining PHP 14,000.00 written off — Vendor became unreachable', actor: 'Li Wei' },
-    { color: '#389e0d', time: '2026-04-14 11:00', desc: 'Partial payment released — APA2604008A (PHP 18,000.00)', actor: 'HR System' },
-    { color: '#0958d9', time: '2026-04-12 09:00', desc: 'AP Application APA2604008A created', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-10 10:00', desc: 'Statement created', actor: 'Zhang Jialei' },
-  ],
-  AP2026040009: [
-    { color: '#cf1322', time: '2026-04-09 11:30', desc: 'Statement canceled — Duplicate statement created in error', actor: 'Zhang Jialei' },
-    { color: '#00b96b', time: '2026-04-08 14:00', desc: 'Statement created', actor: 'Zhang Jialei' },
-  ],
-};
-
-const LINKED_PAYMENT: Record<string, { appNo: string; appType: string; status: string; amount: string; submittedAt: string; hrStatus: string }[]> = {
-  AP2026040006: [{
-    appNo: 'APA2604001',
-    appType: 'AP Application',
-    status: 'Pending Review',
-    amount: '44,500.00',
-    submittedAt: '2026-04-16 09:30',
-    hrStatus: 'Under Review in HR System',
-  }],
-};
-
-interface PaidPaymentApp {
-  appNo: string;
-  amount: number;
-  releasedAt: string;
-  proofFile: string;
+interface StatementDetail {
+  no: string;
+  statementType: 'Standard' | 'Standalone';
+  status: ApStatus;
+  source: Source;
+  vendor: string;
+  taxMark: 'Tax-inclusive' | 'Tax-exclusive';
+  settlementItems: string[];
+  reconciliationPeriod: string;
+  currency: string;
+  createDate: string;
+  createBy: string;
+  vatRate: number;
+  whtRate: number;
+  waybills: WaybillRow[];
+  claims: ClaimRow[];
+  invoices: InvoiceRow[];
+  payments: PaymentRow[];
+  operationLog: LogEntry[];
+  rejectReason?: string;
 }
 
-interface UnpaidPaymentApp {
-  appNo: string;
-  amount: number;
-  status: string;
-  submittedAt: string;
+interface Props {
+  statementId: string;
+  onBack: () => void;
 }
 
-interface PartialPaymentInfo {
-  paidAmount: number;
-  paidApplications: PaidPaymentApp[];
-  unpaidApplications: UnpaidPaymentApp[];
-}
+// ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const PARTIAL_PAYMENT_DATA: Record<string, PartialPaymentInfo> = {
-  AP2026040005: {
-    paidAmount: 45000,
-    paidApplications: [
-      { appNo: 'APA2604005A', amount: 45000, releasedAt: '2026-04-24 15:30', proofFile: 'payment_receipt_APA2604005A.pdf' },
+const DETAILS: Record<string, StatementDetail> = {
+
+  // ── VP: Under Payment Preparation (draft, no VP amounts yet)
+  APVS2604001: {
+    no: 'APVS2604001', statementType: 'Standalone', status: 'Under Payment Preparation',
+    source: 'Vendor Portal', vendor: 'Manila Freight Co.',
+    taxMark: 'Tax-exclusive', settlementItems: [],
+    reconciliationPeriod: '2026-04-01 ~ 2026-04-30',
+    currency: 'PHP', createDate: '2026-04-10', createBy: 'Manila Freight Co.',
+    vatRate: 0, whtRate: 0,
+    waybills: [],
+    claims: [],
+    invoices: [],
+    payments: [],
+    operationLog: [
+      { time: '2026-04-10 09:00', action: 'Created the AP statement', operator: 'Manila Freight Co.' },
     ],
-    unpaidApplications: [
-      { appNo: 'APA2604005B', amount: 54000, status: 'Pending Review', submittedAt: '2026-04-25 09:00' },
+  },
+
+  // ── VP: Awaiting Comparison (full comparison with mismatches)
+  APVS2604002: {
+    no: 'APVS2604002', statementType: 'Standard', status: 'Awaiting Comparison',
+    source: 'Vendor Portal', vendor: 'Manila Freight Co.',
+    taxMark: 'Tax-exclusive', settlementItems: ['Vendor Exception Fee', 'Vendor Additional Charge', 'Reimbursement Expense'],
+    reconciliationPeriod: '2026-04-01 ~ 2026-04-30',
+    currency: 'PHP', createDate: '2026-04-01', createBy: 'Manila Freight Co.',
+    vatRate: 12, whtRate: 2,
+    waybills: [
+      {
+        no: 'WB2604011', positionTime: '2026-04-11 09:00', unloadingTime: '2026-04-10 15:30',
+        truckType: '6-Wheeler', origin: 'PH-Cavite-Imus / DC', destination: 'PH-NCR-Taguig',
+        items: [
+          { name: 'Basic Amount',       tmsAmount: 14500, vpAmount: 14500 },
+          { name: 'PrePaid Amount',     tmsAmount:  2000, vpAmount:  2000 },
+          { name: 'Additional Charge',  tmsAmount:   800, vpAmount:   900 },
+        ],
+      },
+      {
+        no: 'WB2604012', positionTime: '2026-04-12 17:00', unloadingTime: '2026-04-11 09:00',
+        truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig',
+        items: [
+          { name: 'Basic Amount',      tmsAmount: 13300, vpAmount: 13300 },
+          { name: 'PrePaid Amount',    tmsAmount:     0, vpAmount:     0 },
+        ],
+      },
+      {
+        no: 'WB2604013', positionTime: '2026-04-13 11:15', unloadingTime: '2026-04-12 17:00',
+        truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila / Port Area',
+        items: [
+          { name: 'Basic Amount',      tmsAmount: 15000, vpAmount: 15000 },
+          { name: 'PrePaid Amount',    tmsAmount:  1190, vpAmount:  1190 },
+          { name: 'Additional Charge', tmsAmount:  1200, vpAmount:  1200 },
+          { name: 'Exception Fee',     tmsAmount:   500, vpAmount:   500 },
+        ],
+      },
+    ],
+    claims: [
+      { no: 'PHCT26041501AB', type: 'KPI Claim', amount: 2000, currency: 'PHP', waybillNo: 'WB2604011' },
+    ],
+    invoices: [],
+    payments: [],
+    operationLog: [
+      { time: '2026-04-01 10:00', action: 'Created the AP statement', operator: 'Manila Freight Co.' },
+    ],
+  },
+
+  // ── VP: Awaiting Rebill (rejected back to VP, with reason)
+  APVS2604003: {
+    no: 'APVS2604003', statementType: 'Standard', status: 'Awaiting Rebill',
+    source: 'Vendor Portal', vendor: 'Manila Freight Co.',
+    taxMark: 'Tax-exclusive', settlementItems: ['Basic Amount'],
+    reconciliationPeriod: '2026-04-01 ~ 2026-04-30',
+    currency: 'PHP', createDate: '2026-04-10', createBy: 'Manila Freight Co.',
+    vatRate: 12, whtRate: 2,
+    rejectReason: 'Basic Amount for WB2604013 exceeds contracted rate. Additional Charge for WB2604013 has no supporting proof. Please correct and resubmit.',
+    waybills: [
+      {
+        no: 'WB2604014', positionTime: '2026-04-14 08:30', unloadingTime: '2026-04-13 11:15',
+        truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba / Plant 2',
+        items: [
+          { name: 'Basic Amount',   tmsAmount: 12000, vpAmount: 12500 },
+          { name: 'PrePaid Amount', tmsAmount:     0, vpAmount:     0 },
+        ],
+      },
+      {
+        no: 'WB2604015', positionTime: '2026-04-15 14:00', unloadingTime: '2026-04-14 08:30',
+        truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila / Port Area',
+        items: [
+          { name: 'Basic Amount',   tmsAmount: 13300, vpAmount: 13300 },
+          { name: 'PrePaid Amount', tmsAmount:     0, vpAmount:     0 },
+        ],
+      },
+      {
+        no: 'WB2604016', positionTime: '2026-04-16 10:45', unloadingTime: '2026-04-15 14:00',
+        truckType: '6-Wheeler', origin: 'PH-NCR-Quezon City', destination: 'PH-Bulacan-Meycauayan',
+        items: [
+          { name: 'Basic Amount',      tmsAmount: 11800, vpAmount: 11800 },
+          { name: 'PrePaid Amount',    tmsAmount:     0, vpAmount:     0 },
+          { name: 'Additional Charge', tmsAmount:   500, vpAmount:   500 },
+        ],
+      },
+    ],
+    claims: [],
+    invoices: [],
+    payments: [],
+    operationLog: [
+      { time: '2026-04-10 09:00', action: 'Created the AP statement', operator: 'Manila Freight Co.' },
+      { time: '2026-04-12 14:30', action: 'Rejected the AP statement', operator: 'Keris', detail: 'Basic Amount for WB2604013 exceeds contracted rate.' },
+    ],
+  },
+
+  // ── Internal: Pending Payment
+  APVS2604004: {
+    no: 'APVS2604004', statementType: 'Standard', status: 'Pending Payment',
+    source: 'Intelal', vendor: 'Laguna Logistics Corp.',
+    taxMark: 'Tax-exclusive', settlementItems: ['Basic Amount'],
+    reconciliationPeriod: '2026-04-01 ~ 2026-04-30',
+    currency: 'PHP', createDate: '2026-04-01', createBy: 'Zhang Jialei',
+    vatRate: 12, whtRate: 2,
+    waybills: [
+      {
+        no: 'WB2604020', positionTime: '2026-04-01 08:00', unloadingTime: '2026-03-31 18:00',
+        truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cavite-Imus / DC',
+        items: [
+          { name: 'Basic Amount', tmsAmount: 16800, vpAmount: 0 },
+          { name: 'Additional Charge', tmsAmount: 900, vpAmount: 0 },
+        ],
+      },
+      {
+        no: 'WB2604021', positionTime: '2026-04-02 09:30', unloadingTime: '2026-04-01 08:00',
+        truckType: '6-Wheeler', origin: 'PH-Cavite-Imus / DC', destination: 'PH-NCR-Taguig',
+        items: [
+          { name: 'Basic Amount', tmsAmount: 13300, vpAmount: 0 },
+        ],
+      },
+      {
+        no: 'WB2604022', positionTime: '2026-04-03 14:00', unloadingTime: '2026-04-02 09:30',
+        truckType: '4-Wheeler', origin: 'PH-Laguna-Calamba', destination: 'PH-NCR-Manila',
+        items: [
+          { name: 'Basic Amount', tmsAmount: 9800, vpAmount: 0 },
+          { name: 'Exception Fee', tmsAmount: 500, vpAmount: 0 },
+        ],
+      },
+    ],
+    claims: [],
+    invoices: [
+      { no: 'INV-2026-00185', amount: 44821, date: '2026-04-05', proof: 'invoice_185.pdf' },
+    ],
+    payments: [
+      { payableAmount: 44821, status: 'Pending', applicationNo: 'PA2604001', proof: 'payment_proof.pdf', bankName: 'BDO Unibank', bankAccountName: 'Laguna Logistics Corp.', bankAccountNo: '1234567890' },
+    ],
+    operationLog: [
+      { time: '2026-04-01 10:00', action: 'Created the AP statement', operator: 'Zhang Jialei' },
+      { time: '2026-04-03 14:20', action: 'Confirmed & Created RFP', operator: 'Zhang Jialei' },
+      { time: '2026-04-05 09:00', action: 'Invoice added', operator: 'Zhang Jialei' },
+    ],
+  },
+
+  // ── Internal: Partially Payment
+  APVS2604005: {
+    no: 'APVS2604005', statementType: 'Standard', status: 'Partially Payment',
+    source: 'Intelal', vendor: 'Laguna Logistics Corp.',
+    taxMark: 'Tax-inclusive', settlementItems: ['Basic Amount', 'Vendor Additional Charge'],
+    reconciliationPeriod: '2026-04-01 ~ 2026-04-30',
+    currency: 'PHP', createDate: '2026-04-10', createBy: 'Zhang Jialei',
+    vatRate: 12, whtRate: 2,
+    waybills: [
+      {
+        no: 'WB2604030', positionTime: '2026-04-05 08:00', unloadingTime: '2026-04-04 18:00',
+        truckType: '10-Wheeler', origin: 'PH-NCR-Manila / Port Area', destination: 'PH-Cavite-Imus / DC',
+        items: [{ name: 'Basic Amount', tmsAmount: 16800, vpAmount: 0 }, { name: 'Additional Charge', tmsAmount: 1200, vpAmount: 0 }],
+      },
+      {
+        no: 'WB2604031', positionTime: '2026-04-06 09:00', unloadingTime: '2026-04-05 08:00',
+        truckType: '6-Wheeler', origin: 'PH-Cavite-Imus', destination: 'PH-NCR-Taguig',
+        items: [{ name: 'Basic Amount', tmsAmount: 13300, vpAmount: 0 }],
+      },
+      { no: 'WB2604032', positionTime: '2026-04-07 11:00', unloadingTime: '2026-04-06 09:00',
+        truckType: '10-Wheeler', origin: 'PH-Batangas / Lima', destination: 'PH-NCR-Manila',
+        items: [{ name: 'Basic Amount', tmsAmount: 15000, vpAmount: 0 }, { name: 'Additional Charge', tmsAmount: 800, vpAmount: 0 }],
+      },
+      { no: 'WB2604033', positionTime: '2026-04-08 14:00', unloadingTime: '2026-04-07 11:00',
+        truckType: '4-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Laguna-Calamba',
+        items: [{ name: 'Basic Amount', tmsAmount: 9800, vpAmount: 0 }],
+      },
+      { no: 'WB2604034', positionTime: '2026-04-09 09:00', unloadingTime: '2026-04-08 14:00',
+        truckType: '10-Wheeler', origin: 'PH-Pampanga / Clark', destination: 'PH-NCR-Manila',
+        items: [{ name: 'Basic Amount', tmsAmount: 14500, vpAmount: 0 }, { name: 'Additional Charge', tmsAmount: 600, vpAmount: 0 }],
+      },
+      { no: 'WB2604035', positionTime: '2026-04-10 08:00', unloadingTime: '2026-04-09 09:00',
+        truckType: '6-Wheeler', origin: 'PH-NCR-Quezon City', destination: 'PH-Bulacan-Meycauayan',
+        items: [{ name: 'Basic Amount', tmsAmount: 11800, vpAmount: 0 }],
+      },
+      { no: 'WB2604036', positionTime: '2026-04-11 10:00', unloadingTime: '2026-04-10 08:00',
+        truckType: '10-Wheeler', origin: 'PH-NCR-Manila', destination: 'PH-Cebu / Port',
+        items: [{ name: 'Basic Amount', tmsAmount: 16500, vpAmount: 0 }],
+      },
+    ],
+    claims: [],
+    invoices: [{ no: 'INV-2026-00179', amount: 99000, date: '2026-04-12', proof: 'invoice_179.pdf' }],
+    payments: [
+      { payableAmount: 50000, status: 'Paid', applicationNo: 'PA2604008', proof: 'payment_1.pdf', bankName: 'BDO Unibank', bankAccountName: 'Laguna Logistics Corp.', bankAccountNo: '1234567890' },
+      { payableAmount: 49000, status: 'Pending', applicationNo: 'PA2604009', proof: '—', bankName: 'BDO Unibank', bankAccountName: 'Laguna Logistics Corp.', bankAccountNo: '1234567890' },
+    ],
+    operationLog: [
+      { time: '2026-04-10 08:30', action: 'Created the AP statement', operator: 'Zhang Jialei' },
+      { time: '2026-04-11 10:00', action: 'Confirmed & Created RFP', operator: 'Zhang Jialei' },
     ],
   },
 };
 
-const PAID_PAYMENT_DATA: Record<string, { paidAmount: number; apps: PaidPaymentApp[] }> = {
-  AP2026040001: {
-    paidAmount: 53200,
-    apps: [
-      { appNo: 'APA2604010', amount: 53200, releasedAt: '2026-04-18 10:00', proofFile: 'payment_receipt_APA2604010.pdf' },
-    ],
-  },
-};
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
-const mockProofNames = ['proof_doc_001.pdf', 'payment_evidence.jpg', 'waybill_scan.png', 'receipt_Apr2026.pdf'];
-
-// ── Helpers ──────────────────────────────────────────────
-
-const TERMINAL_STATUSES: Status[] = ['Paid', 'Written Off', 'Canceled'];
-
-function isTerminal(status: Status) {
-  return TERMINAL_STATUSES.includes(status);
+function fmt(n: number) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2 });
 }
 
-// ── Component ──────────────────────────────────────────────
+function compareResult(tms: number, vp: number): { label: string; color: string } {
+  if (tms === vp) return { label: 'Matched', color: '#389e0d' };
+  return { label: 'MisMatched', color: '#cf1322' };
+}
+
+function waybillTotals(w: WaybillRow, isVP: boolean) {
+  const tms = w.items.filter(i => i.name !== 'PrePaid Amount').reduce((s, i) => s + i.tmsAmount, 0)
+    - (w.items.find(i => i.name === 'PrePaid Amount')?.tmsAmount ?? 0);
+  const vp = isVP
+    ? w.items.filter(i => i.name !== 'PrePaid Amount').reduce((s, i) => s + i.vpAmount, 0)
+      - (w.items.find(i => i.name === 'PrePaid Amount')?.vpAmount ?? 0)
+    : 0;
+  return { tms, vp, diff: tms - vp };
+}
+
+// ─── Status UI ─────────────────────────────────────────────────────────────────
+
+const STATUS_STYLE: Record<ApStatus, React.CSSProperties> = {
+  'Under Payment Preparation': { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591' },
+  'Awaiting Comparison':       { background: '#fff1b8', color: '#7c5700', border: '1px solid #ffe58f' },
+  'Awaiting Rebill':           { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+  'Pending Payment':           { background: '#e6f4ff', color: '#0958d9', border: '1px solid #91caff' },
+  'Partially Payment':         { background: '#fffbe6', color: '#d48806', border: '1px solid #ffe58f' },
+  'Paid':                      { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f' },
+  'Written Off':               { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' },
+  'Canceled':                  { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e' },
+};
+
+const BASE_BADGE: React.CSSProperties = { borderRadius: 4, padding: '2px 10px', fontSize: 12, fontWeight: 500 };
+
+// ─── Section Header ───────────────────────────────────────────────────────────
+
+function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 4, height: 16, background: '#333', borderRadius: 2, flexShrink: 0 }} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>{title}</span>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+// ─── Key-Value Row ────────────────────────────────────────────────────────────
+
+function KVRow({ items }: { items: { label: string; value: React.ReactNode }[] }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px 0', marginBottom: 8 }}>
+      {items.map((item, i) => (
+        <div key={i}>
+          <div style={{ fontSize: 12, color: '#999', marginBottom: 3 }}>{item.label}</div>
+          <div style={{ fontSize: 13, color: '#333' }}>{item.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 
 function ApStatementDetail({ statementId, onBack }: Props) {
-  const data = STATEMENT_DATA[statementId] || { ...FALLBACK, id: statementId };
+  const stmt = DETAILS[statementId];
 
-  const [currentStatus, setCurrentStatus] = useState<Status>(data.status);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showWriteOffDialog, setShowWriteOffDialog] = useState(false);
-  const [showConfirmPaymentDialog, setShowConfirmPaymentDialog] = useState(false);
-  const [showAddApAppDialog, setShowAddApAppDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [cancelReason, setCancelReason] = useState('');
-  const [writeOffReason, setWriteOffReason] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [apAppNo, setApAppNo] = useState('');
-  const [apAppAmount, setApAppAmount] = useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Create AP Application form state
-  const [apPaymentDefinition, setApPaymentDefinition] = useState('');
-  const [apEntity, setApEntity] = useState('');
-  const [apBusinessUnit, setApBusinessUnit] = useState('');
-  const [apDateOfNeeded, setApDateOfNeeded] = useState('');
-  const [apPaymentIdL2, setApPaymentIdL2] = useState('');
-  const [apBankName, setApBankName] = useState('');
-  const [apPayeeAccount, setApPayeeAccount] = useState('');
-  const [apSupportingDocs, setApSupportingDocs] = useState<string[]>(['invoice_proof.png']);
-  const [actionDone, setActionDone] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [expandedWaybills, setExpandedWaybills] = useState<Set<string>>(() => new Set(data.waybills[0] ? [data.waybills[0].no] : []));
-  const [activeStatementTab, setActiveStatementTab] = useState<StatementDetailTab>('waybill');
+  const isVP = stmt?.source === 'Vendor Portal';
+  const isEditable = stmt?.status === 'Under Payment Preparation';
+  const isAwaitingComparison = stmt?.status === 'Awaiting Comparison';
 
-  const [invoices, setInvoices] = useState<InvoiceRecord[]>(INITIAL_INVOICES[statementId] || []);
-  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<InvoiceRecord | null>(null);
-  const [invoiceFormRows, setInvoiceFormRows] = useState<InvoiceFormRow[]>([]);
-
-  const [proofFiles, setProofFiles] = useState<string[]>(PROOF_DATA[statementId] || []);
-  const [claimTickets, setClaimTickets] = useState<ClaimTicketRow[]>(CLAIM_TICKET_DATA[statementId] || []);
-  const [linkedPayments, setLinkedPayments] = useState(LINKED_PAYMENT[statementId] || []);
-
-  const badge = (s: Status) => ({ ...STATUS_STYLE[s], borderRadius: 4, padding: '3px 10px', fontSize: 13 });
-  const statementPaidAmount = data.paidAmount ?? PARTIAL_PAYMENT_DATA[statementId]?.paidAmount ?? PAID_PAYMENT_DATA[statementId]?.paidAmount ?? (currentStatus === 'Paid' ? data.vendorTotal : 0);
-  const statementTotalInvoiceAmount = data.totalInvoiceAmount ?? invoices.reduce((sum, inv) => {
-    const amount = Number(inv.amount.replace(/,/g, ''));
-    return sum + (Number.isFinite(amount) ? amount : 0);
-  }, 0);
-
-  const isPaymentPrep = currentStatus === 'Payment Preparation';
-  const isAwaitingComparison = currentStatus === 'Awaiting Comparison';
-  const isAwaitingRebill = currentStatus === 'Awaiting Re-bill';
-  const isPendingPayment = currentStatus === 'Pending Payment';
-  const isPartiallyPayment = currentStatus === 'Partially Payment';
-  const isPaid = currentStatus === 'Paid';
-  const isWrittenOff = currentStatus === 'Written Off';
-  const isCanceled = currentStatus === 'Canceled';
-  const isReadOnly = isTerminal(currentStatus);
-  const canEditWaybills = isPaymentPrep;
-  const canEditInvoice = isPaymentPrep || isAwaitingComparison;
-
-  const allReady = data.waybills.every(w =>
-    w.items.every(item => {
-      const r = computeItemResult(item);
-      return r === 'Matched' || r === 'Matched (Vendor Discount)';
-    })
-  );
-
-  const mismatchCount = data.waybills.filter(w =>
-    w.items.some(item => {
-      const r = computeItemResult(item);
-      return r === 'Mismatched' || r === 'Missed';
-    })
-  ).length;
-
-  // ── Handlers ──
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleReject = () => {
-    if (!rejectReason.trim()) return;
-    setShowRejectDialog(false);
-    setCurrentStatus('Awaiting Re-bill');
-    setActionDone('rejected');
-    showToast('Statement rejected and sent back to vendor.');
-  };
-
-  const handleCancel = () => {
-    if (!cancelReason.trim()) return;
-    setShowCancelDialog(false);
-    setCurrentStatus('Canceled');
-    setActionDone('canceled');
-    showToast('Statement has been canceled.');
-  };
-
-  const handleWriteOff = () => {
-    if (!writeOffReason.trim()) return;
-    setShowWriteOffDialog(false);
-    setCurrentStatus('Written Off');
-    setActionDone('written-off');
-    showToast('Remaining balance has been written off.');
-  };
-
-  const handleConfirmPayment = () => {
-    setShowConfirmPaymentDialog(false);
-    setCurrentStatus('Pending Payment');
-    setActionDone('confirmed-payment');
-    showToast('Vendor Payment created and pushed to HR system.');
-  };
-
-  const handleAddApApp = () => {
-    if (!apAppNo.trim() || !apAppAmount.trim()) return;
-    setLinkedPayments(prev => [...prev, {
-      appNo: apAppNo,
-      appType: 'AP Application',
-      status: 'Pending Review',
-      amount: apAppAmount,
-      submittedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      hrStatus: 'Submitted',
-    }]);
-    setShowAddApAppDialog(false);
-    setApAppNo('');
-    setApAppAmount('');
-    showToast(`AP Application ${apAppNo} added successfully.`);
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      showToast('Comparison refreshed.');
-    }, 1000);
-  };
-
-  const handleVoidInvoice = (invId: string) => {
-    setInvoices(prev => prev.map(i => i.id === invId ? { ...i, status: 'Voided' as const } : i));
-    showToast('Invoice voided.');
-  };
-
-  const toggleWaybill = (waybillNo: string) => {
-    setExpandedWaybills(prev => {
-      const next = new Set(prev);
-      if (next.has(waybillNo)) next.delete(waybillNo);
-      else next.add(waybillNo);
-      return next;
+  const toggleRow = (no: string) => {
+    setExpandedRows(prev => {
+      const n = new Set(prev);
+      if (n.has(no)) n.delete(no); else n.add(no);
+      return n;
     });
   };
 
-  const openWaybillDetail = () => {
-    window.open(WAYBILL_DETAIL_URL, '_blank', 'noopener,noreferrer');
-  };
+  // ── Amount calculations ────────────────────────────────────────────────────
 
-  const openAddInvoice = () => {
-    setInvoiceFormRows([{ id: Date.now().toString(), clientEntity: '', no: '', date: '', amount: '', proofFileName: '', proofOcrDone: false }]);
-    setEditingInvoice(null);
-    setShowInvoiceDialog(true);
-  };
+  const allItems = stmt?.waybills.flatMap(w => w.items) ?? [];
 
-  const openEditInvoice = (inv: InvoiceRecord) => {
-    setInvoiceFormRows([{ id: inv.id, clientEntity: inv.clientEntity, no: inv.no, date: inv.date, amount: inv.amount, proofFileName: inv.proofFileName || '', proofOcrDone: !!inv.proofFileName }]);
-    setEditingInvoice(inv);
-    setShowInvoiceDialog(true);
-  };
+  const sumByName = (name: string, field: 'tmsAmount' | 'vpAmount') =>
+    allItems.filter(i => i.name === name).reduce((s, i) => s + i[field], 0);
 
-  const handleInvoiceConfirm = () => {
-    if (editingInvoice) {
-      const row = invoiceFormRows[0];
-      setInvoices(prev => prev.map(i => i.id === editingInvoice.id ? {
-        ...i, clientEntity: row.clientEntity, no: row.no, date: row.date, amount: row.amount,
-        proofFileName: row.proofFileName || undefined,
-      } : i));
-    } else {
-      const newInvs: InvoiceRecord[] = invoiceFormRows
-        .filter(r => r.no.trim())
-        .map(r => ({
-          id: r.id, clientEntity: r.clientEntity, no: r.no, date: r.date, amount: r.amount,
-          status: 'Pending Verification' as const, proofFileName: r.proofFileName || undefined,
-        }));
-      setInvoices(prev => [...prev, ...newInvs]);
-    }
-    setShowInvoiceDialog(false);
-  };
+  const tmsBasic      = sumByName('Basic Amount', 'tmsAmount');
+  const tmsPrePaid    = sumByName('PrePaid Amount', 'tmsAmount');
+  const tmsAdditional = sumByName('Additional Charge', 'tmsAmount');
+  const tmsException  = sumByName('Exception Fee', 'tmsAmount');
 
-  const updateFormRow = (id: string, field: keyof InvoiceFormRow, value: string | boolean) => {
-    setInvoiceFormRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-  };
+  const vpBasic       = sumByName('Basic Amount', 'vpAmount');
+  const vpPrePaid     = sumByName('PrePaid Amount', 'vpAmount');
+  const vpAdditional  = sumByName('Additional Charge', 'vpAmount');
+  const vpException   = sumByName('Exception Fee', 'vpAmount');
 
-  const addFormRow = () => {
-    setInvoiceFormRows(prev => [...prev, { id: Date.now().toString(), clientEntity: '', no: '', date: '', amount: '', proofFileName: '', proofOcrDone: false }]);
-  };
+  const tmsWCC = tmsBasic + tmsAdditional + tmsException - tmsPrePaid;
+  const vpWCC  = vpBasic  + vpAdditional  + vpException  - vpPrePaid;
 
-  const removeFormRow = (id: string) => {
-    setInvoiceFormRows(prev => prev.filter(r => r.id !== id));
-  };
+  const claimTotal = stmt?.claims.reduce((s, c) => s + c.amount, 0) ?? 0;
 
-  const handleProofUpload = (rowId: string) => {
-    updateFormRow(rowId, 'proofFileName', '');
-    updateFormRow(rowId, 'proofOcrDone', false);
-    setTimeout(() => {
-      updateFormRow(rowId, 'proofFileName', 'invoice_scan.pdf');
-      updateFormRow(rowId, 'proofOcrDone', true);
-    }, 1500);
-  };
+  const vatRate = stmt?.vatRate ?? 0;
+  const whtRate = stmt?.whtRate ?? 0;
 
-  // ── Log computation ──
+  const tmsVAT  = Math.round(tmsWCC * vatRate / 100);
+  const whtSign = -1;
+  const tmsWHT  = Math.round(tmsWCC * whtRate / 100);
+  const vpVAT   = Math.round(vpWCC  * vatRate / 100);
+  const vpWHT   = Math.round(vpWCC  * whtRate / 100);
 
-  const staticLogs: LogEntry[] = STATIC_LOGS[statementId] || [
-    { color: '#00b96b', time: `${data.createdAt} 08:00`, desc: 'Statement created', actor: 'Zhang Jialei' },
-  ];
+  const tmsTotalPayable = tmsWCC - claimTotal + tmsVAT - tmsWHT;
+  const vpTotalPayable  = vpWCC  - claimTotal + vpVAT  - vpWHT;
 
-  const dynamicLogs: LogEntry[] = [];
-  if (actionDone === 'rejected') {
-    dynamicLogs.push({ color: '#cf1322', time: 'Just now', desc: `Statement rejected — ${rejectReason}`, actor: 'Zhang Jialei' });
-  } else if (actionDone === 'canceled') {
-    dynamicLogs.push({ color: '#cf1322', time: 'Just now', desc: `Statement canceled — ${cancelReason}`, actor: 'Zhang Jialei' });
-  } else if (actionDone === 'written-off') {
-    dynamicLogs.push({ color: '#d46b08', time: 'Just now', desc: `Remaining balance written off — ${writeOffReason}`, actor: 'Zhang Jialei' });
-  } else if (actionDone === 'confirmed-payment') {
-    dynamicLogs.push({ color: '#00b96b', time: 'Just now', desc: 'Confirm & Create Vendor Payment', actor: 'Zhang Jialei' });
+  if (!stmt) {
+    return (
+      <div className="tms-card" style={{ padding: 40, textAlign: 'center', color: '#999' }}>
+        Statement not found.
+        <div style={{ marginTop: 16 }}>
+          <button className="btn-default" onClick={onBack}>← Back</button>
+        </div>
+      </div>
+    );
   }
 
-  const allLogs = [...dynamicLogs, ...staticLogs];
+  // ── Top action buttons ─────────────────────────────────────────────────────
 
-  // ── Amount summaries ──
+  const renderTopActions = () => {
+    if (isAwaitingComparison) return (
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn-danger" onClick={() => setShowRejectDialog(true)}>Reject to Vendor</button>
+        <button className="btn-primary" onClick={() => setShowConfirmDialog(true)}>Confirm &amp; Create RFP</button>
+      </div>
+    );
+    if (isEditable) return (
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn-default">Save</button>
+        <button className="btn-primary">Submit to TMS</button>
+      </div>
+    );
+    return null;
+  };
 
-  const vpAmountSummary = data.waybills.reduce<Record<SummaryBucket, number>>((acc, waybill) => {
-    waybill.items.forEach(item => { acc[getItemBucket(item.name)] += item.vendorAmount; });
-    return acc;
-  }, { basic: 0, additional: 0, exception: 0 });
-
-  const tmsAmountSummary = data.waybills.reduce<Record<SummaryBucket, number>>((acc, waybill) => {
-    waybill.items.forEach(item => { acc[getItemBucket(item.name)] += item.tmsAmount; });
-    return acc;
-  }, { basic: 0, additional: 0, exception: 0 });
-
-  const vpClaimAmount = claimTickets.reduce((sum, ticket) => sum + ticket.claimAmount, 0);
-  const tmsClaimAmount = claimTickets.reduce((sum, ticket) => sum + ticket.allocatableAmount, 0);
-  const vpKpiClaim = claimTickets.filter(ticket => ticket.claimType.toLowerCase().includes('kpi')).reduce((sum, ticket) => sum + ticket.claimAmount, 0);
-  const tmsKpiClaim = claimTickets.filter(ticket => ticket.claimType.toLowerCase().includes('kpi')).reduce((sum, ticket) => sum + ticket.allocatableAmount, 0);
-  const vpOthersAmount = 0;
-  const tmsOthersAmount = 0;
-  const vpVatAmount = data.taxMark === 'VAT-in' ? Math.round(data.vendorTotal / 1.12 * 0.12 * 100) / 100 : 0;
-  const tmsVatAmount = data.taxMark === 'VAT-in' ? Math.round(data.tmsTotal / 1.12 * 0.12 * 100) / 100 : 0;
-  const vpWhtAmount = 0;
-  const tmsWhtAmount = 0;
-  const totalAmountPayable = data.vendorTotal + vpClaimAmount + vpKpiClaim + vpOthersAmount + vpVatAmount - vpWhtAmount;
-  const tmsTotalAmountPayable = data.tmsTotal + tmsClaimAmount + tmsKpiClaim + tmsOthersAmount + tmsVatAmount - tmsWhtAmount;
-
-  // ── Renderers ──
+  // ── Settlement Details: Waybill table ──────────────────────────────────────
 
   const renderWaybillTable = () => {
-    const showActions = isAwaitingComparison;
-    const showRemove = isPaymentPrep;
+    if (stmt.waybills.length === 0) {
+      return (
+        <div style={{ padding: '24px 0', textAlign: 'center', color: '#bbb', fontSize: 13, border: '1px dashed #e8e8e8', borderRadius: 4, marginBottom: 16 }}>
+          No waybills added.
+        </div>
+      );
+    }
+
     return (
-      <table className="data-table ap-waybill-table" style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            <th>Waybill</th>
-            <th style={{ textAlign: 'right' }}>TMS Amount</th>
-            <th style={{ textAlign: 'right' }}>VP Amount</th>
-            <th>Status</th>
-            <th style={{ textAlign: 'right' }}>Discrepancy</th>
-            <th>Position Time</th>
-            <th>Unloading Time</th>
-            <th>Truck Type</th>
-            <th>Origin</th>
-            <th>Destination</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.waybills.map((w, index) => {
-            const wVendorTotal = w.items.reduce((s, i) => s + i.vendorAmount, 0);
-            const wTmsTotal = w.items.reduce((s, i) => s + i.tmsAmount, 0);
-            const discrepancy = wVendorTotal - wTmsTotal;
-            const isMatch = discrepancy <= 0;
-            const bucketTotals = getWaybillBucketTotals(w);
-            const isExpanded = expandedWaybills.has(w.no);
-            const times = getWaybillDisplayTimes(w, index);
-            return (
-              <React.Fragment key={w.no}>
-                <tr className="ap-waybill-parent" onClick={() => toggleWaybill(w.no)}>
-                  <td style={{ fontWeight: 700, color: '#1677ff' }}>
-                    <span style={{ display: 'inline-block', width: 16, color: '#777' }}>{isExpanded ? '▾' : '▸'}</span>
-                    {w.no}
-                  </td>
-                  <td className="num" style={{ fontWeight: 600 }}>{fmt(wTmsTotal)}</td>
-                  <td className="num" style={{ fontWeight: 600 }}>{fmt(wVendorTotal)}</td>
-                  <td>
-                    <span style={isMatch
-                      ? { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-                      : { background: '#fff1f0', color: '#cf1322', border: '1px solid #ffa39e', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-                    }>
-                      {discrepancy === 0 ? 'Matched' : discrepancy < 0 ? 'Matched' : 'Mismatched'}
-                    </span>
-                  </td>
-                  <td className="num" style={{ color: discrepancy === 0 ? '#389e0d' : discrepancy > 0 ? '#cf1322' : '#d46b08', fontWeight: 600 }}>
-                    {fmtDiff(discrepancy)}
-                  </td>
-                  <td style={{ fontSize: 12 }}>{times.positionTime}</td>
-                  <td style={{ fontSize: 12 }}>{times.unloadingTime}</td>
-                  <td style={{ fontSize: 12 }}>{w.truckType}</td>
-                  <td style={{ fontSize: 12 }}>{w.origin}</td>
-                  <td style={{ fontSize: 12 }}>{w.destination}</td>
-                  <td>
-                    {showActions && !isMatch ? (
-                      <button
-                        className="btn-link ap-icon-link"
-                        onClick={(e) => { e.stopPropagation(); openWaybillDetail(); }}
-                        title="Open waybill detail for price modification"
-                      >
-                        <ExternalLink size={14} />
-                        Edit Price
-                      </button>
-                    ) : showRemove ? (
-                      <button
-                        className="btn-link ap-icon-link"
-                        style={{ color: '#ff4d4f' }}
-                        onClick={(e) => { e.stopPropagation(); showToast(`Waybill ${w.no} removed from statement.`); }}
-                        title="Remove waybill"
-                      >
-                        <Trash2 size={14} />
-                        Remove
-                      </button>
-                    ) : (
-                      <span style={{ color: '#bbb', fontSize: 12 }}>—</span>
+      <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+        <table className="data-table" style={{ minWidth: isVP ? 1100 : 900 }}>
+          <thead>
+            <tr>
+              <th style={{ width: 28 }} />
+              <th>Waybill</th>
+              <th style={{ textAlign: 'right' }}>TMS Amount</th>
+              {isVP && <th style={{ textAlign: 'right' }}>VP Amount</th>}
+              {isVP && <th>Comparison</th>}
+              {isVP && <th style={{ textAlign: 'right' }}>Difference</th>}
+              <th>Position Time</th>
+              <th>Unloading Time</th>
+              <th>Truck Type</th>
+              <th>Origin</th>
+              <th>Destination</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stmt.waybills.map(w => {
+              const expanded = expandedRows.has(w.no);
+              const tot = waybillTotals(w, isVP);
+              const cmp = isVP ? compareResult(tot.tms, tot.vp) : null;
+
+              return (
+                <React.Fragment key={w.no}>
+                  {/* Summary row */}
+                  <tr style={{ background: expanded ? '#fafafa' : undefined }}>
+                    <td style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => toggleRow(w.no)}>
+                      <span style={{ fontSize: 12, color: '#999', userSelect: 'none' }}>
+                        {expanded ? '▼' : '▶'}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{w.no}</td>
+                    <td style={{ textAlign: 'right', fontSize: 13 }}>{fmt(tot.tms)}</td>
+                    {isVP && <td style={{ textAlign: 'right', fontSize: 13 }}>{fmt(tot.vp)}</td>}
+                    {isVP && cmp && (
+                      <td>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: cmp.color }}>{cmp.label}</span>
+                      </td>
                     )}
-                  </td>
-                </tr>
-                {isExpanded && (
-                  <tr className="ap-waybill-detail-row">
-                    <td colSpan={11}>
-                      <div className="ap-waybill-detail">
-                        <table className="data-table" style={{ width: '100%' }}>
-                          <thead>
-                            <tr>
-                              <th>Waybill Item</th>
-                              <th style={{ textAlign: 'right' }}>TMS Amount</th>
-                              <th style={{ textAlign: 'right' }}>VP Amount</th>
-                              <th style={{ textAlign: 'right' }}>Difference</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {([
-                              ['Basic Amount', bucketTotals.basic],
-                              ['Additional Charge', bucketTotals.additional],
-                              ['Exception Fee', bucketTotals.exception],
-                            ] as const).map(([label, totals]) => {
-                              const diff = totals.vendor - totals.tms;
-                              return (
-                                <tr key={label}>
-                                  <td style={{ fontWeight: 600 }}>{label}</td>
-                                  <td className="num">{fmt(totals.tms)}</td>
-                                  <td className="num">{fmt(totals.vendor)}</td>
-                                  <td className="num" style={{ color: diff === 0 ? '#389e0d' : diff > 0 ? '#cf1322' : '#d46b08', fontWeight: 600 }}>
-                                    {fmtDiff(diff)}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                    {isVP && (
+                      <td style={{ textAlign: 'right', fontSize: 13, color: tot.diff !== 0 ? '#cf1322' : '#389e0d', fontWeight: 500 }}>
+                        {tot.diff !== 0 ? fmt(Math.abs(tot.diff)) : '—'}
+                      </td>
+                    )}
+                    <td style={{ fontSize: 12, color: '#555' }}>{w.positionTime}</td>
+                    <td style={{ fontSize: 12, color: '#555' }}>{w.unloadingTime}</td>
+                    <td style={{ fontSize: 12 }}>{w.truckType}</td>
+                    <td style={{ fontSize: 12, color: '#555' }}>{w.origin}</td>
+                    <td style={{ fontSize: 12, color: '#555' }}>{w.destination}</td>
+                    <td>
+                      {isEditable && (
+                        <button className="btn-link" style={{ color: '#cf1322', fontSize: 12 }}>Remove</button>
+                      )}
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </tbody>
-      </table>
+
+                  {/* Expanded: per-item rows */}
+                  {expanded && w.items.map((item, idx) => {
+                    const itemDiff = isVP ? item.tmsAmount - item.vpAmount : 0;
+                    const itemCmp  = isVP ? compareResult(item.tmsAmount, item.vpAmount) : null;
+                    const isPrePaid = item.name === 'PrePaid Amount';
+                    return (
+                      <tr key={idx} style={{ background: '#f9f9f9' }}>
+                        <td />
+                        <td style={{ paddingLeft: 32, fontSize: 12, color: isPrePaid ? '#0958d9' : '#555' }}>
+                          {isPrePaid ? `↳ ${item.name}` : item.name}
+                        </td>
+                        <td style={{ textAlign: 'right', fontSize: 12, color: isPrePaid ? '#0958d9' : '#333' }}>
+                          {isPrePaid ? `−${fmt(item.tmsAmount)}` : fmt(item.tmsAmount)}
+                        </td>
+                        {isVP && (
+                          <td style={{ textAlign: 'right', fontSize: 12, color: isPrePaid ? '#0958d9' : '#333' }}>
+                            {isPrePaid ? `−${fmt(item.vpAmount)}` : fmt(item.vpAmount)}
+                          </td>
+                        )}
+                        {isVP && itemCmp && (
+                          <td>
+                            <span style={{ fontSize: 11, color: itemCmp.color }}>{itemCmp.label}</span>
+                          </td>
+                        )}
+                        {isVP && (
+                          <td style={{ textAlign: 'right', fontSize: 12, color: itemDiff !== 0 ? '#cf1322' : '#389e0d' }}>
+                            {itemDiff !== 0 ? fmt(Math.abs(itemDiff)) : '—'}
+                          </td>
+                        )}
+                        <td colSpan={5} />
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {isVP && (
+                            <span style={{ display: 'inline-flex', gap: 8 }}>
+                              <button className="btn-link" style={{ fontSize: 11 }}>OC Check</button>
+                              <button className="btn-link" style={{ fontSize: 11 }}>Pricing Check</button>
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
-  const renderClaimTicketTable = () => {
-    if (claimTickets.length === 0) {
-      return <div className="empty">No claim tickets associated with this statement.</div>;
+  // ── Settlement Details: Claim table ───────────────────────────────────────
+
+  const renderClaimTable = () => {
+    if (stmt.claims.length === 0) {
+      return (
+        <div style={{ padding: '16px 0', textAlign: 'center', color: '#bbb', fontSize: 13, border: '1px dashed #e8e8e8', borderRadius: 4 }}>
+          No claim tickets attached.
+        </div>
+      );
     }
-    const canRemove = isPaymentPrep || isAwaitingComparison;
     return (
-      <table className="data-table ap-claim-ticket-table" style={{ width: '100%' }}>
+      <table className="data-table">
         <thead>
           <tr>
-            <th>Ticket No.</th>
-            <th>Claim Type</th>
-            <th>Customer</th>
-            <th className="num">Claim Amount</th>
-            <th>Claim Reason</th>
-            <th>Status</th>
-            <th>Created Date</th>
-            <th>Created By</th>
-            {canRemove && <th>Actions</th>}
+            <th>Claim Ticket No.</th>
+            <th>Type</th>
+            <th>Waybill No.</th>
+            <th style={{ textAlign: 'right' }}>Amount</th>
+            <th>Currency</th>
           </tr>
         </thead>
         <tbody>
-          {claimTickets.map(ticket => (
-            <tr key={ticket.ticketNo}>
-              <td style={{ fontWeight: 700, color: '#1f2937' }}>{ticket.ticketNo}</td>
-              <td>{ticket.claimType}</td>
-              <td>{ticket.customer}</td>
-              <td className="num" style={{ color: '#ff4d4f', fontWeight: 700 }}>{fmt(ticket.claimAmount)}</td>
-              <td>{ticket.claimReason}</td>
-              <td><span className="ap-claim-status">{ticket.status}</span></td>
-              <td>{ticket.createdDate}</td>
-              <td>{ticket.createdBy}</td>
-              {canRemove && (
-                <td>
-                  <button
-                    className="ap-trash-btn"
-                    title="Remove claim ticket"
-                    onClick={() => setClaimTickets(prev => prev.filter(item => item.ticketNo !== ticket.ticketNo))}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </td>
-              )}
+          {stmt.claims.map(c => (
+            <tr key={c.no}>
+              <td style={{ fontWeight: 600, color: '#1677ff' }}>{c.no}</td>
+              <td style={{ fontSize: 12 }}>{c.type}</td>
+              <td style={{ fontSize: 12 }}>{c.waybillNo}</td>
+              <td style={{ textAlign: 'right', fontSize: 13, fontWeight: 500 }}>{fmt(c.amount)}</td>
+              <td style={{ fontSize: 12 }}>{c.currency}</td>
             </tr>
           ))}
         </tbody>
@@ -1120,1041 +608,450 @@ function ApStatementDetail({ statementId, onBack }: Props) {
     );
   };
 
-  const renderAmountSummaryTable = () => {
-    const summaryItem = (label: string, tmsAmount: number, vpAmount: number, strong = false) => {
-      const diff = vpAmount - tmsAmount;
+  // ── Amount Summary ──────────────────────────────────────────────────────────
+
+  const renderAmountSummary = () => {
+    const colHdr = (label: string) => (
+      <div style={{ fontSize: 12, color: '#999', textAlign: 'right' }}>{label}</div>
+    );
+    const amtRow = (label: string, tms: number, vp?: number, bold?: boolean, isDeduction?: boolean) => {
+      const sign = isDeduction ? '−' : '';
+      const style: React.CSSProperties = { fontSize: 13, fontWeight: bold ? 600 : 400, color: isDeduction ? '#0958d9' : '#333' };
       return (
-        <div className={`ap-summary-row ${strong ? 'is-strong' : ''}`}>
-          <span className="ap-summary-item-label">{label}</span>
-          <span className="ap-summary-cell">{fmt(tmsAmount)}</span>
-          <span className="ap-summary-cell">{fmt(vpAmount)}</span>
-          <span className={`ap-summary-cell diff ${diff === 0 ? 'match' : diff > 0 ? 'up' : 'down'}`}>{fmtDiff(diff)}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: isVP ? '2fr 1fr 1fr 1fr' : '2fr 1fr', gap: 4, alignItems: 'center', padding: '5px 0', borderBottom: '1px solid #f5f5f5' }}>
+          <span style={{ fontSize: 13, color: isDeduction ? '#0958d9' : '#555', paddingLeft: isDeduction ? 12 : 0 }}>
+            {isDeduction ? `↳ ${label}` : label}
+          </span>
+          <span style={{ ...style, textAlign: 'right' }}>{sign}{fmt(tms)}</span>
+          {isVP && <span style={{ ...style, textAlign: 'right' }}>{vp !== undefined ? `${sign}${fmt(vp)}` : '—'}</span>}
+          {isVP && <span style={{ ...style, textAlign: 'right', color: tms !== (vp ?? tms) ? '#cf1322' : '#389e0d' }}>
+            {tms !== (vp ?? tms) ? fmt(Math.abs(tms - (vp ?? tms))) : '—'}
+          </span>}
         </div>
       );
     };
 
-    const renderSummaryBlock = (
-      title: string, tmsTotal: number, vpTotal: number,
-      rows: Array<{ label: string; tms: number; vp: number }>
-    ) => (
-      <div className="ap-summary-col">
-        <div className="ap-summary-block-title">{title}</div>
-        <div className="ap-summary-table">
-          <div className="ap-summary-table-head">
-            <span>Item</span><span>TMS</span><span>VP</span><span>Diff</span>
-          </div>
-          {summaryItem(title, tmsTotal, vpTotal, true)}
-          <div className="ap-summary-sublist">
-            {rows.map(row => summaryItem(row.label, row.tms, row.vp))}
-          </div>
-        </div>
-      </div>
-    );
-
-    const twoCol: React.CSSProperties = { gridTemplateColumns: 'minmax(132px, 1.3fr) minmax(90px, 1fr)' };
-    const renderSimpleSummaryBlock = (
-      title: string, total: number,
-      rows: Array<{ label: string; amount: number }>
-    ) => (
-      <div className="ap-summary-col">
-        <div className="ap-summary-block-title">{title}</div>
-        <div className="ap-summary-table">
-          <div className="ap-summary-table-head" style={twoCol}>
-            <span>Item</span><span>Amount</span>
-          </div>
-          <div className="ap-summary-row is-strong" style={twoCol}>
-            <span className="ap-summary-item-label">{title}</span>
-            <span className="ap-summary-cell">{fmt(total)}</span>
-          </div>
-          <div className="ap-summary-sublist">
-            {rows.map(row => (
-              <div key={row.label} className="ap-summary-row" style={twoCol}>
-                <span className="ap-summary-item-label">{row.label}</span>
-                <span className="ap-summary-cell">{fmt(row.amount)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-
     return (
-      <div className="ap-amount-summary">
-        <div className="ap-summary-total">
-          <span>Total Amount Payable</span>
-          <div className="ap-summary-total-values">
-            <span><b>TMS</b>{fmt(tmsTotalAmountPayable)}</span>
-            <span><b>VP</b>{fmt(totalAmountPayable)}</span>
-            <span className={`diff ${totalAmountPayable - tmsTotalAmountPayable === 0 ? 'match' : totalAmountPayable - tmsTotalAmountPayable > 0 ? 'up' : 'down'}`}>
-              <b>Diff</b>{fmtDiff(totalAmountPayable - tmsTotalAmountPayable)}
-            </span>
-          </div>
-        </div>
-        <div className="ap-summary-grid">
-          {renderSummaryBlock(
-            'Waybill Contract Cost',
-            tmsAmountSummary.basic + tmsAmountSummary.additional + tmsAmountSummary.exception,
-            vpAmountSummary.basic + vpAmountSummary.additional + vpAmountSummary.exception,
-            [
-              { label: 'Basic Amount', tms: tmsAmountSummary.basic, vp: vpAmountSummary.basic },
-              { label: 'Additional Charge', tms: tmsAmountSummary.additional, vp: vpAmountSummary.additional },
-              { label: 'Exception Fee', tms: tmsAmountSummary.exception, vp: vpAmountSummary.exception },
-            ]
-          )}
-          {renderSimpleSummaryBlock('Claim', vpClaimAmount, [{ label: 'KPI Claim', amount: vpKpiClaim }])}
-          {renderSummaryBlock('Others', tmsOthersAmount, vpOthersAmount, [
-            { label: 'VAT', tms: tmsVatAmount, vp: vpVatAmount },
-            { label: 'WHT', tms: tmsWhtAmount, vp: vpWhtAmount },
-          ])}
-        </div>
-      </div>
-    );
-  };
-
-  const renderInvoiceDialog = () => {
-    if (!showInvoiceDialog) return null;
-    const isEdit = editingInvoice !== null;
-    return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1500 }}>
-        <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 820, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-          <div style={{ borderLeft: '4px solid #00b96b', paddingLeft: 12, marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>{isEdit ? 'Edit Invoice' : 'Add Invoice'}</div>
-          </div>
-          {invoiceFormRows.map((row, idx) => (
-            <div key={row.id} style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: 16, marginBottom: 12, position: 'relative' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Number</div>
-                  <input type="text" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    placeholder="e.g. INV-001" value={row.no} onChange={e => updateFormRow(row.id, 'no', e.target.value)} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Date</div>
-                  <input type="date" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    value={row.date} onChange={e => updateFormRow(row.id, 'date', e.target.value)} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Invoice Amount</div>
-                  <input type="text" style={{ fontSize: 13, border: '1px solid #d9d9d9', borderRadius: 6, padding: '6px 10px', width: '100%', boxSizing: 'border-box' }}
-                    placeholder="e.g. 10,000.00" value={row.amount} onChange={e => updateFormRow(row.id, 'amount', e.target.value)} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    Invoice Proof
-                    <span style={{ background: '#e6f4ff', color: '#1677ff', fontSize: 11, padding: '1px 6px', borderRadius: 4 }}>AI OCR</span>
-                  </div>
-                  {row.proofFileName ? (
-                    <div style={{ width: 80, height: 80, border: '1px solid #d9d9d9', borderRadius: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 11, color: '#555', background: '#f5f5f5', gap: 4 }}
-                      onClick={() => handleProofUpload(row.id)}>
-                      <div style={{ width: 40, height: 40, background: '#d9d9d9', borderRadius: 4 }} />
-                      <div style={{ maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.proofFileName}</div>
-                    </div>
-                  ) : (
-                    <div style={{ width: 80, height: 80, border: '1px dashed #d9d9d9', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 24, color: '#bbb' }}
-                      onClick={() => handleProofUpload(row.id)}>+</div>
-                  )}
-                </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button style={{ width: 32, height: 32, borderRadius: '50%', background: '#ff4d4f', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    onClick={() => removeFormRow(row.id)}>−</button>
-                  {!isEdit && idx === invoiceFormRows.length - 1 && (
-                    <button style={{ width: 32, height: 32, borderRadius: '50%', background: '#00b96b', color: '#fff', fontSize: 20, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      onClick={addFormRow}>+</button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-            <button className="btn-default" onClick={() => setShowInvoiceDialog(false)}>Cancel</button>
-            <button className="btn-primary" onClick={handleInvoiceConfirm}>Confirm</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ── MAIN RENDER ──
-
-  return (
-    <div>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button className="btn-link" onClick={onBack}>← Back to AP Statement</button>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{data.id}</h2>
-        <span style={badge(currentStatus)}>{currentStatus}</span>
-        <span style={data.source === 'Vendor Portal'
-          ? { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-          : { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-        }>{data.source}</span>
-
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Payment Preparation actions */}
-          {isPaymentPrep && (
-            <>
-              <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowCancelDialog(true)}>Cancel</button>
-              <button className="btn-primary" onClick={() => {
-                setPaymentAmount(fmt(totalAmountPayable));
-                setShowConfirmPaymentDialog(true);
-              }}>Confirm &amp; Create Vendor Payment</button>
-            </>
-          )}
-          {/* Awaiting Comparison actions */}
-          {isAwaitingComparison && (
-            <>
-              <button className="btn-default" onClick={handleRefresh} disabled={refreshing}>
-                {refreshing ? 'Refreshing…' : '↻ Refresh'}
-              </button>
-              <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowRejectDialog(true)}>Reject</button>
-              <button className="btn-primary" onClick={() => {
-                setPaymentAmount(fmt(totalAmountPayable));
-                setShowConfirmPaymentDialog(true);
-              }} disabled={!allReady}>Confirm &amp; Create Vendor Payment</button>
-              {!allReady && (
-                <span style={{ fontSize: 12, color: '#cf1322', marginLeft: 8 }}>Resolve all Mismatched / Missed items first.</span>
-              )}
-            </>
-          )}
-          {/* Awaiting Re-bill actions */}
-          {isAwaitingRebill && (
-            <button className="btn-default" style={{ color: '#cf1322', borderColor: '#ffa39e' }} onClick={() => setShowCancelDialog(true)}>Cancel</button>
-          )}
-          {/* Pending Payment actions */}
-          {isPendingPayment && (
-            <>
-              <button className="btn-default" onClick={() => { setApAppNo(`APA${Date.now().toString().slice(-7)}`); setApAppAmount(''); setShowAddApAppDialog(true); }}>
-                + Add AP Application
-              </button>
-              <button className="btn-default" style={{ color: '#d46b08', borderColor: '#ffd591' }} onClick={() => setShowWriteOffDialog(true)}>Write Off</button>
-              <button className="btn-default" onClick={() => showToast('Export completed.')}>
-                <Download size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Export
-              </button>
-            </>
-          )}
-          {/* Partially Payment actions */}
-          {isPartiallyPayment && (
-            <>
-              <button className="btn-default" onClick={() => { setApAppNo(`APA${Date.now().toString().slice(-7)}`); setApAppAmount(''); setShowAddApAppDialog(true); }}>
-                + Add AP Application
-              </button>
-              <button className="btn-default" style={{ color: '#d46b08', borderColor: '#ffd591' }} onClick={() => setShowWriteOffDialog(true)}>Write Off</button>
-            </>
-          )}
-          {/* Terminal states — Export only */}
-          {isReadOnly && (
-            <button className="btn-default" onClick={() => showToast('Export completed.')}>
-              <Download size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />Export
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Terminal state banners */}
-      {isPaid && (
-        <div className="ap-terminal-banner paid">
-          <span className="banner-icon">✓</span>
-          <div>
-            <div>Payment Complete</div>
-            <div className="banner-detail">All amounts have been fully settled. Total paid: {fmt(statementPaidAmount)}</div>
-          </div>
-        </div>
-      )}
-      {isWrittenOff && (
-        <div className="ap-terminal-banner written-off">
-          <span className="banner-icon">⚠</span>
-          <div>
-            <div>Written Off</div>
-            <div className="banner-detail">
-              <strong>Reason:</strong> {data.writeOffReason || 'No reason provided'}<br />
-              <strong>Written off by:</strong> {data.writeOffBy || 'Unknown'} · <strong>Written off amount:</strong> {fmt(data.writeOffAmount || 0)}
-            </div>
-          </div>
-        </div>
-      )}
-      {isCanceled && (
-        <div className="ap-terminal-banner canceled">
-          <span className="banner-icon">✗</span>
-          <div>
-            <div>Statement Canceled</div>
-            <div className="banner-detail">
-              <strong>Reason:</strong> {data.cancelReason || 'No reason provided'}<br />
-              <strong>Canceled by:</strong> {data.cancelBy || 'Unknown'}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Awaiting Re-bill banner */}
-      {isAwaitingRebill && data.rejectReason && (
-        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
-          <span style={{ fontSize: 16 }}>⚠</span>
-          <div>
-            <strong>Statement rejected and sent back to vendor.</strong>
-            <div style={{ marginTop: 4, fontSize: 13, color: '#555' }}>
-              <strong>Reject Reason:</strong> {data.rejectReason}
-            </div>
-            <div style={{ marginTop: 2, fontSize: 12, color: '#999' }}>
-              Waiting for vendor to revise and resubmit via Vendor Portal.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Action done banners */}
-      {actionDone === 'rejected' && (
-        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
-          ✗ Statement rejected and sent back to vendor for correction.
-        </div>
-      )}
-      {actionDone === 'canceled' && (
-        <div className="alert" style={{ background: '#fff1f0', border: '1px solid #ffa39e', color: '#cf1322', marginBottom: 16 }}>
-          ✗ Statement has been canceled. All associated waybills and tickets have been released.
-        </div>
-      )}
-      {actionDone === 'written-off' && (
-        <div className="alert" style={{ background: '#fff7e6', border: '1px solid #ffd591', color: '#d46b08', marginBottom: 16 }}>
-          ⚠ Remaining balance has been written off. Statement is now closed.
-        </div>
-      )}
-      {actionDone === 'confirmed-payment' && (
-        <div className="alert" style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d', marginBottom: 16 }}>
-          ✓ Vendor Payment created successfully and pushed to HR system for processing.
-        </div>
-      )}
-
-      {/* Statement info */}
-      <div className="tms-card" style={{ marginBottom: 16 }}>
-        <div className="section-title" style={{ marginBottom: 12 }}>Statement Info</div>
-        <div className="ap-statement-info-grid">
-          {[
-            ['Statement NO', data.id],
-            ['Statement Status', currentStatus],
-            ['Statement Tax Mark', data.taxMark || 'VAT-ex'],
-            ['Total Amount Payable', fmt(totalAmountPayable)],
-            ['Total Invoice Amount', fmt(statementTotalInvoiceAmount)],
-            ['Paid Amount', fmt(statementPaidAmount)],
-            ['Vendor', data.vendor],
-            ['Create date', data.createdAt],
-            ['Create By', data.createdBy || 'Zhang Jialei'],
-          ].map(([label, value]) => (
-            <div className="ap-statement-info-item" key={label as string}>
-              <div className="ap-statement-info-label">{label}</div>
-              <div className="ap-statement-info-value">{value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Waybill / Claim ticket table */}
-      <div className={`tms-card${isReadOnly || isAwaitingRebill ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
-        <div className="section-title" style={{ marginBottom: 4 }}>
-          {isPaymentPrep ? 'Settlement Details' : 'Waybill List'}
-        </div>
-        <div className="ap-statement-tabs">
-          <button className={`tab-btn ${activeStatementTab === 'waybill' ? 'active' : ''}`}
-            onClick={() => setActiveStatementTab('waybill')}>
-            Waybill List ({data.waybills.length})
-          </button>
-          <button className={`tab-btn ${activeStatementTab === 'claim' ? 'active' : ''}`}
-            onClick={() => setActiveStatementTab('claim')}>
-            Claim Ticket ({claimTickets.length})
-          </button>
-          {/* Add buttons for Payment Preparation */}
-          {isPaymentPrep && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-              {activeStatementTab === 'waybill' && (
-                <button className="btn-default" style={{ fontSize: 12 }} onClick={() => showToast('Add Waybill dialog would open here.')}>
-                  <Plus size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />Add Waybill
-                </button>
-              )}
-              {activeStatementTab === 'claim' && (
-                <button className="btn-default" style={{ fontSize: 12 }} onClick={() => showToast('Add Ticket dialog would open here.')}>
-                  <Plus size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />Add Ticket
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-        {isAwaitingComparison && (
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
-            TMS contract prices are shown for comparison. Results are computed automatically.
-            {mismatchCount > 0 && (
-              <span style={{ marginLeft: 8, color: '#cf1322' }}>⚠ {mismatchCount} issue(s) to resolve</span>
-            )}
-          </div>
-        )}
-        {activeStatementTab === 'waybill' ? renderWaybillTable() : renderClaimTicketTable()}
-      </div>
-
-      {/* Amount Summary */}
-      <div className="tms-card" style={{ marginBottom: 16 }}>
-        <div className="section-title" style={{ marginBottom: 12 }}>Amount Summary</div>
-        {renderAmountSummaryTable()}
-      </div>
-
-      {/* Invoice section */}
-      {(canEditInvoice || isPendingPayment || isAwaitingRebill || isReadOnly) && (
-        <div className={`tms-card${isReadOnly || isAwaitingRebill ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-            <div className="section-title" style={{ margin: 0 }}>Invoice</div>
-            {canEditInvoice && (
-              <button className="btn-default" style={{ marginLeft: 'auto', fontSize: 12 }} onClick={openAddInvoice}>+ Add Invoice</button>
-            )}
-            {isPendingPayment && (
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#888' }}>Void Invoice available</span>
-            )}
-          </div>
-          {invoices.length === 0 ? (
-            <div style={{ fontSize: 13, color: '#999' }}>No invoice uploaded.</div>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Invoice No.</th>
-                  <th>Invoice Amount</th>
-                  <th>Invoice Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map(inv => (
-                  <tr key={inv.id}>
-                    <td style={{ fontSize: 13 }}>{inv.no}</td>
-                    <td style={{ fontSize: 13 }}>{inv.amount}</td>
-                    <td style={{ fontSize: 13 }}>{inv.date}</td>
-                    <td>
-                      <span style={inv.status === 'Verified'
-                        ? { background: '#f6ffed', color: '#389e0d', border: '1px solid #b7eb8f', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-                        : inv.status === 'Voided'
-                        ? { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12, textDecoration: 'line-through' }
-                        : { background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 }
-                      }>{inv.status}</span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        {canEditInvoice && inv.status !== 'Voided' && (
-                          <>
-                            <button className="btn-link" style={{ fontSize: 12 }} onClick={() => openEditInvoice(inv)}>Edit</button>
-                            <button className="btn-link" style={{ fontSize: 12, color: '#ff4d4f' }} onClick={() => setInvoices(prev => prev.filter(i => i.id !== inv.id))}>Delete</button>
-                          </>
-                        )}
-                        {isPendingPayment && inv.status !== 'Voided' && (
-                          <button className="btn-link" style={{ fontSize: 12, color: '#ff4d4f' }} onClick={() => handleVoidInvoice(inv.id)}>Void</button>
-                        )}
-                        {inv.status === 'Voided' && <span style={{ fontSize: 12, color: '#999' }}>Voided</span>}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* Supporting Proof */}
-      <div className={`tms-card${isReadOnly ? ' ap-readonly-overlay' : ''}`} style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          <div className="section-title" style={{ margin: 0 }}>Supporting Proof</div>
-          {!isReadOnly && !isAwaitingRebill && (
-            <button className="btn-default" style={{ marginLeft: 'auto', fontSize: 12 }}
-              onClick={() => {
-                const name = mockProofNames[proofFiles.length % mockProofNames.length];
-                setProofFiles(prev => [...prev, name]);
-              }}>+ Add Proof</button>
-          )}
-        </div>
-        {proofFiles.length === 0 ? (
-          <div style={{ fontSize: 13, color: '#999' }}>No proof uploaded.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
-            {proofFiles.map((f, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                <FileText size={14} color="#999" />
-                <span>{f}</span>
-                <a href="#" style={{ fontSize: 12, color: '#1677ff' }} onClick={e => e.preventDefault()}>Download</a>
-              </div>
+      <div>
+        {/* Items to be settled */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>* Items to be settled</div>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            {['Vendor Basic Amount', 'Vendor Additional Charge', 'Vendor Exception Fee', 'Reimbursement Expense'].map(item => (
+              <label key={item} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#333', cursor: 'not-allowed' }}>
+                <input type="checkbox" checked={stmt.settlementItems.includes(item)} disabled readOnly />
+                {item}
+              </label>
             ))}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Payment section — Pending Payment */}
-      {isPendingPayment && (linkedPayments.length > 0 || LINKED_PAYMENT[statementId]) && (() => {
-        const payments = linkedPayments.length > 0 ? linkedPayments : (LINKED_PAYMENT[statementId] || []);
-        return (
-          <div className="tms-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 12 }}>Payment</div>
-            {payments.map((payment, pi) => (
-              <div key={pi} style={{ marginBottom: pi < payments.length - 1 ? 16 : 0 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application No.</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#1677ff' }}>{payment.appNo}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Application Type</div>
-                    <span style={{ background: '#fff0f6', color: '#c41d7f', border: '1px solid #ffadd2', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{payment.appType}</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Amount</div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>{payment.amount}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Submitted At</div>
-                    <div style={{ fontSize: 13 }}>{payment.submittedAt}</div>
-                  </div>
-                </div>
-                {/* Progress stepper */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 16 }}>
-                  {(['Pending Review', 'Approved', 'Released'] as const).map((step, idx) => {
-                    const isCurrent = payment.status === step;
-                    const isPast = idx < ['Pending Review', 'Approved', 'Released'].indexOf(payment.status);
-                    return (
-                      <React.Fragment key={step}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <div style={{
-                            width: 28, height: 28, borderRadius: '50%',
-                            background: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#d9d9d9',
-                            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 13, fontWeight: 600,
-                          }}>{isPast ? '✓' : idx + 1}</div>
-                          <div style={{ fontSize: 12, color: isCurrent ? '#d46b08' : isPast ? '#00b96b' : '#aaa', whiteSpace: 'nowrap' }}>{step}</div>
-                        </div>
-                        {idx < 2 && <div style={{ flex: 1, height: 2, background: isPast ? '#00b96b' : '#e8e8e8', minWidth: 40, maxWidth: 80 }} />}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-                <div style={{ background: '#e6f4ff', border: '1px solid #91caff', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: '#0958d9', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <span>ⓘ</span>
-                  <span>This application is currently "{payment.hrStatus}". TMS will be notified automatically once payment is released.</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
-
-      {/* Payment section — Partially Payment */}
-      {isPartiallyPayment && PARTIAL_PAYMENT_DATA[statementId] && (() => {
-        const pp = PARTIAL_PAYMENT_DATA[statementId];
-        const unpaidTotal = pp.unpaidApplications.reduce((s, a) => s + a.amount, 0);
-        return (
-          <div className="tms-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 16 }}>Payment</div>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Paid Amount</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#389e0d' }}>{fmt(pp.paidAmount)}</div>
-              </div>
-              <div style={{ background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Outstanding Amount</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#d46b08' }}>{fmt(unpaidTotal)}</div>
-              </div>
-              <div style={{ background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Total Amount</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(data.vendorTotal)}</div>
-              </div>
-            </div>
-            {/* Paid applications */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#389e0d', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#389e0d', display: 'inline-block' }} />
-                Paid Vendor Payment Applications
-              </div>
-              <table className="data-table" style={{ width: '100%' }}>
-                <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Amount</th><th>Released At</th><th>Payment Proof</th></tr></thead>
-                <tbody>
-                  {pp.paidApplications.map(app => (
-                    <tr key={app.appNo}>
-                      <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
-                      <td style={{ textAlign: 'right', fontSize: 13, color: '#389e0d', fontWeight: 600 }}>{fmt(app.amount)}</td>
-                      <td style={{ fontSize: 13 }}>{app.releasedAt}</td>
-                      <td style={{ fontSize: 13 }}>
-                        <a href="#" style={{ color: '#1677ff' }} onClick={e => e.preventDefault()}>
-                          <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{app.proofFile}
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* Pending applications */}
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#d46b08', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d46b08', display: 'inline-block' }} />
-                Pending Vendor Payment Applications
-              </div>
-              <table className="data-table" style={{ width: '100%' }}>
-                <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Unpaid Amount</th><th>Status</th><th>Submitted At</th></tr></thead>
-                <tbody>
-                  {pp.unpaidApplications.map(app => (
-                    <tr key={app.appNo}>
-                      <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
-                      <td style={{ textAlign: 'right', fontSize: 13, color: '#d46b08', fontWeight: 600 }}>{fmt(app.amount)}</td>
-                      <td><span style={{ background: '#fff7e6', color: '#d46b08', border: '1px solid #ffd591', borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>{app.status}</span></td>
-                      <td style={{ fontSize: 13 }}>{app.submittedAt}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Payment section — Paid (terminal) */}
-      {isPaid && PAID_PAYMENT_DATA[statementId] && (() => {
-        const pp = PAID_PAYMENT_DATA[statementId];
-        return (
-          <div className="tms-card" style={{ marginBottom: 16 }}>
-            <div className="section-title" style={{ marginBottom: 16 }}>Payment</div>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-              <div style={{ background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 8, padding: '12px 20px', minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Total Paid</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#389e0d' }}>{fmt(pp.paidAmount)}</div>
-              </div>
-            </div>
-            <table className="data-table" style={{ width: '100%' }}>
-              <thead><tr><th>Application No.</th><th style={{ textAlign: 'right' }}>Amount</th><th>Released At</th><th>Release Proof</th></tr></thead>
-              <tbody>
-                {pp.apps.map(app => (
-                  <tr key={app.appNo}>
-                    <td style={{ fontSize: 13, fontWeight: 600, color: '#1677ff' }}>{app.appNo}</td>
-                    <td style={{ textAlign: 'right', fontSize: 13, color: '#389e0d', fontWeight: 600 }}>{fmt(app.amount)}</td>
-                    <td style={{ fontSize: 13 }}>{app.releasedAt}</td>
-                    <td style={{ fontSize: 13 }}>
-                      <a href="#" style={{ color: '#1677ff' }} onClick={e => e.preventDefault()}>
-                        <FileText size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />{app.proofFile}
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })()}
-
-      {/* Operation Log */}
-      <div className="tms-card" style={{ marginBottom: 16 }}>
-        <div className="section-title" style={{ marginBottom: 12 }}>Operation Log</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {allLogs.map((log, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: log.color, marginTop: 3, flexShrink: 0 }} />
+        {/* Total Amount Payable bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '12px 18px', background: '#f6f9ff', borderRadius: 6, border: '1px solid #d6e4ff', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#666', marginBottom: 2 }}>Total Amount Payable</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: isVP ? 24 : 0 }}>
               <div>
-                <span style={{ color: '#888', marginRight: 8 }}>{log.time}</span>
-                <span>{log.desc}</span>
-                <span style={{ color: '#888', marginLeft: 8 }}>· {log.actor}</span>
+                {isVP && <div style={{ fontSize: 11, color: '#999' }}>TMS Amount</div>}
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>PHP {fmt(tmsTotalPayable)}</div>
               </div>
+              {isVP && <>
+                <div>
+                  <div style={{ fontSize: 11, color: '#999' }}>VP Amount</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#555' }}>{fmt(vpTotalPayable)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: '#999' }}>Diff</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: tmsTotalPayable !== vpTotalPayable ? '#cf1322' : '#389e0d' }}>
+                    {tmsTotalPayable !== vpTotalPayable ? fmt(Math.abs(tmsTotalPayable - vpTotalPayable)) : '—'}
+                  </div>
+                </div>
+              </>}
             </div>
-          ))}
+          </div>
+          <div style={{ borderLeft: '1px solid #d6e4ff', height: 40 }} />
+          <div>
+            <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Statement Tax Mark</div>
+            <div style={{ display: 'flex', gap: 14 }}>
+              {(['Tax-inclusive', 'Tax-exclusive'] as const).map(m => (
+                <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, cursor: 'not-allowed' }}>
+                  <input type="radio" name="taxMark_detail" value={m} checked={stmt.taxMark === m} disabled readOnly />
+                  {m}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 3-column grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr 1px 1fr', border: '1px solid #f0f0f0', borderRadius: 6, overflow: 'hidden' }}>
+
+          {/* Col 1: Waybill Contract Cost */}
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, color: '#333', marginBottom: 10 }}>Waybill Contract Cost</div>
+            {isVP && (
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 4, paddingBottom: 6, borderBottom: '1px solid #f0f0f0', marginBottom: 6 }}>
+                <div />{colHdr('TMS')}{colHdr('VP')}{colHdr('Diff')}
+              </div>
+            )}
+            {amtRow('Subtotal', tmsWCC, isVP ? vpWCC : undefined, true)}
+            {amtRow('Vendor Basic Amount', tmsBasic, isVP ? vpBasic : undefined)}
+            {tmsPrePaid > 0 && amtRow('PrePaid Amount', tmsPrePaid, isVP ? vpPrePaid : undefined, false, true)}
+            {tmsAdditional > 0 && amtRow('Vendor Additional Charge', tmsAdditional, isVP ? vpAdditional : undefined)}
+            {tmsException  > 0 && amtRow('Vendor Exception Fee', tmsException, isVP ? vpException : undefined)}
+          </div>
+
+          <div style={{ background: '#f0f0f0' }} />
+
+          {/* Col 2: Claim */}
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, color: '#333', marginBottom: 10 }}>Claim</div>
+            {stmt.claims.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {stmt.claims.map(c => (
+                  <div key={c.no} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#555' }}>{c.type}</span>
+                    <span style={{ color: '#cf1322', fontWeight: 500 }}>−{fmt(c.amount)}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderTop: '1px solid #f0f0f0', paddingTop: 6, marginTop: 2, fontWeight: 600 }}>
+                  <span style={{ color: '#333' }}>Subtotal</span>
+                  <span style={{ color: '#cf1322' }}>−{fmt(claimTotal)}</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: 13 }}>
+                No claim deductions
+              </div>
+            )}
+          </div>
+
+          <div style={{ background: '#f0f0f0' }} />
+
+          {/* Col 3: Others (VAT, WHT) */}
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, color: '#333', marginBottom: 10 }}>Others</div>
+            {isVP && (
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 4, paddingBottom: 6, borderBottom: '1px solid #f0f0f0', marginBottom: 6 }}>
+                <div />{colHdr('TMS')}{colHdr('VP')}{colHdr('Diff')}
+              </div>
+            )}
+            {vatRate > 0 && amtRow(`VAT (${vatRate}%)`, tmsVAT, isVP ? vpVAT : undefined)}
+            {whtRate > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: isVP ? '2fr 1fr 1fr 1fr' : '2fr 1fr', gap: 4, alignItems: 'center', padding: '5px 0', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: 13, color: '#555' }}>WHT ({whtRate}%)</span>
+                <span style={{ fontSize: 13, textAlign: 'right', color: '#cf1322' }}>−{fmt(tmsWHT)}</span>
+                {isVP && <span style={{ fontSize: 13, textAlign: 'right', color: '#cf1322' }}>−{fmt(vpWHT)}</span>}
+                {isVP && <span style={{ fontSize: 13, textAlign: 'right', color: tmsWHT !== vpWHT ? '#cf1322' : '#389e0d' }}>
+                  {tmsWHT !== vpWHT ? fmt(Math.abs(tmsWHT - vpWHT)) : '—'}
+                </span>}
+              </div>
+            )}
+            {vatRate === 0 && whtRate === 0 && (
+              <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: 13 }}>
+                No tax applied
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    );
+  };
 
-      {/* ── Dialogs ── */}
+  // ── Invoice ────────────────────────────────────────────────────────────────
 
-      {/* Reject dialog (Awaiting Comparison) */}
-      {showRejectDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#cf1322' }}>Reject Statement</div>
-            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
-              Reject Reason <span style={{ color: '#ff4d4f' }}>*</span>
-            </label>
-            <textarea
-              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
-              placeholder="Explain the issue so the vendor can correct and resubmit."
-              value={rejectReason} onChange={e => setRejectReason(e.target.value)}
-            />
-            {!rejectReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-              <button className="btn-default" onClick={() => setShowRejectDialog(false)}>Cancel</button>
-              <button style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: rejectReason.trim() ? 'pointer' : 'not-allowed', opacity: rejectReason.trim() ? 1 : 0.5 }}
-                onClick={handleReject}>Reject</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cancel dialog */}
-      {showCancelDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#cf1322' }}>Cancel Statement</div>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
-              This will permanently cancel the statement. All associated waybills and tickets will be released and can be included in other statements.
-            </div>
-            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
-              Cancel Reason <span style={{ color: '#ff4d4f' }}>*</span>
-            </label>
-            <textarea
-              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
-              placeholder="Explain why this statement is being canceled."
-              value={cancelReason} onChange={e => setCancelReason(e.target.value)}
-            />
-            {!cancelReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-              <button className="btn-default" onClick={() => setShowCancelDialog(false)}>Back</button>
-              <button style={{ background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: cancelReason.trim() ? 'pointer' : 'not-allowed', opacity: cancelReason.trim() ? 1 : 0.5 }}
-                onClick={handleCancel}>Confirm Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Write Off dialog */}
-      {showWriteOffDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#d46b08' }}>Write Off Remaining Balance</div>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
-              This will write off the remaining unpaid balance and mark the statement as terminated. This action cannot be undone.
-            </div>
-            <div style={{ background: '#fff7e6', border: '1px solid #ffd591', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span>Total Amount:</span><strong>{fmt(data.vendorTotal)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span>Paid Amount:</span><strong style={{ color: '#389e0d' }}>{fmt(statementPaidAmount)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ffd591', paddingTop: 4 }}>
-                <span>Write Off Amount:</span><strong style={{ color: '#d46b08' }}>{fmt(data.vendorTotal - statementPaidAmount)}</strong>
-              </div>
-            </div>
-            <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 6 }}>
-              Write Off Reason <span style={{ color: '#ff4d4f' }}>*</span>
-            </label>
-            <textarea
-              style={{ width: '100%', height: 90, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
-              placeholder="Explain the reason for writing off the remaining balance."
-              value={writeOffReason} onChange={e => setWriteOffReason(e.target.value)}
-            />
-            {!writeOffReason.trim() && <div style={{ fontSize: 12, color: '#cf1322', marginTop: 4 }}>Reason is required.</div>}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-              <button className="btn-default" onClick={() => setShowWriteOffDialog(false)}>Back</button>
-              <button style={{ background: '#d46b08', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: writeOffReason.trim() ? 'pointer' : 'not-allowed', opacity: writeOffReason.trim() ? 1 : 0.5 }}
-                onClick={handleWriteOff}>Confirm Write Off</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm & Create Vendor Payment — full HR form */}
-      {showConfirmPaymentDialog && (() => {
-        // Build payment items from waybill data
-        const paymentItems = (() => {
-          const buckets: Record<string, number> = {};
-          data.waybills.forEach(w => w.items.forEach(item => {
-            const bucket = item.name;
-            buckets[bucket] = (buckets[bucket] || 0) + item.vendorAmount;
-          }));
-          return Object.entries(buckets).map(([type, amount]) => ({
-            type, amount,
-            vatRate: '7%', whtRate: '2%',
-            vat: Math.round(amount * 0.07), wht: Math.round(amount * 0.02),
-            invoiceNo: invoices[0]?.no || '',
-          }));
-        })();
-
-        // Deduction items from claim tickets
-        const deductionItems = claimTickets.map(t => ({
-          type: t.claimType,
-          amount: t.claimAmount,
-          vatRate: '7%', whtRate: '2%',
-          vat: Math.round(t.claimAmount * 0.07), wht: Math.round(t.claimAmount * 0.02),
-          refNo: t.ticketNo,
-        }));
-
-        const totalPayment = paymentItems.reduce((s, i) => s + i.amount, 0)
-          - deductionItems.reduce((s, i) => s + i.amount, 0);
-
-        const fieldLabel = (label: string, required = true) => (
-          <div style={{ fontSize: 12, color: '#777', marginBottom: 8 }}>
-            {required && <span style={{ color: '#ff4d4f', marginRight: 2 }}>*</span>}{label}
-          </div>
-        );
-
-        const selectStyle: React.CSSProperties = {
-          width: '100%', padding: '9px 32px 9px 12px', border: '1px solid #d9d9d9', borderRadius: 6,
-          fontSize: 13, background: '#fff', appearance: 'none',
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E\")",
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-          boxSizing: 'border-box', height: 38,
-        };
-
-        const inputStyle: React.CSSProperties = {
-          width: '100%', padding: '9px 12px', border: '1px solid #d9d9d9', borderRadius: 6,
-          fontSize: 13, boxSizing: 'border-box', height: 38,
-        };
-
-        const readonlyStyle: React.CSSProperties = {
-          ...inputStyle, background: '#fafafa', color: '#555',
-        };
-
-        const sectionTitle = (title: string) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 18px' }}>
-            <div style={{ width: 4, height: 18, background: '#00b96b', borderRadius: 2, flexShrink: 0 }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#222', letterSpacing: 0.1 }}>{title}</span>
-          </div>
-        );
-
-        const itemTableHeader = (cols: string[]) => (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.3fr 2fr', gap: '0 20px', padding: '0 0 8px', borderBottom: '1px solid #f0f0f0', marginBottom: 12 }}>
-            {cols.map(h => <div key={h} style={{ fontSize: 12, color: '#999', fontWeight: 600 }}>{h}</div>)}
-          </div>
-        );
-
-        const itemTableRow = (cells: React.ReactNode[], key: number) => (
-          <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1.4fr 1.3fr 2fr', gap: '0 20px', marginBottom: 12, alignItems: 'center' }}>
-            {cells}
-          </div>
-        );
-
-        return (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, overflowY: 'auto', padding: '40px 20px' }}>
-            <div style={{ background: '#fff', borderRadius: 12, width: '90vw', maxWidth: 1200, boxShadow: '0 12px 48px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
-
-              {/* Modal header */}
-              <div style={{ padding: '18px 32px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafafa' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 4, height: 20, background: '#00b96b', borderRadius: 2 }} />
-                  <span style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Create AP Application</span>
-                </div>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', padding: 6, borderRadius: 4, lineHeight: 1 }} onClick={() => setShowConfirmPaymentDialog(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div style={{ padding: '8px 32px 32px' }}>
-
-                {/* Row 1: 4 fields */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 28 }}>
-                  <div>
-                    {fieldLabel('Responsible Department')}
-                    <select style={selectStyle} defaultValue="ap">
-                      <option value="ap">Account Payable Department</option>
-                    </select>
-                  </div>
-                  <div>
-                    {fieldLabel('Payment Definition')}
-                    <select style={selectStyle} value={apPaymentDefinition} onChange={e => setApPaymentDefinition(e.target.value)}>
-                      <option value=""></option>
-                      <option value="vendor">Vendor Payment</option>
-                      <option value="freight">Freight Settlement</option>
-                    </select>
-                  </div>
-                  <div>
-                    {fieldLabel('Entity')}
-                    <select style={selectStyle} value={apEntity} onChange={e => setApEntity(e.target.value)}>
-                      <option value=""></option>
-                      <option value="ph">Inteluck Philippines</option>
-                      <option value="th">Inteluck Thailand</option>
-                      <option value="sg">Inteluck Singapore</option>
-                    </select>
-                  </div>
-                  <div>
-                    {fieldLabel('Business Unit')}
-                    <select style={selectStyle} value={apBusinessUnit} onChange={e => setApBusinessUnit(e.target.value)}>
-                      <option value=""></option>
-                      <option value="logistics">Logistics</option>
-                      <option value="trucking">Trucking</option>
-                      <option value="freight">Freight</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Row 2: 4 fields */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 20 }}>
-                  <div>
-                    {fieldLabel('Date of Needed')}
-                    <select style={selectStyle} value={apDateOfNeeded} onChange={e => setApDateOfNeeded(e.target.value)}>
-                      <option value=""></option>
-                      <option value="2026-05-07">2026-05-07</option>
-                      <option value="2026-05-14">2026-05-14</option>
-                      <option value="2026-05-21">2026-05-21</option>
-                    </select>
-                  </div>
-                  <div>
-                    {fieldLabel('Payment Category', false)}
-                    <div style={{ height: 38, display: 'flex', alignItems: 'center', fontSize: 13, fontWeight: 500, color: '#333' }}>Vendor Payment</div>
-                  </div>
-                  <div>
-                    {fieldLabel('Payment Identification L1')}
-                    <select style={selectStyle} defaultValue="logistics">
-                      <option value="logistics">Logistics &amp; Trucking</option>
-                      <option value="freight">Freight Forwarding</option>
-                    </select>
-                  </div>
-                  <div>
-                    {fieldLabel('Payment Identification L2')}
-                    <select style={selectStyle} value={apPaymentIdL2} onChange={e => setApPaymentIdL2(e.target.value)}>
-                      <option value=""></option>
-                      <option value="land">Land Transport</option>
-                      <option value="sea">Sea Freight</option>
-                      <option value="air">Air Freight</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Amount Information */}
-                {sectionTitle('Amount Information')}
-                <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: '20px 24px' }}>
-
-                  {/* Payment Amount summary */}
-                  <div style={{ display: 'flex', gap: 40, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
-                    <span style={{ color: '#888' }}>Payment Amount &nbsp;<strong style={{ color: '#00b96b', fontSize: 16 }}>{fmt(totalPayment)}</strong></span>
-                  </div>
-
-                  {/* Payment Items */}
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#444', marginBottom: 14 }}>Payment Item</div>
-                    {itemTableHeader(['* Payment Item Type', '* Net Amount', 'VAT Rate & WHT Rate', 'VAT & WHT', 'Invoice Number'])}
-                    {paymentItems.map((item, i) => itemTableRow([
-                      <input key="type" style={readonlyStyle} readOnly value={item.type} />,
-                      <input key="amt" style={readonlyStyle} readOnly value={fmt(item.amount)} />,
-                      <input key="rate" style={readonlyStyle} readOnly value={`${item.vatRate}, ${item.whtRate}`} />,
-                      <span key="vw" style={{ fontSize: 13, color: '#555' }}>{item.vat.toLocaleString()}, {item.wht.toLocaleString()}</span>,
-                      <input key="inv" style={inputStyle} placeholder="Invoice No." defaultValue={i === 0 ? (invoices[0]?.no || '') : ''} />,
-                    ], i))}
-                  </div>
-
-                  {/* Deduction Items */}
-                  {deductionItems.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#444', marginBottom: 14 }}>Deduction Item</div>
-                      {itemTableHeader(['* Deduction Item Type', '* Net Amount', 'VAT Rate & WHT Rate', 'VAT & WHT', 'Reference Number'])}
-                      {deductionItems.map((item, i) => itemTableRow([
-                        <input key="type" style={readonlyStyle} readOnly value={item.type} />,
-                        <input key="amt" style={readonlyStyle} readOnly value={fmt(item.amount)} />,
-                        <input key="rate" style={readonlyStyle} readOnly value={`${item.vatRate}, ${item.whtRate}`} />,
-                        <span key="vw" style={{ fontSize: 13, color: '#555' }}>{item.vat.toLocaleString()}, {item.wht.toLocaleString()}</span>,
-                        <input key="ref" style={readonlyStyle} readOnly value={item.refNo} />,
-                      ], i))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Payee Information */}
-                {sectionTitle('Payee Information')}
-                <div style={{ border: '1px solid #e8e8e8', borderRadius: 8, padding: '20px 24px' }}>
-                  <div style={{ display: 'flex', gap: 48, marginBottom: 20, fontSize: 13 }}>
-                    <span><span style={{ color: '#888' }}>Payee Type</span> &nbsp;<strong>External Vendor</strong></span>
-                    <span><span style={{ color: '#888' }}>Payee Name</span> &nbsp;<strong>{data.vendor}</strong></span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 20 }}>
-                    <div>
-                      {fieldLabel('Bank Name')}
-                      <select style={selectStyle} value={apBankName} onChange={e => setApBankName(e.target.value)}>
-                        <option value=""></option>
-                        <option value="bdo">BDO Unibank</option>
-                        <option value="bpi">Bank of the Philippine Islands</option>
-                        <option value="metrobank">Metrobank</option>
-                        <option value="scb">Standard Chartered</option>
-                      </select>
-                    </div>
-                    <div>
-                      {fieldLabel('Payee Account')}
-                      <select style={selectStyle} value={apPayeeAccount} onChange={e => setApPayeeAccount(e.target.value)}>
-                        <option value=""></option>
-                        <option value="1">**** 4521</option>
-                        <option value="2">**** 8834</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Supporting Documents */}
-                {sectionTitle('Supporting Documents')}
-                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                  {apSupportingDocs.map((doc, i) => (
-                    <div key={i} style={{ position: 'relative' }}>
-                      <div style={{
-                        width: 96, height: 96, border: '1px solid #e8e8e8', borderRadius: 8,
-                        background: '#fafafa', display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', gap: 6,
-                        fontSize: 11, color: '#999',
-                      }}>
-                        <FileText size={28} color="#bbb" />
-                        <span style={{ maxWidth: 84, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center', padding: '0 4px' }}>{doc}</span>
-                      </div>
-                      <button
-                        onClick={() => setApSupportingDocs(prev => prev.filter((_, j) => j !== i))}
-                        style={{ position: 'absolute', top: -7, right: -7, width: 20, height: 20, borderRadius: '50%', background: '#ff4d4f', border: '2px solid #fff', color: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                      >×</button>
-                    </div>
-                  ))}
-                  <div
-                    onClick={() => setApSupportingDocs(prev => [...prev, `document_${prev.length + 1}.pdf`])}
-                    style={{
-                      width: 96, height: 96, border: '1px dashed #d9d9d9', borderRadius: 8,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', fontSize: 32, color: '#ccc',
-                      transition: 'border-color 0.2s',
-                    }}
-                  >+</div>
-                </div>
-
-                {/* Footer */}
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 32, paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
-                  <button className="btn-default" style={{ minWidth: 100, height: 36 }} onClick={() => setShowConfirmPaymentDialog(false)}>Cancel</button>
-                  <button className="btn-primary" style={{ minWidth: 100, height: 36 }} onClick={handleConfirmPayment}>Confirm</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Add AP Application dialog */}
-      {showAddApAppDialog && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Add AP Application</div>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 16 }}>
-              Manually add a new HR payment application record for this statement.
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Application No.</label>
-              <input type="text" style={{ width: '100%', padding: '6px 10px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, boxSizing: 'border-box' }}
-                value={apAppNo} onChange={e => setApAppNo(e.target.value)} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 4 }}>Amount</label>
-              <input type="text" style={{ width: '100%', padding: '6px 10px', border: '1px solid #d9d9d9', borderRadius: 6, fontSize: 13, boxSizing: 'border-box' }}
-                placeholder="e.g. 25,000.00" value={apAppAmount} onChange={e => setApAppAmount(e.target.value)} />
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-              <button className="btn-default" onClick={() => setShowAddApAppDialog(false)}>Cancel</button>
-              <button className="btn-primary" onClick={handleAddApApp}
-                style={{ opacity: apAppNo.trim() && apAppAmount.trim() ? 1 : 0.5, cursor: apAppNo.trim() && apAppAmount.trim() ? 'pointer' : 'not-allowed' }}>
-                Add Application
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Invoice Add/Edit dialog */}
-      {renderInvoiceDialog()}
-
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 24, right: 24, background: '#fff', border: '1px solid #d9d9d9',
-          borderRadius: 8, padding: '12px 18px', maxWidth: 420, fontSize: 13, color: '#333',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)', zIndex: 2000,
-        }}>
-          {toast}
+  const renderInvoice = () => (
+    <div>
+      {stmt.invoices.length > 0 ? (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Invoice No.</th>
+              <th style={{ textAlign: 'right' }}>Invoice Amount</th>
+              <th>Invoice Date</th>
+              <th>Proof</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stmt.invoices.map(inv => (
+              <tr key={inv.no}>
+                <td style={{ color: '#1677ff', fontWeight: 600 }}>{inv.no}</td>
+                <td style={{ textAlign: 'right', fontSize: 13, fontWeight: 500 }}>{fmt(inv.amount)}</td>
+                <td style={{ fontSize: 12, color: '#1677ff' }}>{inv.date}</td>
+                <td style={{ fontSize: 12 }}>
+                  <span style={{ color: '#1677ff', cursor: 'pointer' }}>{inv.proof}</span>
+                </td>
+                <td>
+                  <button className="btn-link" style={{ color: '#cf1322', fontSize: 12 }}>Void</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div style={{ padding: '16px 0', textAlign: 'center', color: '#bbb', fontSize: 13, border: '1px dashed #e8e8e8', borderRadius: 4 }}>
+          No invoices added.
         </div>
       )}
     </div>
+  );
+
+  // ── Payment ────────────────────────────────────────────────────────────────
+
+  const renderPayment = () => (
+    <div>
+      {stmt.payments.length > 0 ? (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'right' }}>Payable Amount</th>
+              <th>Payment Application Status</th>
+              <th>Payment Application No.</th>
+              <th>Proof</th>
+              <th>Bank Name</th>
+              <th>Bank Account Name</th>
+              <th>Bank Account No.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stmt.payments.map((p, i) => (
+              <tr key={i}>
+                <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 13 }}>{fmt(p.payableAmount)}</td>
+                <td>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: p.status === 'Paid' ? '#389e0d' : '#d48806' }}>
+                    {p.status}
+                  </span>
+                </td>
+                <td style={{ fontSize: 12, color: '#1677ff' }}>{p.applicationNo}</td>
+                <td style={{ fontSize: 12 }}>
+                  {p.proof !== '—'
+                    ? <span style={{ color: '#1677ff', cursor: 'pointer' }}>{p.proof}</span>
+                    : <span style={{ color: '#bbb' }}>—</span>
+                  }
+                </td>
+                <td style={{ fontSize: 12 }}>{p.bankName}</td>
+                <td style={{ fontSize: 12 }}>{p.bankAccountName}</td>
+                <td style={{ fontSize: 12 }}>{p.bankAccountNo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div style={{ padding: '16px 0', textAlign: 'center', color: '#bbb', fontSize: 13, border: '1px dashed #e8e8e8', borderRadius: 4 }}>
+          No payment records.
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Operation Log ──────────────────────────────────────────────────────────
+
+  const renderOperationLog = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {stmt.operationLog.map((entry, i) => (
+        <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#d9d9d9', marginTop: 4, flexShrink: 0 }} />
+            {i < stmt.operationLog.length - 1 && (
+              <div style={{ width: 1, flex: 1, background: '#f0f0f0', marginTop: 2 }} />
+            )}
+          </div>
+          <div style={{ paddingBottom: i < stmt.operationLog.length - 1 ? 0 : 0 }}>
+            <div style={{ fontSize: 13, color: '#333', marginBottom: 2 }}>
+              <span style={{ color: '#999', marginRight: 10 }}>{entry.time}</span>
+              <span>{entry.action}</span>
+              <span style={{ color: '#1677ff', marginLeft: 8 }}>{entry.operator}</span>
+            </div>
+            {entry.detail && (
+              <div style={{ fontSize: 12, color: '#888', background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 4, padding: '4px 10px', marginTop: 4 }}>
+                Reject Reason: {entry.detail}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Reject / Confirm Dialogs ───────────────────────────────────────────────
+
+  const renderDialogs = () => (
+    <>
+      {showRejectDialog && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ width: 420 }}>
+            <div className="modal-header">
+              <span className="modal-title">Reject to Vendor</span>
+              <button className="modal-close" onClick={() => setShowRejectDialog(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: 13, color: '#555', marginBottom: 12 }}>
+                Please provide a reason for rejection. This will be sent to the vendor and the statement will be set to <strong>Awaiting Rebill</strong>.
+              </p>
+              <textarea
+                style={{ width: '100%', minHeight: 100, border: '1px solid #d9d9d9', borderRadius: 4, padding: 10, fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+                placeholder="Enter reject reason…"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+              />
+            </div>
+            <div className="modal-footer">
+              <button className="btn-default" onClick={() => setShowRejectDialog(false)}>Cancel</button>
+              <button className="btn-danger" disabled={!rejectReason.trim()} onClick={() => setShowRejectDialog(false)}>Confirm Reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmDialog && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ width: 400 }}>
+            <div className="modal-header">
+              <span className="modal-title">Confirm &amp; Create RFP</span>
+              <button className="modal-close" onClick={() => setShowConfirmDialog(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: 13, color: '#555' }}>
+                Confirm comparison result for <strong>{stmt.no}</strong> and create a Request for Payment?
+              </p>
+              <div style={{ background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 4, padding: '10px 14px', marginTop: 12, fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ color: '#666' }}>TMS Amount</span>
+                  <span style={{ fontWeight: 600 }}>PHP {fmt(tmsTotalPayable)}</span>
+                </div>
+                {isVP && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ color: '#666' }}>VP Amount</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(vpTotalPayable)}</span>
+                  </div>
+                )}
+                {isVP && tmsTotalPayable !== vpTotalPayable && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cf1322' }}>
+                    <span>Difference</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(Math.abs(tmsTotalPayable - vpTotalPayable))}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-default" onClick={() => setShowConfirmDialog(false)}>Cancel</button>
+              <button className="btn-primary" onClick={() => setShowConfirmDialog(false)}>Confirm &amp; Create RFP</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // ── Main Render ────────────────────────────────────────────────────────────
+
+  const CARD: React.CSSProperties = { background: '#fff', border: '1px solid #f0f0f0', borderRadius: 6, padding: '18px 20px', marginBottom: 14 };
+
+  return (
+    <>
+      {/* Top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <button className="btn-link" onClick={onBack} style={{ fontSize: 13 }}>← Back</button>
+        {renderTopActions()}
+      </div>
+
+      {/* Reject reason banner */}
+      {stmt.rejectReason && (
+        <div style={{ background: '#fff1f0', border: '1px solid #ffa39e', borderRadius: 6, padding: '10px 16px', marginBottom: 14, fontSize: 13, color: '#cf1322' }}>
+          <strong>Reject Reason:</strong> {stmt.rejectReason}
+        </div>
+      )}
+
+      {/* ── Basic Information ── */}
+      <div style={CARD}>
+        <SectionHeader title="Basic Information" />
+        <KVRow items={[
+          { label: 'Statement No.',      value: <strong>{stmt.no}</strong> },
+          { label: 'Statement Type',     value: stmt.statementType },
+          { label: 'Status',             value: <span style={{ ...BASE_BADGE, ...STATUS_STYLE[stmt.status] }}>{stmt.status}</span> },
+          { label: 'Vendor',             value: stmt.vendor },
+          { label: 'Statement Tax Mark', value: stmt.taxMark },
+        ]} />
+        <KVRow items={[
+          { label: 'Settlement Items',      value: stmt.settlementItems.length > 0 ? stmt.settlementItems.join(', ') : <span style={{ color: '#bbb' }}>—</span> },
+          { label: 'Reconciliation Period', value: stmt.reconciliationPeriod },
+          { label: 'Total Amount Payable',  value: <strong>{stmt.currency} {fmt(tmsTotalPayable)}</strong> },
+          { label: 'Total Invoice Amount',  value: stmt.invoices.length > 0 ? `${stmt.currency} ${fmt(stmt.invoices.reduce((s, i) => s + i.amount, 0))}` : <span style={{ color: '#bbb' }}>—</span> },
+          { label: 'Paid Amount',           value: stmt.payments.filter(p => p.status === 'Paid').reduce((s, p) => s + p.payableAmount, 0) > 0
+              ? `${stmt.currency} ${fmt(stmt.payments.filter(p => p.status === 'Paid').reduce((s, p) => s + p.payableAmount, 0))}`
+              : <span style={{ color: '#bbb' }}>—</span>
+          },
+        ]} />
+        <KVRow items={[
+          { label: 'Source',       value: <span style={{ fontSize: 12, borderRadius: 4, padding: '2px 8px', ...(isVP ? { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3' } : { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9' }) }}>{stmt.source}</span> },
+          { label: 'Create Date',  value: stmt.createDate },
+          { label: 'Create By',    value: stmt.createBy },
+          { label: '', value: '' },
+          { label: '', value: '' },
+        ]} />
+      </div>
+
+      {/* ── Settlement Details ── */}
+      <div style={CARD}>
+        <SectionHeader
+          title="Settlement Details"
+          action={isEditable ? <button className="btn-default" style={{ fontSize: 12 }}>Add Waybill</button> : undefined}
+        />
+
+        {/* Waybill list header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>
+            Waybill List ({stmt.waybills.length})
+          </span>
+          <span style={{ color: '#d9d9d9' }}>|</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#333' }}>
+            Claim Ticket List ({stmt.claims.length})
+          </span>
+        </div>
+
+        {renderWaybillTable()}
+
+        {/* Claim tickets (below waybill table) */}
+        {stmt.claims.length > 0 && (
+          <div style={{ marginTop: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 10 }}>
+              Claim Ticket List ({stmt.claims.length})
+            </div>
+            {renderClaimTable()}
+          </div>
+        )}
+      </div>
+
+      {/* ── Amount Summary ── */}
+      <div style={CARD}>
+        <SectionHeader title="Amount Summary" />
+        {renderAmountSummary()}
+      </div>
+
+      {/* ── Invoice ── */}
+      <div style={CARD}>
+        <SectionHeader
+          title="Invoice"
+          action={<button className="btn-default" style={{ fontSize: 12 }}>Add Invoice</button>}
+        />
+        {renderInvoice()}
+      </div>
+
+      {/* ── Payment ── */}
+      <div style={CARD}>
+        <SectionHeader title="Payment" />
+        {renderPayment()}
+      </div>
+
+      {/* ── Operation Log ── */}
+      <div style={CARD}>
+        <SectionHeader title="Operation Log" />
+        {renderOperationLog()}
+      </div>
+
+      {renderDialogs()}
+    </>
   );
 }
 
