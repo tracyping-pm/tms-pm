@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>折扣规则管理 - TMS系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+        }
+        
+        .table-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 500px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #2c3e50;
+        }
+        
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>折扣规则管理</h1>
+        
+        <div class="header">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索项目、路线...">
+                <button class="btn btn-secondary">搜索</button>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">新增折扣规则</button>
+        </div>
+        
+        <div class="message message-success" id="successMessage" style="display: none;">
+            操作成功！
+        </div>
+        
+        <div class="table-container">
+            <table id="discountTable">
+                <thead>
+                    <tr>
+                        <th>规则ID</th>
+                        <th>项目</th>
+                        <th>路线</th>
+                        <th>折扣类型</th>
+                        <th>折扣值</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 折扣规则数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑折扣规则模态框 -->
+    <div class="modal" id="discountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增折扣规则</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="discountForm">
+                <input type="hidden" id="ruleId">
+                
+                <div class="form-group">
+                    <label for="projectId">项目</label>
+                    <select id="projectId">
+                        <option value="PROJ001">京东物流</option>
+                        <option value="PROJ002">苏宁物流</option>
+                        <option value="PROJ003">顺丰速运</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="routeCode">路线编码</label>
+                    <input type="text" id="routeCode" placeholder="例如：BEIJING-SHANGHAI">
+                </div>
+                
+                <div class="form-group">
+                    <label for="origin">起点</label>
+                    <input type="text" id="origin" placeholder="例如：北京市">
+                </div>
+                
+                <div class="form-group">
+                    <label for="destination">终点</label>
+                    <input type="text" id="destination" placeholder="例如：上海市">
+                </div>
+                
+                <div class="form-group">
+                    <label for="discountType">折扣类型</label>
+                    <select id="discountType">
+                        <option value="0">固定折扣率</option>
+                        <option value="1">固定折扣金额</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="discountValue">折扣值</label>
+                    <input type="number" id="discountValue" step="0.01" placeholder="例如：0.9 或 50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="status">状态</label>
+                    <select id="status">
+                        <option value="1">启用</option>
+                        <option value="0">禁用</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let discountRules = [];
+        
+        // 加载折扣规则数据
+        async function loadDiscountRules() {
+            try {
+                const response = await fetch('src/database/discount_rules.json');
+                const data = await response.json();
+                discountRules = data.records;
+                renderDiscountTable();
+            } catch (error) {
+                console.error('加载折扣规则失败:', error);
+            }
+        }
+        
+        // 渲染折扣规则表格
+        function renderDiscountTable() {
+            const tbody = document.querySelector('#discountTable tbody');
+            tbody.innerHTML = '';
+            
+            discountRules.forEach(rule => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rule.id}</td>
+                    <td>${rule.project_name}</td>
+                    <td>${rule.origin} → ${rule.destination}</td>
+                    <td>${rule.discount_type_name}</td>
+                    <td>${rule.discount_type === 0 ? rule.discount_value * 100 + '%' : rule.discount_value + '元'}</td>
+                    <td><span class="status-badge ${rule.status === 1 ? 'status-active' : 'status-inactive'}">${rule.status_name}</span></td>
+                    <td>
+                        <button class="btn btn-success" onclick="editRule('${rule.id}')">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteRule('${rule.id}')">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 打开新增模态框
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '新增折扣规则';
+            document.getElementById('ruleId').value = '';
+            document.getElementById('projectId').value = 'PROJ001';
+            document.getElementById('routeCode').value = '';
+            document.getElementById('origin').value = '';
+            document.getElementById('destination').value = '';
+            document.getElementById('discountType').value = '0';
+            document.getElementById('discountValue').value = '';
+            document.getElementById('status').value = '1';
+            document.getElementById('discountModal').style.display = 'block';
+        }
+        
+        // 编辑规则
+        function editRule(id) {
+            const rule = discountRules.find(r => r.id === id);
+            if (rule) {
+                document.getElementById('modalTitle').textContent = '编辑折扣规则';
+                document.getElementById('ruleId').value = rule.id;
+                document.getElementById('projectId').value = rule.project_id;
+                document.getElementById('routeCode').value = rule.route_code;
+                document.getElementById('origin').value = rule.origin;
+                document.getElementById('destination').value = rule.destination;
+                document.getElementById('discountType').value = rule.discount_type.toString();
+                document.getElementById('discountValue').value = rule.discount_value;
+                document.getElementById('status').value = rule.status.toString();
+                document.getElementById('discountModal').style.display = 'block';
+            }
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('discountModal').style.display = 'none';
+        }
+        
+        // 保存折扣规则
+        document.getElementById('discountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('ruleId').value;
+            const projectId = document.getElementById('projectId').value;
+            const projectName = document.querySelector('#projectId option:checked').text;
+            const routeCode = document.getElementById('routeCode').value;
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const discountType = parseInt(document.getElementById('discountType').value);
+            const discountValue = parseFloat(document.getElementById('discountValue').value);
+            const status = parseInt(document.getElementById('status').value);
+            
+            if (!routeCode || !origin || !destination || !discountValue) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            const ruleData = {
+                id: id || 'DIS' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + (discountRules.length + 1).toString().padStart(3, '0'),
+                project_id: projectId,
+                project_name: projectName,
+                route_code: routeCode,
+                origin: origin,
+                destination: destination,
+                discount_type: discountType,
+                discount_type_name: discountType === 0 ? '固定折扣率' : '固定折扣金额',
+                discount_value: discountValue,
+                discount_description: discountType === 0 ? (discountValue * 100) + '折优惠' : '固定优惠' + discountValue + '元',
+                status: status,
+                status_name: status === 1 ? '启用' : '禁用',
+                created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            };
+            
+            if (id) {
+                // 编辑现有规则
+                const index = discountRules.findIndex(r => r.id === id);
+                discountRules[index] = ruleData;
+            } else {
+                // 新增规则
+                discountRules.push(ruleData);
+            }
+            
+            // 保存到文件（实际项目中应该调用API）
+            saveDiscountRules();
+            
+            // 刷新表格
+            renderDiscountTable();
+            closeModal();
+            
+            // 显示成功消息
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        });
+        
+        // 保存折扣规则到文件
+        function saveDiscountRules() {
+            // 实际项目中应该调用API保存数据
+            console.log('保存折扣规则:', discountRules);
+            // 这里模拟保存成功
+        }
+        
+        // 删除规则
+        function deleteRule(id) {
+            if (confirm('确定要删除这条折扣规则吗？')) {
+                discountRules = discountRules.filter(r => r.id !== id);
+                saveDiscountRules();
+                renderDiscountTable();
+                
+                // 显示成功消息
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('discountModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // 页面加载时加载数据
+        window.onload = loadDiscountRules;
+    </script>
+</body>
+</html>

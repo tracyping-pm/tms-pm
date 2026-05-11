@@ -1,0 +1,53 @@
+{
+  "tableName": "折扣规则表",
+  "records": [
+    {
+      "id": "DIS20260424001",
+      "project_id": "PROJ001",
+      "project_name": "京东物流",
+      "route_code": "BEIJING-SHANGHAI",
+      "origin": "北京市",
+      "destination": "上海市",
+      "discount_type": 0,
+      "discount_type_name": "固定折扣率",
+      "discount_value": 0.9,
+      "discount_description": "9折优惠",
+      "status": 1,
+      "status_name": "启用",
+      "created_at": "2026-04-24 10:00:00",
+      "updated_at": "2026-04-24 10:00:00"
+    },
+    {
+      "id": "DIS20260424002",
+      "project_id": "PROJ002",
+      "project_name": "苏宁物流",
+      "route_code": "GUANGZHOU-SHENZHEN",
+      "origin": "广州市",
+      "destination": "深圳市",
+      "discount_type": 1,
+      "discount_type_name": "固定折扣金额",
+      "discount_value": 50,
+      "discount_description": "固定优惠50元",
+      "status": 1,
+      "status_name": "启用",
+      "created_at": "2026-04-24 10:05:00",
+      "updated_at": "2026-04-24 10:05:00"
+    },
+    {
+      "id": "DIS20260424003",
+      "project_id": "PROJ001",
+      "project_name": "京东物流",
+      "route_code": "BEIJING-GUANGZHOU",
+      "origin": "北京市",
+      "destination": "广州市",
+      "discount_type": 0,
+      "discount_type_name": "固定折扣率",
+      "discount_value": 0.85,
+      "discount_description": "8.5折优惠",
+      "status": 0,
+      "status_name": "禁用",
+      "created_at": "2026-04-24 10:10:00",
+      "updated_at": "2026-04-24 10:10:00"
+    }
+  ]
+}

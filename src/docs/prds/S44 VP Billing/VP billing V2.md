@@ -1,73 +1,49 @@
-太棒了！作为 TMS PM，我非常赞同现在切入 UI/UX 交互设计阶段。这能帮助开发和 UI 团队直观地理解“盲核对”与“支付打通”机制的落地细节。
+1. 运单选择与数据流转 (Unbilled Waybills Selection & Data Flow)
+在 Unbilled waybills list 页面，为供应商提供“双轨制”的对账单创建入口，满足不同核对习惯的供应商。
 
-以下是我针对 **Vendor Portal (VP)** 和 **TMS** 核心页面的 UI/UX 交互设计方案，重点突出了数据隔离与对比效率：
+路径 A：上传自有数据 (Upload Own Data / Sync from Sheet)
 
----
+交互逻辑：新增 Sync from Sheet 或 Upload Excel 按钮。供应商下载标准 Sheet 模板，在模板中维护运单号及自有财务核算的价格数据。
 
-### 一、 Vendor Portal (VP) 端交互设计
+数据流转：供应商在模板编辑完成后点击同步（Sync），系统自动拉取 Sheet 中的数据并跳转至 Create Statement 页面。
 
-设计原则：**极简上传、绝对数据隔离、清晰的状态指引。**
+页面回显：Create Statement 页面内的运单列表及金额，将严格按照供应商上传的自有数据进行回显渲染。
 
-#### 1. 待出账运单列表 (Unbilled Waybills List)
-* **页面布局**：标准的表格视图。
-* **字段展示**：`Waybill No.`、`Unloading Time`、`Actual Truck Type`、`Origin`、`Destination`。
-    * **⚠️ UX 关键**：**绝对不可展示任何金额字段**（如 Contract Cost）。
-* **交互操作**：
-    * 左侧提供**复选框 (Checkbox)**，支持跨页勾选。
-    * 勾选后，顶部悬浮操作栏出现 `Generate Statement` 按钮，并在旁边提示已选的运单数量（例如：*5 Waybills Selected*）。
+路径 B：使用系统默认价格 (Select Unbilled Waybills)
 
-#### 2. 对账单数据填报页 (Upload Own Data / Create Statement)
-* **页面布局**：分为“基础信息”与“运单金额明细”两部分。
-* **基础信息模块**：
-    * 填写/上传发票：`Invoice No.`（支持多个）、`Invoice Proof`（必填，拖拽上传组件）。
-* **运单金额明细模块 (List View)**：
-    * 展示刚刚选中的运单列表。
-    * 为每行运单提供金额输入框：`Basic Amount`、`Additional Charge`、`Exception Fee`。
-    * **快捷交互 (Bulk Action)**：提供 `Download Template` 和 `Upload Excel` 功能。供应商可下载选定运单的空模板，本地填好金额后一键上传覆盖，提升大量运单的操作效率。
-* **底部操作**：`Save as Draft`（保存草稿）与 `Submit to TMS`（提交）。提交后弹出二次确认：“*提交后将无法修改，是否确认？*”
+交互逻辑：针对没有自有系统或接受 TMS 价格的供应商，支持在 Unbilled waybills list 中直接勾选目标运单，点击 Create Statement。
 
-#### 3. 供应商对账单列表 (Generated Statement List)
-* **页面布局**：列表视图，按创建时间倒序排列。
-* **字段展示**：`Statement No.`、`Total Submitted Amount`（供应商自己填报的总额）、`Creation Time`、`Status`。
-* **状态与交互 (Status & Actions)**：
-    * `Awaiting Comparison` (待比对)：仅可 `View`。
-    * `Awaiting Re-bill` (被 TMS 拒回)：高亮显示（如红字），操作列提供 `Edit` 按钮。点击进入后，顶部醒目展示 TMS 的 `Reject Reason`，供应商可修改金额后重新提交。
-    * `Pending Payment` / `Paid`：不可修改，仅供查询付款进度。
+数据流转：跳转至 Create Statement 页面后，系统自动带入被选中的运单，并使用 TMS 内部的系统价格（Contract Cost）作为结算基准。
 
----
+2. 发票上传模块升级 (Invoice Upload Module)
+强化发票信息的颗粒度，为后续的自动对账和税务合规（特别是泰国 TH 的 VAT/WHT 抵扣）提供结构化数据支撑。但为非必填
 
-### 二、 TMS 端交互设计
+新增字段与必填项：
 
-设计原则：**高亮差异、提升比对效率、闭环支付链路。**
+Invoice Number (发票号) - 必填，需走历史发票查重逻辑。
 
-#### 1. TMS 对账单列表 (AP Statement List)
-* **新增筛选器**：
-    * `Source`：下拉单选 `TMS Internal` 或 `Vendor Portal`。
-    * `Comparison Status`：下拉多选 `Match`、`Has Mismatch`、`Has Miss`。
-* **列表高亮**：若对账单包含 `Mismatch` 或 `Miss` 项，在 `Statement No.` 旁边增加一个黄色的 `[⚠️ 异常]` 徽标，提醒 FA 优先处理。
+Invoice Amount (发票金额) - 必填，支持多币种输入。
 
-#### 2. 对账单详情页 (Statement Detail) - 核心比对视图
-这是 FA 工作最高频的页面，必须针对“盲核对”做特殊设计。
+Invoice Date (发票日期) - 必填。
 
-* **运单明细模块 (Waybill Billing Information)**：采用**双行对比 (Split View)** 或 **双列对比 (Side-by-side)** 布局。
-    * **展示逻辑**：每一行结算项（如 Basic Amount），同时展示 **TMS Amount** 和 **Vendor Amount**。
-    * **状态徽章 (Badges)**：
-        * 金额完全一致：展示绿色的 `<Match>` 标签。
-        * 金额不一致：展示红色的 `<Mismatch>` 标签，并将差值标红（如 *Diff: ₱ 500*）。
-        * TMS 缺失该项（例如供应商报销过路费，但 TMS 无此 Additional Charge）：展示橙色的 `<Miss>` 标签。
-* **操作交互 (Actions)**：
-    * **单行修正 (Internal Modification)**：针对 Mismatch 的运单，提供 `Edit Amount` 按钮。点击后弹窗修改 TMS 金额，保存时**强制要求填写备注并上传凭证**（Operation Log 同步记录）。修改后差值为 0，标签自动变为 `<Match>`。
-    * **全局拒回 (Reject to VP)**：若差异无法内部消化，点击顶部的 `Reject` 按钮，弹窗强制填写 `Reject Reason`，随后该账单退回至 VP。
-    * **全局确认 (Confirm)**：**只有当列表中所有项均为 `<Match>` 时，`Confirm` 按钮才高亮可用**。点击后对账单状态变更为 `Pending Payment`。
+Attachment (发票附件) - 必填，支持 PDF、JPG、PNG 等主流格式。
 
-#### 3. 支付打通与列表 (Payment Integration & List)
-* **一键发起支付**：
-    * 在状态为 `Pending Payment` 的对账单详情页顶部，出现蓝色的 `Create Payment Request` 按钮。
-    * 点击后，系统自动提取对账单数据（Payee Name, Bank Account, Net Amount 等）填充至创建弹窗，FA 仅需补充必要审批信息即可提交。
-* **支付申请列表 (Payment Request List - 同步 HR)**：
-    * **列表字段**：`Payment No.`、`Associated Statement No.`、`Amount`、`HR Status` (如 Pending Approval, Released, Closed)。
-    * **状态联动**：一旦此处列表的 `HR Status` 变为 `Released` / `Closed`，系统自动将对应的 AP Statement 状态更新为 `Paid`，并在 Operation Log 中打上系统日志：“*Status auto-updated to Paid via HR Payment integration.*”
+OCR 智能识别辅助：
 
----
+交互优化：供应商上传 Attachment 后，系统自动触发 OCR（光学字符识别）服务，尝试提取并自动填充 Invoice Number、Invoice Amount 和 Invoice Date。
 
-这个 UI/UX 框架旨在最大程度减少双方的沟通摩擦成本。针对 TMS 详情页的比对视图，你倾向于使用**上下双行展示（TMS在上，Vendor在下）**，还是**左右双列展示（左TMS，右Vendor）**来呈现 Mismatch 的金额？
+兜底机制：若 OCR 识别失败或识别有误，供应商可随时手动覆写（Override）这些字段。
+
+3. 费用抵扣扩展 (Select Claim Ticket Tab)
+在 Create Statement 页面的明细区域，引入 Claim Ticket 抵扣逻辑，实现正向运费与逆向扣款的结算闭环。
+
+Tab 结构：在底部的明细列表中，原有的 Waybill List 旁边新增一个 Select Claim Ticket Tab。
+
+数据范围与校验：
+
+点击 Add Claim Ticket，弹窗仅展示状态严格为 For Deduction（待扣款）且 Responsible Party 为当前供应商的工单。
+
+总额计算：对账单的最终结算总额（Total Amount Payable）需自动减去勾选的 Claim Ticket 扣款金额，允许选择是否含税，选择WHT,VAT的税率。 且展示每个结算项的总额（包含basic Amount, Additional charge,exception fee, Reimbursement )
+
+
+在发票上传环节，如果供应商填写的 Invoice Amount（发票金额）与当前对账单中所有运单累加出来的 Total Submitted Amount（核算总额）不一致，系统给一个 Warning 提示并允许其提交审核
