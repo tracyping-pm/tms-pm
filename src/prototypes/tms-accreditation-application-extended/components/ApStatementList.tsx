@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getAllApStatements, formatApDateTime, type SyncedApStmtStatus } from '../../../common/apStatementSync';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -12,7 +13,7 @@ export type ApStatementStatus =
   | 'Written Off'
   | 'Canceled';
 
-type Source = 'Vendor Portal' | 'Intelal';
+type Source = 'Vendor Portal' | 'Internal';
 type StatementType = 'Standard' | 'Standalone';
 type SettlementItem =
   | 'Basic Amount'
@@ -84,7 +85,7 @@ const SAMPLE: Row[] = [
   },
   {
     no: 'APVS2604004',
-    source: 'Intelal',
+    source: 'Internal',
     vendorName: 'Laguna Logistics Corp.',
     settlementItems: ['Basic Amount'],
     totalAmountPayable: 52800,
@@ -97,7 +98,7 @@ const SAMPLE: Row[] = [
   },
   {
     no: 'APVS2604005',
-    source: 'Intelal',
+    source: 'Internal',
     vendorName: 'Laguna Logistics Corp.',
     settlementItems: ['Basic Amount', 'Vendor Additional Charge'],
     totalAmountPayable: 99000,
@@ -123,7 +124,7 @@ const SAMPLE: Row[] = [
   },
   {
     no: 'APVS2603002',
-    source: 'Intelal',
+    source: 'Internal',
     vendorName: 'SMC Logistics',
     settlementItems: ['Basic Amount'],
     totalAmountPayable: 32000,
@@ -136,7 +137,7 @@ const SAMPLE: Row[] = [
   },
   {
     no: 'APVS2603003',
-    source: 'Intelal',
+    source: 'Internal',
     vendorName: 'Cebu Trans Lines',
     settlementItems: ['Basic Amount', 'Vendor Additional Charge', 'Vendor Exception Fee'],
     totalAmountPayable: 15500,
@@ -164,7 +165,7 @@ const STATUS_STYLE: Record<ApStatementStatus, React.CSSProperties> = {
 
 const SOURCE_STYLE: Record<Source, React.CSSProperties> = {
   'Vendor Portal': { background: '#f0fcf4', color: '#00b96b', border: '1px solid #87e8a3', borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' },
-  'Intelal':       { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
+  'Internal':       { background: '#f5f5f5', color: '#595959', border: '1px solid #d9d9d9', borderRadius: 4, padding: '2px 8px', fontSize: 12 },
 };
 
 const BASE_BADGE: React.CSSProperties = { borderRadius: 4, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap' };
@@ -190,12 +191,47 @@ function isEditable(status: ApStatementStatus) {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
+// Map synced status (already TMS canonical) to ApStatementStatus
+function toApStatus(s: SyncedApStmtStatus): ApStatementStatus {
+  return s as ApStatementStatus;
+}
+
 function ApStatementList({ onCreateNew, onViewDetail, onEdit }: Props) {
   const [filterNo, setFilterNo] = useState('');
   const [filterVendor, setFilterVendor] = useState('');
   const [filterSource, setFilterSource] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+
+  // Track localStorage updates from the VP tab
+  const [storageVer, setStorageVer] = useState(0);
+  useEffect(() => {
+    const h = (e: StorageEvent) => { if (e.key === 'ap-statements-sync') setStorageVer(v => v + 1); };
+    window.addEventListener('storage', h);
+    return () => window.removeEventListener('storage', h);
+  }, []);
+
+  const sampleNos = useMemo(() => new Set(SAMPLE.map(r => r.no)), []);
+
+  // Rows from VP-submitted statements (deduplicated against SAMPLE)
+  const syncedRows = useMemo((): Row[] => {
+    return getAllApStatements()
+      .filter(s => !sampleNos.has(s.no))
+      .map(s => ({
+        no: s.no,
+        source: s.source,
+        vendorName: s.vendorName,
+        settlementItems: (s.settlementItems || []) as SettlementItem[],
+        totalAmountPayable: s.totalVpAmount,
+        currency: 'PHP',
+        statementType: s.statementType,
+        waybillCount: s.waybillCount,
+        invoiceNo: '—',
+        status: toApStatus(s.status),
+        createdAt: formatApDateTime(s.createdAt),
+      }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageVer, sampleNos]);
 
   const handleReset = () => {
     setFilterNo('');
@@ -205,7 +241,9 @@ function ApStatementList({ onCreateNew, onViewDetail, onEdit }: Props) {
     setFilterStatus('');
   };
 
-  const filtered = SAMPLE.filter(r => {
+  const ALL_ROWS = [...syncedRows, ...SAMPLE];
+
+  const filtered = ALL_ROWS.filter(r => {
     if (filterNo && !r.no.toLowerCase().includes(filterNo.toLowerCase())) return false;
     if (filterVendor && !r.vendorName.toLowerCase().includes(filterVendor.toLowerCase())) return false;
     if (filterSource && r.source !== filterSource) return false;
@@ -240,7 +278,7 @@ function ApStatementList({ onCreateNew, onViewDetail, onEdit }: Props) {
         <select className="filter-select" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
           <option value="">Source: All</option>
           <option value="Vendor Portal">Vendor Portal</option>
-          <option value="Intelal">Intelal</option>
+          <option value="Internal">Internal</option>
         </select>
         <select className="filter-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
           <option value="">Statement Type: All</option>

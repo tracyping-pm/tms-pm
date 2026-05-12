@@ -13,6 +13,7 @@ export interface NewStatementData {
   totalSubmittedAmount: number;
   createdAt: string;
   isDraft?: boolean;
+  settlementItems: string[];
   // Full snapshot for the detail page
   waybills: WaybillData[];
   claims: ClaimData[];
@@ -293,6 +294,12 @@ function BillableCreateStatementForm({ prefillWaybillNos, billableWaybills, onBa
     totalSubmittedAmount: totalAmountPayable,
     createdAt: new Date().toISOString(),
     isDraft,
+    settlementItems: [
+      ...(includeBasic ? ['Basic Amount'] : []),
+      ...(includeAdditional ? ['Vendor Additional Charge'] : []),
+      ...(includeException ? ['Vendor Exception Fee'] : []),
+      ...(includeReimbursement ? ['Reimbursement Expense'] : []),
+    ],
     waybills: addedWaybills,
     claims: addedClaims,
     taxMark,

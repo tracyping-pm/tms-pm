@@ -18,6 +18,7 @@ import './style.css';
 
 import React, { useState } from 'react';
 import { getAllApplications } from '../../common/prepaidApplicationSync';
+import { upsertApStatement, getApStatement, tmsStatusToVpStatus } from '../../common/apStatementSync';
 
 import VendorPortalShell from './components/VendorPortalShell';
 
@@ -165,26 +166,6 @@ const Component = function VendorPortal() {
   };
 
   const handleBillableStatementCreate = (data: NewStatementData) => {
-    if (!data.isDraft) {
-      // Only submitted statements move waybills into Statement Pending.
-      setPendingWaybills(prev => [...new Set([...prev, ...data.waybillNos])]);
-    }
-    setSelectedWaybills([]);
-    setUnbilledView('list');
-    // Add new statement to My Statements list
-    const newRow: StatementRow = {
-      no: data.statementNo,
-      source: 'Self-Created',
-      totalSubmittedAmount: data.totalSubmittedAmount,
-      currency: 'PHP',
-      statementType: data.statementType,
-      waybillCount: data.waybillNos.length,
-      invoiceNo: '—',
-      status: data.isDraft ? 'Draft' : 'Awaiting Comparison',
-      createdAt: data.createdAt.slice(0, 16).replace('T', ' '),
-    };
-    setExtraStatements(prev => [newRow, ...prev]);
-    // Persist a snapshot so the Detail page can render the user-created statement.
     const snapshot: StatementMockData = {
       source: 'Self-Created',
       reconciliationPeriod: data.reconciliationPeriod,
@@ -220,8 +201,65 @@ const Component = function VendorPortal() {
       vat: data.vatAmount,
       wht: data.whtAmount,
     };
+
+    if (!data.isDraft) {
+      // Submitted: persist to localStorage so TMS can see it.
+      setPendingWaybills(prev => [...new Set([...prev, ...data.waybillNos])]);
+      upsertApStatement({
+        no: data.statementNo,
+        vendorName: 'Manila Freight Co.',
+        source: 'Vendor Portal',
+        status: 'Awaiting Comparison',
+        statementType: data.statementType,
+        reconciliationPeriod: data.reconciliationPeriod,
+        taxMark: data.taxMark,
+        vatRate: data.vatRate,
+        whtRate: data.whtRate,
+        vatAmount: data.vatAmount,
+        whtAmount: data.whtAmount,
+        settlementItems: data.settlementItems,
+        totalVpAmount: data.totalSubmittedAmount,
+        waybillCount: data.waybillNos.length,
+        waybills: data.waybills.map(w => ({
+          no: w.no,
+          positionTime: w.positionTime,
+          unloadingTime: w.unloadingTime,
+          truckType: w.truckType,
+          origin: w.origin,
+          destination: w.destination,
+          basicAmount: w.basicAmount,
+          additionalCharge: w.additionalCharge,
+          exceptionFee: w.exceptionFee,
+          reimbursement: w.reimbursement,
+        })),
+        claims: data.claims.map(c => ({ no: c.no, type: c.type, amount: c.amount, waybillNo: c.waybillNo })),
+        createdAt: data.createdAt,
+        submittedAt: new Date().toISOString(),
+        operationLogs: [{ time: new Date().toISOString(), actor: 'Manila Freight Co.', action: 'Submitted the AP statement' }],
+      });
+      // StatementList reads submitted statements from localStorage — no need to add to extraStatements.
+    } else {
+      // Draft: keep in React state only.
+      const newRow: StatementRow = {
+        no: data.statementNo,
+        source: 'Self-Created',
+        totalSubmittedAmount: data.totalSubmittedAmount,
+        currency: 'PHP',
+        statementType: data.statementType,
+        waybillCount: data.waybillNos.length,
+        invoiceNo: '—',
+        status: 'Draft',
+        createdAt: data.createdAt.slice(0, 16).replace('T', ' '),
+      };
+      setExtraStatements(prev => [newRow, ...prev]);
+      setExtraStatementData(prev => ({ ...prev, [data.statementNo]: snapshot }));
+    }
+
+    // Always keep snapshot so StatementDetail can fall back to it
     setExtraStatementData(prev => ({ ...prev, [data.statementNo]: snapshot }));
-    // Navigate to My Statements
+
+    setSelectedWaybills([]);
+    setUnbilledView('list');
     setMenu('my-statements');
     setStatementView('list');
     if (data.isDraft) {
@@ -255,7 +293,9 @@ const Component = function VendorPortal() {
   // --- My Statements handlers ---
   const handleOpenStatementDetail = (no: string, status: StatementStatus) => {
     setOpenedStmtNo(no);
-    setOpenedStmtStatus(status);
+    // Use live status from sync if available (TMS may have updated it)
+    const synced = getApStatement(no);
+    setOpenedStmtStatus(synced ? tmsStatusToVpStatus(synced.status) as StatementStatus : status);
     setStatementView('detail');
   };
 
@@ -365,14 +405,77 @@ const Component = function VendorPortal() {
             />
           </>
         );
-      case 'detail':
+      case 'detail': {
+        // Build extraData from localStorage for synced statements, fall back to in-memory snapshot
+        const syncedStmt = getApStatement(openedStmtNo);
+        let detailExtraData = extraStatementData[openedStmtNo];
+        if (syncedStmt && !detailExtraData) {
+          detailExtraData = {
+            source: 'Self-Created',
+            reconciliationPeriod: syncedStmt.reconciliationPeriod,
+            taxMark: syncedStmt.taxMark,
+            totalAmountPayable: syncedStmt.totalVpAmount,
+            createDate: syncedStmt.createdAt.slice(0, 10),
+            waybills: syncedStmt.waybills.map(w => ({
+              no: w.no,
+              waybillAmount: w.basicAmount + w.additionalCharge + w.exceptionFee + w.reimbursement,
+              basicAmount: w.basicAmount,
+              prepaidAmount: 0,
+              additionalCharge: w.additionalCharge,
+              exceptionFee: w.exceptionFee,
+              reimbursement: w.reimbursement,
+              positionTime: w.positionTime,
+              unloadingTime: w.unloadingTime,
+              truckType: w.truckType,
+              origin: w.origin,
+              destination: w.destination,
+            })),
+            claimTickets: syncedStmt.claims.map(c => ({
+              ticketNo: c.no,
+              claimType: c.type,
+              relatedWaybill: c.waybillNo,
+              claimAmount: c.amount,
+            })),
+            waybillContractCost: syncedStmt.waybills.reduce(
+              (s, w) => s + w.basicAmount + w.additionalCharge + w.exceptionFee + w.reimbursement, 0
+            ),
+            vendorBasicAmount: syncedStmt.waybills.reduce((s, w) => s + w.basicAmount, 0),
+            prepaidAmount: 0,
+            vendorExceptionFee: syncedStmt.waybills.reduce((s, w) => s + w.exceptionFee, 0),
+            vendorAdditionalCharge: syncedStmt.waybills.reduce((s, w) => s + w.additionalCharge, 0),
+            kpiClaim: syncedStmt.claims.reduce((s, c) => s + c.amount, 0),
+            vat: syncedStmt.vatAmount,
+            wht: syncedStmt.whtAmount,
+            rejectReason: syncedStmt.rejectReason,
+            operationLog: (syncedStmt.operationLogs || []).map(l => ({
+              timestamp: l.time.slice(0, 16).replace('T', ' '),
+              action: l.action,
+              operator: l.actor,
+              subLine: l.note ? `Reason: ${l.note}` : undefined,
+            })),
+          };
+        } else if (syncedStmt && detailExtraData) {
+          // Merge in reject reason and operation log from sync
+          detailExtraData = {
+            ...detailExtraData,
+            rejectReason: syncedStmt.rejectReason ?? detailExtraData.rejectReason,
+            operationLog: syncedStmt.operationLogs
+              ? syncedStmt.operationLogs.map(l => ({
+                  timestamp: l.time.slice(0, 16).replace('T', ' '),
+                  action: l.action,
+                  operator: l.actor,
+                  subLine: l.note ? `Reason: ${l.note}` : undefined,
+                }))
+              : detailExtraData.operationLog,
+          };
+        }
         return (
           <StatementDetailView
             no={openedStmtNo}
             status={openedStmtStatus}
             onBack={() => setStatementView('list')}
             onSubmitToTMS={handleSubmitToTMS}
-            extraData={extraStatementData[openedStmtNo]}
+            extraData={detailExtraData}
             onEdit={
               openedStmtStatus === 'Draft' || openedStmtStatus === 'Awaiting Re-bill'
                 ? () => handleEditStatement(openedStmtNo, openedStmtStatus)
@@ -380,6 +483,7 @@ const Component = function VendorPortal() {
             }
           />
         );
+      }
       case 'edit':
         return (
           <CreateStatementForm

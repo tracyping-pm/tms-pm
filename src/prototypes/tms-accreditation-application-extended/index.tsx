@@ -23,10 +23,11 @@ import CreatePrepaidForm from './components/CreatePrepaidForm';
 import ApStatementList, { type ApStatementStatus } from './components/ApStatementList';
 import ApStatementDetail from './components/ApStatementDetail';
 import CreateApStatementForm from './components/CreateApStatementForm';
+import WaybillBillingDetail from './components/WaybillBillingDetail';
 
 type ActiveMenu = 'accreditation' | 'ap-statement';
 type PrepaidView = 'list' | 'detail' | 'create';
-type ApView = 'list' | 'detail' | 'create' | 'edit';
+type ApView = 'list' | 'detail' | 'create' | 'edit' | 'waybill';
 
 const Component = function TmsPrepaidApplication() {
   const [activeMenu, setActiveMenu] = useState<ActiveMenu>('accreditation');
@@ -39,6 +40,7 @@ const Component = function TmsPrepaidApplication() {
   const [apView, setApView] = useState<ApView>('list');
   const [openedStatementId, setOpenedStatementId] = useState('');
   const [openedStatementStatus, setOpenedStatementStatus] = useState<ApStatementStatus>('Awaiting Comparison');
+  const [openedWaybillNo, setOpenedWaybillNo] = useState('');
 
   const handleMenuChange = (key: string) => {
     const menu = key as ActiveMenu;
@@ -88,6 +90,14 @@ const Component = function TmsPrepaidApplication() {
           <ApStatementDetail
             statementId={openedStatementId}
             onBack={() => setApView('list')}
+            onViewWaybill={(no) => { setOpenedWaybillNo(no); setApView('waybill'); }}
+          />
+        );
+      case 'waybill':
+        return (
+          <WaybillBillingDetail
+            waybillNo={openedWaybillNo}
+            onBack={() => setApView('detail')}
           />
         );
       case 'create':
@@ -115,6 +125,7 @@ const Component = function TmsPrepaidApplication() {
     }
     if (activeMenu === 'ap-statement') {
       if (apView === 'detail') return ['AP Statement', 'AP Statement List', openedStatementId];
+      if (apView === 'waybill') return ['AP Statement', openedStatementId, 'Waybill', openedWaybillNo];
       if (apView === 'create') return ['AP Statement', 'AP Statement List', 'Create AP Statement'];
       if (apView === 'edit') return ['AP Statement', 'AP Statement List', openedStatementId, 'Edit'];
       return ['AP Statement', 'AP Statement List'];

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getAllApStatements, tmsStatusToVpStatus } from '../../../common/apStatementSync';
 
 interface Props {
   onOpenDetail: (no: string, status: Status) => void;
@@ -167,13 +168,60 @@ function StatementList({ onOpenDetail, onEdit, statusOverrides = {}, extraRows =
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
 
-  const ALL_ROWS = [...extraRows, ...SAMPLE];
+  // Refresh when TMS updates localStorage from the other tab
+  const [storageVer, setStorageVer] = useState(0);
+  useEffect(() => {
+    const h = (e: StorageEvent) => { if (e.key === 'ap-statements-sync') setStorageVer(v => v + 1); };
+    window.addEventListener('storage', h);
+    return () => window.removeEventListener('storage', h);
+  }, []);
+
+  const sampleNos = useMemo(() => new Set(SAMPLE.map(r => r.no)), []);
+
+  // Rows from VP-submitted statements in localStorage
+  const syncedRows = useMemo((): Row[] => {
+    return getAllApStatements()
+      .filter(s => !sampleNos.has(s.no))
+      .map(s => ({
+        no: s.no,
+        source: 'Self-Created' as Source,
+        totalSubmittedAmount: s.totalVpAmount,
+        currency: 'PHP',
+        statementType: s.statementType,
+        waybillCount: s.waybillCount,
+        invoiceNo: '—',
+        status: tmsStatusToVpStatus(s.status) as Status,
+        createdAt: s.createdAt.slice(0, 16).replace('T', ' '),
+        rejectReason: s.rejectReason,
+      }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageVer, sampleNos]);
+
+  // Status overrides from localStorage (for SAMPLE rows that may have been updated)
+  const syncStatusOverrides = useMemo((): Record<string, Status> => {
+    const map: Record<string, Status> = {};
+    for (const s of getAllApStatements()) {
+      map[s.no] = tmsStatusToVpStatus(s.status) as Status;
+      // Also carry reject reason if any
+    }
+    return map;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageVer]);
+
+  const allOverrides = { ...syncStatusOverrides, ...statusOverrides };
+
+  // Extra rows from parent that aren't already in sync (i.e. draft-only rows)
+  const syncNos = useMemo(() => new Set(syncedRows.map(r => r.no)), [syncedRows]);
+  const draftExtraRows = extraRows.filter(r => !syncNos.has(r.no));
+
+  const ALL_ROWS = [...syncedRows, ...draftExtraRows, ...SAMPLE];
 
   const filtered = ALL_ROWS.filter(r => {
+    const effectiveStatus = allOverrides[r.no] ?? r.status;
     if (filterStatementNo && !r.no.toLowerCase().includes(filterStatementNo.toLowerCase())) return false;
     if (filterSource && r.source !== filterSource) return false;
     if (filterInvoiceNo && !r.invoiceNo.toLowerCase().includes(filterInvoiceNo.toLowerCase())) return false;
-    if (filterStatus && r.status !== filterStatus) return false;
+    if (filterStatus && effectiveStatus !== filterStatus) return false;
     if (filterType && r.statementType !== filterType) return false;
     return true;
   });
@@ -256,7 +304,10 @@ function StatementList({ onOpenDetail, onEdit, statusOverrides = {}, extraRows =
         </thead>
         <tbody>
           {filtered.map(r => {
-            const effectiveStatus: Status = statusOverrides[r.no] ?? r.status;
+            const effectiveStatus: Status = allOverrides[r.no] ?? r.status;
+            // For synced rows, pick up rejectReason from localStorage
+            const syncEntry = getAllApStatements().find(s => s.no === r.no);
+            const effectiveRejectReason = syncEntry?.rejectReason ?? r.rejectReason;
             const isDraftOrRebill = effectiveStatus === 'Draft' || effectiveStatus === 'Awaiting Re-bill';
             return (
               <tr key={r.no}>
@@ -280,9 +331,9 @@ function StatementList({ onOpenDetail, onEdit, statusOverrides = {}, extraRows =
                 <td style={{ fontSize: 13, color: r.invoiceNo === '—' ? '#bbb' : '#333' }}>{r.invoiceNo}</td>
                 <td>
                   <span style={{ ...BASE_BADGE, ...STATUS_STYLE[effectiveStatus] }}>{effectiveStatus}</span>
-                  {effectiveStatus === 'Awaiting Re-bill' && r.rejectReason && (
-                    <div style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 220 }} title={r.rejectReason}>
-                      {r.rejectReason.length > 55 ? r.rejectReason.slice(0, 55) + '…' : r.rejectReason}
+                  {effectiveStatus === 'Awaiting Re-bill' && effectiveRejectReason && (
+                    <div style={{ fontSize: 11, color: '#cf1322', marginTop: 3, maxWidth: 220 }} title={effectiveRejectReason}>
+                      {effectiveRejectReason.length > 55 ? effectiveRejectReason.slice(0, 55) + '…' : effectiveRejectReason}
                     </div>
                   )}
                 </td>
